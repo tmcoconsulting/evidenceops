@@ -9,9 +9,10 @@ subagent produced repository content during this phase.
 
 | Date | Milestone | Primary contributor | Commit |
 | --- | --- | --- | --- |
-| 2026-07-18 | Repository identity and safety foundation | Human-directed Codex implementation | Recorded after commit |
-| 2026-07-18 | Sanitizer, evidence engine, synthetic demo, docs, and CI | Human-directed Codex implementation | Recorded after commit |
-| 2026-07-18 | Repository protections and Pages verification | Human-directed Codex implementation | Recorded after commit |
+| 2026-07-18 | Secure project, evidence engine, and sanitizer foundation | Human-directed Codex implementation | `a5dbe3703e530297cfda165e69338791a419d403` |
+| 2026-07-18 | Synthetic documentation and demo site | Human-directed Codex implementation | `b0a283b3848a523f80fd6501273872725d44161d` |
+| 2026-07-18 | GitHub governance, CI, and Pages automation | Human-directed Codex implementation | `0a2dbc3906ae6274e2f9d4a79d2ce620ae417368` |
+| 2026-07-18 | Validation evidence record | Human-directed Codex implementation | This document's follow-up commit |
 
 ## Commands and checks
 
