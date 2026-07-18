@@ -1,0 +1,40 @@
+name: Feature request
+description: Propose a scoped EvidenceOps capability or design change.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What operator or audit-evidence problem should be solved?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed outcome
+      description: Describe the smallest useful behavior, without using real tenant examples.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Deterministic evidence
+        - Sanitization and data handling
+        - Provider interface
+        - Documentation and demo
+        - Workflow and operations
+        - Generated analysis
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: security
+    attributes:
+      label: Security and data considerations
+      description: Identify permissions, data classes, retention, public output, and approval boundaries.
+    validations:
+      required: true

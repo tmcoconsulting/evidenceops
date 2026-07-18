@@ -1,0 +1,10 @@
+# The verified repository administrator owns the initial Phase 0 review boundary.
+* @tib3r1us
+
+# Security- and publication-sensitive paths require the same explicit owner review.
+/.github/workflows/ @tib3r1us
+/evidenceops/sanitization/ @tib3r1us
+/scripts/ @tib3r1us
+/docs/security-model.md @tib3r1us
+/docs/data-handling.md @tib3r1us
+/docs/threat-model.md @tib3r1us

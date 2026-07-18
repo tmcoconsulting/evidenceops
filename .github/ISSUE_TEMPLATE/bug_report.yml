@@ -1,0 +1,47 @@
+name: Bug report
+description: Report a reproducible EvidenceOps defect using synthetic data only.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include credentials, tenant exports, device identifiers, user information, or other
+        sensitive data. Use GitHub private vulnerability reporting for security issues.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Provide minimal steps using synthetic data.
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: EvidenceOps revision
+      description: Commit hash or release tag.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation output
+      description: Summarize relevant command results without pasting secrets or raw data.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data safety
+      options:
+        - label: I used only synthetic or provably sanitized data.
+          required: true
+        - label: This report does not disclose a vulnerability publicly.
+          required: true
