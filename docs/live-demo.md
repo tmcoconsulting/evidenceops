@@ -42,7 +42,7 @@ addresses, UUID-shaped identifiers, key material, and bearer credentials.
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements-dev.txt
-python -m pip install --no-build-isolation --no-deps -e .
+python -m pip install --no-build-isolation --no-deps .
 python -m pytest
 mkdocs serve
 ```
