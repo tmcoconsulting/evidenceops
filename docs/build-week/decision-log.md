@@ -58,6 +58,8 @@ possible public disclosure.
 
 ## 2026-07-18 — Deploy Pages only after validation
 
+**Status:** Superseded during Phase 1 security remediation; the workflow was removed.
+
 **Decision:** A Pages workflow runs only after the `CI` workflow succeeds for `main`, rebuilds the
 site at the validated commit, scans it, and uses GitHub's supported Pages artifact/deploy actions.
 
@@ -66,6 +68,9 @@ site at the validated commit, scans it, and uses GitHub's supported Pages artifa
 and [deployment protection rules](https://docs.github.com/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment).
 
 ## 2026-07-18 — Defer custom domain and live collection
+
+**Status:** Superseded for hosting. Live collection remains deferred; the selected future hostname
+is now part of the Cloudflare Workers milestone below.
 
 **Decision:** Use the initial GitHub Pages hostname. Do not configure DNS, Graph authentication, or
 live collection in Phase 0.
@@ -82,3 +87,101 @@ brand asset.
 
 **Why:** No corresponding asset with established usage rights was present in the working directory.
 TMCO Consulting, LLC is named as the legitimate project sponsor without using an unverified asset.
+
+## 2026-07-18 — Bound Phase 1 to Graph v1.0 legacy configuration
+
+**Decision:** Read only `deviceConfigurations` and their `assignments`; normalize two fields from
+`macOSGeneralDeviceConfiguration`. Do not use `/beta` Settings Catalog or managed-device inventory.
+
+**Why:** Microsoft documents the [configuration list](https://learn.microsoft.com/graph/api/intune-deviceconfig-deviceconfiguration-list?view=graph-rest-1.0),
+[assignment list](https://learn.microsoft.com/graph/api/intune-deviceconfig-deviceconfigurationassignment-list?view=graph-rest-1.0),
+and [macOS resource](https://learn.microsoft.com/graph/api/resources/intune-deviceconfig-macosgeneraldeviceconfiguration?view=graph-rest-1.0)
+in v1.0. A supported v1.0 Settings Catalog contract was not established. Device counts would add a
+permission without contributing to this narrow drift proof.
+
+## 2026-07-18 — Request one Graph read permission
+
+**Decision:** Use only delegated/application `DeviceManagementConfiguration.Read.All`, with its
+documented administrator consent requirement. Do not request its write counterpart,
+`Directory.Read.All`, or managed-device read scope.
+
+**Why:** It is the least privileged permission Microsoft lists for both implemented endpoints. The
+IDs and rationale are machine-readable in `manifests/microsoft-graph-permissions.v1.json` and
+traceable to the [Microsoft permissions reference](https://learn.microsoft.com/graph/permissions-reference#devicemanagementconfigurationreadall).
+
+## 2026-07-18 — Normalize instead of storing raw Graph exports
+
+**Decision:** Retain source policy IDs only in a restrictive private package; never persist full
+Graph responses. Publication is a distinct, key-requiring, fail-closed command.
+
+**Why:** Configuration read permission is broad even when code uses a narrow slice. Data
+minimization reduces disclosure, retention, and future schema-change risk.
+
+## 2026-07-18 — Constrain GPT with structure and verification
+
+**Decision:** Send only a validated public package (maximum 256 KiB) to the OpenAI Responses API,
+with no tools, `store: false`, strict `json_schema`, and the configured Build Week model
+`gpt-5.6-sol`. Treat the returned object as untrusted.
+
+**Why:** OpenAI documents [structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
+and the [Responses API](https://developers.openai.com/api/reference/resources/responses/methods/create).
+Structure narrows output shape; a separate deterministic verifier enforces evidence/status/claim
+rules and keeps human review authoritative.
+
+## 2026-07-18 — Keep live automation out of the public repository
+
+**Decision:** Document—but do not add—a private OIDC collection workflow. Public CI and the local
+static demo use no tenant or OpenAI credentials.
+
+**Why:** GitHub OIDC and Entra workload federation can issue short-lived credentials, but their
+subjects, environments, tenant/application IDs, and retention are private deployment decisions.
+The public repository cannot safely supply universal tenant-specific values.
+
+## 2026-07-18 — Retire GitHub Pages and select Cloudflare Workers Static Assets
+
+**Decision:** Remove the GitHub Pages `workflow_run` deployment and its `pages: write` and
+deployment OIDC permissions. Keep MkDocs as a local/static build, and make Cloudflare Workers Static
+Assets at `evidenceops.tmcoconsulting.com` the next separately reviewed milestone. Route only
+same-origin `/api/*` through Worker code; serve other static assets directly.
+
+**Why:** The Codex Security scan proved the branch-name-only `workflow_run` gate could select a
+fork-controlled SHA for execution in the privileged deployment job. Retiring the obsolete hosting
+path removes the sink rather than preserving unnecessary deployment privilege. Cloudflare
+documents selective
+[`run_worker_first`](https://developers.cloudflare.com/workers/static-assets/binding/#run_worker_first)
+routing for hybrid static/API applications. No Cloudflare resource, configuration, secret, DNS
+record, workflow, or deployment is created in this remediation.
+
+## 2026-07-18 — Use one credential catalog at every egress
+
+**Decision:** Publication sanitization, repository scanning, static-artifact scanning, and pre-model
+egress import one high-confidence credential-pattern catalog. The catalog includes every GitHub
+`ghp_`, `gho_`, `ghu_`, `ghs_`, `ghr_`, and `github_pat_` form covered by regression tests.
+
+**Why:** Duplicated patterns diverged and allowed underscore-form GitHub credentials to cross the
+publication boundary. One catalog makes a missed update visible to every gate and test.
+
+## 2026-07-18 — Verify typed claims; quarantine unrestricted prose
+
+**Decision:** Narrative explanations carry an additive typed `deterministic_claim` with closed
+`finding_status` code/value semantics. The verifier requires exact unique finding-ID coverage and
+marks only those typed claims verified. All free-form generated prose remains quarantined for human
+review, regardless of phrasing.
+
+**Why:** A finite status-phrase matcher cannot establish the meaning of unrestricted natural
+language. Exact identifiers and enum values are deterministic; prose is not. Legacy schema-v1
+narratives remain readable but cannot verify without typed claims.
+
+## 2026-07-18 — Defer production OpenAI key and BYOK to the Worker milestone
+
+**Decision:** The future production runtime should use a dedicated EvidenceOps Project
+service-account/project key stored only as a Cloudflare Worker secret. Fixture mode remains the
+default when credits or the key are unavailable. Browser BYOK is deferred pending a dedicated
+browser-key, logging, support, and abuse threat model.
+
+**Why:** OpenAI recommends keeping API keys out of code and public repositories and supplying them
+through environment variables or a secret manager. Cloudflare provides encrypted Worker secret
+bindings. A browser-supplied key would create additional exposure surfaces and is not a safe
+"easy" addition without those controls. See OpenAI
+[production practices](https://developers.openai.com/api/docs/guides/production-best-practices)
+and Cloudflare [Worker secrets](https://developers.cloudflare.com/workers/configuration/secrets/).

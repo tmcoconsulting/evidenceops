@@ -1,55 +1,69 @@
 # Threat Model
 
-This Phase 0 model covers the public repository, CI, Pages deployment, sanitizer, synthetic
-fixtures, and planned read-only collection boundary.
+This Phase 1 model covers the public repository, unprivileged CI, local static build, live read-only
+adapter, private evidence writer, sanitizer, OpenAI boundary, deterministic verifier, and
+synthetic demo. The planned Cloudflare runtime is included as a review trigger, not an implemented
+trust boundary.
 
 ## Assets
 
 - Desired configuration and approval history
-- Future raw endpoint inventory and configuration responses
-- Sanitized evidence packages and deterministic fingerprints
-- Pseudonymization key material
-- Future cloud workload identity
-- Repository and workflow administration rights
-- Generated analysis and its evidence citations
+- Private normalized Intune evidence and source trace identifiers
+- Sanitized packages, evidence IDs, and fingerprints
+- Graph/OpenAI credentials and pseudonymization key material
+- Future workload identity and repository administration rights
+- Generated narratives, verifier results, and human decisions
 
 ## Trust boundaries
 
-| Boundary | Less-trusted side | More-trusted side |
+| Boundary | Untrusted or private side | Validated side |
 | --- | --- | --- |
 | Pull request | Contributor code and fixtures | Protected `main` |
-| Provider | External API response | Normalized evidence engine |
-| Publication | Raw or private package | Sanitized public package |
-| Model | Generated text | Deterministic finding and human decision |
-| Deployment | Build job | Protected Pages environment |
+| Graph | Tenant response and bearer token | GET-only normalizer |
+| Private storage | Traceable normalized evidence | Ignored restrictive directory |
+| Publication | Private package and runtime key | Sanitized public package |
+| OpenAI | External service and generated object | Deterministic verifier |
+| Static build | Repository content | Scanned local `site/` artifact |
+| Future Cloudflare runtime | Browser/API request and Worker secrets | Not implemented; next milestone |
 
 ## Primary threats and controls
 
-| Threat | Impact | Phase 0 control | Deferred control |
+| Threat | Impact | Phase 1 control | Residual/deferred control |
 | --- | --- | --- | --- |
-| Credential committed to Git | Account compromise | Ignore rules, local/CI high-confidence scan, GitHub alerts | Organization incident drill |
-| Raw fixture reaches Pages | Re-identification | Synthetic-only data, raw markers, generated-site scan | Signed publication manifest |
-| Provider adds sensitive field | Silent disclosure | Unknown fields fail closed | Provider schema conformance suite |
-| Workflow dependency compromised | Build compromise | First-party actions pinned to full commits | Dependency review policy |
-| Fork obtains collection credential | Tenant disclosure | No live collector; explicit fork prohibition | OIDC subject/environment policy |
-| Graph permission expands to write | Endpoint mutation | No Graph integration; read-only provider protocol | Permission manifest policy gate |
-| Narrative invents compliance claim | Audit error | Narrative not implemented; evidence remains deterministic | Grounding evals and reviewer UI |
-| Pseudonyms become reversible | Re-identification | Runtime-only HMAC key; output content checks | Key rotation and private mapping controls |
-| Maintainer bypasses review | Unreviewed change | Protected branch and required checks | Additional independent maintainer |
+| Credential committed | Account compromise | Ignore rules and location-only secret scan | Organization incident drill |
+| Private package reaches static/public assets | Re-identification | Separate writer, MkDocs exclusion, path/content scan | Signed publication manifest |
+| Graph adds a sensitive field | Silent disclosure | Explicit normalization and unknown-field publication failure | Live canary contract monitoring |
+| Fork obtains collection credential | Tenant disclosure | No public live workflow or credentials | OIDC subject/environment policy in private repo |
+| Graph permission or verb expands | Endpoint mutation | One read permission and GET-only transport/tests | Dedicated manifest/AST policy gate |
+| Narrative omits/duplicates evidence | Audit error | Exact unique finding-ID set equality | Broader evaluation corpus |
+| Narrative reverses status in prose | Audit error | Typed claims only; all prose quarantined | Explicit human approval workflow |
+| OpenAI receives private data | Tenant disclosure | Validated public shape plus repeated shared content/credential scan; size bound; no tools | Worker egress policy |
+| Device-code token persists | Tenant access | In-memory MSAL cache; no token logging | Managed workstation controls |
+| Pseudonym correlation leaks identity | Re-identification | Runtime-only key and content scans | Key rotation/mapping governance |
+| Action dependency compromised | Build compromise | Immutable action SHAs and least privilege | Organization dependency review |
 
-## Abuse cases
+## Abuse cases covered by tests
 
-- A contributor disguises a real export as a fixture.
-- A provider response nests an identifier under a new field name.
-- Documentation embeds a token in a workflow-debug excerpt.
-- A generated narrative states that drift is resolved when the finding remains open.
-- A compromised action uploads a broader path than the generated site.
+- A contributor disguises a fake domain, email, serial, IP, GUID, token, or key as allowed text.
+- A response nests an unclassified field under a private/dropped object.
+- Graph returns a malformed page, hostile `nextLink`, unsupported policy type, or wrong field type.
+- A narrative duplicates, omits, or invents a finding ID; changes a typed status; uses contradictory
+  synonyms in prose; or declares compliance.
+- A static artifact contains a `private`, `raw`, `exports`, or `artifacts` path.
+- Any supported GitHub token family appears in publication, repository, static, or model-egress
+  content.
+- An operator chooses a nonignored private directory or attempts to overwrite an artifact.
 
-Tests and workflow scopes target these cases, but no control is absolute. Operators must still
-review fixture provenance, permission changes, workflow diffs, and generated claims.
+## Assumptions and exclusions
+
+The model assumes GitHub, Entra, and OpenAI administrative accounts are separately protected and
+that an operator does not deliberately publish private files outside EvidenceOps. Endpoint
+compromise, assessment-framework interpretation, remediation, tenant rollback, and external
+service availability are outside this proof.
 
 ## Review triggers
 
-Update this threat model before adding live collection, a new provider, credentialed workflows,
-model runtime calls, evidence retention, user authentication, custom-domain deployment, or a new
-public data field.
+Update this model before expanding Graph endpoints/settings/permissions, adding a provider,
+creating a credentialed workflow, changing retention, accepting model tools, adding authentication,
+deploying tenant-specific infrastructure, adding Worker/API routes or BYOK, provisioning a secret
+or custom domain, or introducing a new public field.

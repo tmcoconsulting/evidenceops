@@ -1,0 +1,342 @@
+{
+  "collection": {
+    "collection_timestamp_utc": "2026-07-18T18:00:00Z",
+    "content_fingerprint": "sha256:032e79cd03b4d2136ff222e9a96b9b0f1a297aa5135c77a09e9806a376895e1b",
+    "desired_state_git_commit_sha": "synthetic-reviewed-commit",
+    "deterministic_algorithm_version": "evidenceops-drift-v1.0.0",
+    "evidence_id": "ev1-032e79cd03b4d2136ff222e9",
+    "freshness": {
+      "as_of_utc": "2026-07-18T18:00:00Z",
+      "max_age_seconds": 86400,
+      "state": "unknown"
+    },
+    "object_type": "collection_metadata",
+    "provider_evidence_id": "ev1-af4fe5879b99a0790bae5293",
+    "schema_version": "1.0.0"
+  },
+  "content_fingerprint": "sha256:04f92c86e33811b55faf002460981d2d6991a09a9e4166470006f0ad445984d6",
+  "desired_state": [
+    {
+      "content_fingerprint": "sha256:7156d564f37b26edbfb3e134c6e5669777687df4d4607da8555312aa7da2da37",
+      "description": "Synthetic desired state for deterministic comparison.",
+      "desired_state_git_commit_sha": "synthetic-reviewed-commit",
+      "desired_value": true,
+      "evaluation_mode": "exact",
+      "evidence_id": "ev1-7156d564f37b26edbfb3e134",
+      "object_type": "desired_state_record",
+      "platform": "macOS",
+      "record_key": "screen-lock-password",
+      "schema_version": "1.0.0",
+      "setting_key": "macos.screen_lock.require_password",
+      "title": "Require a password after screen lock"
+    },
+    {
+      "content_fingerprint": "sha256:5afa05fffab63171195bee7bf55a76833beab3c8d67017e7a3bdb0d25bc449b6",
+      "description": "Synthetic desired state for deterministic comparison.",
+      "desired_state_git_commit_sha": "synthetic-reviewed-commit",
+      "desired_value": 900,
+      "evaluation_mode": "maximum",
+      "evidence_id": "ev1-5afa05fffab63171195bee7b",
+      "object_type": "desired_state_record",
+      "platform": "macOS",
+      "record_key": "screen-lock-timeout",
+      "schema_version": "1.0.0",
+      "setting_key": "macos.screen_lock.max_idle_seconds",
+      "title": "Limit the idle interval before screen lock"
+    },
+    {
+      "content_fingerprint": "sha256:4779a8c392bdd82406d5e287043094c7a923bb97805f2aa9dcff6a00bd7b5d2e",
+      "description": "Synthetic desired state intentionally lacking an observation.",
+      "desired_state_git_commit_sha": "synthetic-reviewed-commit",
+      "desired_value": 0,
+      "evaluation_mode": "exact",
+      "evidence_id": "ev1-4779a8c392bdd82406d5e287",
+      "object_type": "desired_state_record",
+      "platform": "macOS",
+      "record_key": "screen-lock-grace-period",
+      "schema_version": "1.0.0",
+      "setting_key": "macos.screen_lock.password_grace_seconds",
+      "title": "Request immediate password enforcement"
+    },
+    {
+      "content_fingerprint": "sha256:da1256122f1e5a35a9483de56283de0264fd0f48f095d9068c648dbcea7dcd2c",
+      "description": "Synthetic desired state that must remain not evaluated.",
+      "desired_state_git_commit_sha": "synthetic-reviewed-commit",
+      "desired_value": true,
+      "evaluation_mode": "unsupported",
+      "evidence_id": "ev1-da1256122f1e5a35a9483de5",
+      "object_type": "desired_state_record",
+      "platform": "macOS",
+      "record_key": "screen-lock-unsupported",
+      "schema_version": "1.0.0",
+      "setting_key": "macos.screen_lock.unsupported_demo_setting",
+      "title": "Demonstrate an unsupported evaluator"
+    }
+  ],
+  "evidence_id": "ev1-04f92c86e33811b55faf0024",
+  "evidence_references": [
+    {
+      "content_fingerprint": "sha256:dfd44fccff65c75c6b4d3ed479de3ad04354e715478cf171b3696d2c93d558d6",
+      "evidence_id": "ev1-dfd44fccff65c75c6b4d3ed4",
+      "label": "source collection",
+      "object_type": "evidence_reference",
+      "reference_kind": "collection_metadata",
+      "referenced_evidence_id": "ev1-032e79cd03b4d2136ff222e9",
+      "schema_version": "1.0.0"
+    },
+    {
+      "content_fingerprint": "sha256:befd10ce2fc1fda175fb41687172944e5dc852ed44427ac5a5b44cb450a060eb",
+      "evidence_id": "ev1-befd10ce2fc1fda175fb4168",
+      "label": "desired state",
+      "object_type": "evidence_reference",
+      "reference_kind": "desired_state_record",
+      "referenced_evidence_id": "ev1-7156d564f37b26edbfb3e134",
+      "schema_version": "1.0.0"
+    },
+    {
+      "content_fingerprint": "sha256:460e3f921eee7544e0bbb4c4181af6cf3aea270f5f61f94c90247fe136dda61d",
+      "evidence_id": "ev1-460e3f921eee7544e0bbb4c4",
+      "label": "desired state",
+      "object_type": "evidence_reference",
+      "reference_kind": "desired_state_record",
+      "referenced_evidence_id": "ev1-5afa05fffab63171195bee7b",
+      "schema_version": "1.0.0"
+    },
+    {
+      "content_fingerprint": "sha256:fcb5c8800a1dc229a02684374e2abff38d0dc5aefd2c96e7cf91edba5817dec6",
+      "evidence_id": "ev1-fcb5c8800a1dc229a0268437",
+      "label": "desired state",
+      "object_type": "evidence_reference",
+      "reference_kind": "desired_state_record",
+      "referenced_evidence_id": "ev1-4779a8c392bdd82406d5e287",
+      "schema_version": "1.0.0"
+    },
+    {
+      "content_fingerprint": "sha256:ecf5d25550129d59b88cd7758496d84d2850d6098cda2218386feb4a94f122c2",
+      "evidence_id": "ev1-ecf5d25550129d59b88cd775",
+      "label": "desired state",
+      "object_type": "evidence_reference",
+      "reference_kind": "desired_state_record",
+      "referenced_evidence_id": "ev1-da1256122f1e5a35a9483de5",
+      "schema_version": "1.0.0"
+    },
+    {
+      "content_fingerprint": "sha256:bea7d35e231b2a6f3619265c183f80c1a01fb84a1976d0226fb244656ef46acd",
+      "evidence_id": "ev1-bea7d35e231b2a6f3619265c",
+      "label": "normalized observation",
+      "object_type": "evidence_reference",
+      "reference_kind": "normalized_configuration_observation",
+      "referenced_evidence_id": "ev1-8ea4a7be98f990356fcab2b2",
+      "schema_version": "1.0.0"
+    },
+    {
+      "content_fingerprint": "sha256:e83a3fb4b9f48053c88de1e70fdd1150af97ab8c1369cac3bd9866a98fbc9485",
+      "evidence_id": "ev1-e83a3fb4b9f48053c88de1e7",
+      "label": "normalized observation",
+      "object_type": "evidence_reference",
+      "reference_kind": "normalized_configuration_observation",
+      "referenced_evidence_id": "ev1-084155f978ab938bde61eb7b",
+      "schema_version": "1.0.0"
+    },
+    {
+      "content_fingerprint": "sha256:88a935b088d61c989b24a92729227e73e3c9c452923b42b5233fb5f561821841",
+      "evidence_id": "ev1-88a935b088d61c989b24a927",
+      "label": "normalized observation",
+      "object_type": "evidence_reference",
+      "reference_kind": "normalized_configuration_observation",
+      "referenced_evidence_id": "ev1-6bdfe79c4e3fa28f877596b2",
+      "schema_version": "1.0.0"
+    },
+    {
+      "content_fingerprint": "sha256:d4d5b15cc1233d7c2ee4f4f331c37ad1541c0dd10c767ee041d454b8dac0d039",
+      "evidence_id": "ev1-d4d5b15cc1233d7c2ee4f4f3",
+      "label": "deterministic finding",
+      "object_type": "evidence_reference",
+      "reference_kind": "deterministic_drift_finding",
+      "referenced_evidence_id": "ev1-ecd191c277612b8669db775c",
+      "schema_version": "1.0.0"
+    },
+    {
+      "content_fingerprint": "sha256:52129dfccf686ed13288dcbd18e6425568425d74a3e4ad5d68a4159155034ec4",
+      "evidence_id": "ev1-52129dfccf686ed13288dcbd",
+      "label": "deterministic finding",
+      "object_type": "evidence_reference",
+      "reference_kind": "deterministic_drift_finding",
+      "referenced_evidence_id": "ev1-81658eeb2a8d8930d646dcaf",
+      "schema_version": "1.0.0"
+    },
+    {
+      "content_fingerprint": "sha256:27773fccc7d2c3adf2cc8913b10240c24ae525257f34b8212446352ac56a1141",
+      "evidence_id": "ev1-27773fccc7d2c3adf2cc8913",
+      "label": "deterministic finding",
+      "object_type": "evidence_reference",
+      "reference_kind": "deterministic_drift_finding",
+      "referenced_evidence_id": "ev1-c64986e6dd94a293dc1f3911",
+      "schema_version": "1.0.0"
+    },
+    {
+      "content_fingerprint": "sha256:54bdf5bb3e8e1557a823f0fb6eba3d99b3d962fca3e899d81acf694e710cb7f0",
+      "evidence_id": "ev1-54bdf5bb3e8e1557a823f0fb",
+      "label": "deterministic finding",
+      "object_type": "evidence_reference",
+      "reference_kind": "deterministic_drift_finding",
+      "referenced_evidence_id": "ev1-2c4d66d5b11ce1df5b32a2fe",
+      "schema_version": "1.0.0"
+    }
+  ],
+  "findings": [
+    {
+      "additional_evidence_required": [],
+      "collection_evidence_id": "ev1-032e79cd03b4d2136ff222e9",
+      "content_fingerprint": "sha256:ecd191c277612b8669db775cb66317b9611a35f0cacb5be64d8291387a608fa2",
+      "desired_state_evidence_id": "ev1-7156d564f37b26edbfb3e134",
+      "desired_state_git_commit_sha": "synthetic-reviewed-commit",
+      "deterministic_algorithm_version": "evidenceops-drift-v1.0.0",
+      "evidence_id": "ev1-ecd191c277612b8669db775c",
+      "input_fingerprints": [
+        "sha256:7156d564f37b26edbfb3e134c6e5669777687df4d4607da8555312aa7da2da37",
+        "sha256:8ea4a7be98f990356fcab2b2e28ab2d27152fff0083e0d34ac5defbd98af932e"
+      ],
+      "object_type": "deterministic_drift_finding",
+      "observation_evidence_ids": [
+        "ev1-8ea4a7be98f990356fcab2b2"
+      ],
+      "schema_version": "1.0.0",
+      "status": "matches desired state"
+    },
+    {
+      "additional_evidence_required": [],
+      "collection_evidence_id": "ev1-032e79cd03b4d2136ff222e9",
+      "content_fingerprint": "sha256:81658eeb2a8d8930d646dcaf8c789699d95293daf68dc6aaf74eaeb5df41a036",
+      "desired_state_evidence_id": "ev1-5afa05fffab63171195bee7b",
+      "desired_state_git_commit_sha": "synthetic-reviewed-commit",
+      "deterministic_algorithm_version": "evidenceops-drift-v1.0.0",
+      "evidence_id": "ev1-81658eeb2a8d8930d646dcaf",
+      "input_fingerprints": [
+        "sha256:5afa05fffab63171195bee7bf55a76833beab3c8d67017e7a3bdb0d25bc449b6",
+        "sha256:084155f978ab938bde61eb7b8073fb7fbaa0b1bf519e6b119a9a694be8838f25"
+      ],
+      "object_type": "deterministic_drift_finding",
+      "observation_evidence_ids": [
+        "ev1-084155f978ab938bde61eb7b"
+      ],
+      "schema_version": "1.0.0",
+      "status": "differs from desired state"
+    },
+    {
+      "additional_evidence_required": [
+        "No normalized observation was present for this desired-state record."
+      ],
+      "collection_evidence_id": "ev1-032e79cd03b4d2136ff222e9",
+      "content_fingerprint": "sha256:c64986e6dd94a293dc1f391187765bbcd5ef6a39d8f2d7a55adbdcc377329ce7",
+      "desired_state_evidence_id": "ev1-4779a8c392bdd82406d5e287",
+      "desired_state_git_commit_sha": "synthetic-reviewed-commit",
+      "deterministic_algorithm_version": "evidenceops-drift-v1.0.0",
+      "evidence_id": "ev1-c64986e6dd94a293dc1f3911",
+      "input_fingerprints": [
+        "sha256:4779a8c392bdd82406d5e287043094c7a923bb97805f2aa9dcff6a00bd7b5d2e"
+      ],
+      "object_type": "deterministic_drift_finding",
+      "observation_evidence_ids": [],
+      "schema_version": "1.0.0",
+      "status": "additional evidence required"
+    },
+    {
+      "additional_evidence_required": [
+        "A supported deterministic evaluator is required."
+      ],
+      "collection_evidence_id": "ev1-032e79cd03b4d2136ff222e9",
+      "content_fingerprint": "sha256:2c4d66d5b11ce1df5b32a2fe55a22c44e5b53c494722e56b483cc4e95ff8dc13",
+      "desired_state_evidence_id": "ev1-da1256122f1e5a35a9483de5",
+      "desired_state_git_commit_sha": "synthetic-reviewed-commit",
+      "deterministic_algorithm_version": "evidenceops-drift-v1.0.0",
+      "evidence_id": "ev1-2c4d66d5b11ce1df5b32a2fe",
+      "input_fingerprints": [
+        "sha256:da1256122f1e5a35a9483de56283de0264fd0f48f095d9068c648dbcea7dcd2c",
+        "sha256:6bdfe79c4e3fa28f877596b2f6cff80e6fc723b5fc143106b5c999052bc3eb3f"
+      ],
+      "object_type": "deterministic_drift_finding",
+      "observation_evidence_ids": [
+        "ev1-6bdfe79c4e3fa28f877596b2"
+      ],
+      "schema_version": "1.0.0",
+      "status": "not evaluated"
+    }
+  ],
+  "human_approval_status": "human review required",
+  "object_type": "sanitized_public_evidence_package",
+  "observations": [
+    {
+      "collection_evidence_id": "ev1-032e79cd03b4d2136ff222e9",
+      "content_fingerprint": "sha256:8ea4a7be98f990356fcab2b2e28ab2d27152fff0083e0d34ac5defbd98af932e",
+      "evidence_id": "ev1-8ea4a7be98f990356fcab2b2",
+      "freshness": {
+        "as_of_utc": "2026-07-18T18:00:00Z",
+        "max_age_seconds": 86400,
+        "state": "unknown"
+      },
+      "object_type": "normalized_configuration_observation",
+      "observation_state": "observed",
+      "observed_value": true,
+      "platform": "macOS",
+      "provider_evidence_id": "ev1-af4fe5879b99a0790bae5293",
+      "schema_version": "1.0.0",
+      "setting_key": "macos.screen_lock.require_password",
+      "source_modified_at_utc": "2026-07-18T18:00:00Z"
+    },
+    {
+      "collection_evidence_id": "ev1-032e79cd03b4d2136ff222e9",
+      "content_fingerprint": "sha256:084155f978ab938bde61eb7b8073fb7fbaa0b1bf519e6b119a9a694be8838f25",
+      "evidence_id": "ev1-084155f978ab938bde61eb7b",
+      "freshness": {
+        "as_of_utc": "2026-07-18T18:00:00Z",
+        "max_age_seconds": 86400,
+        "state": "unknown"
+      },
+      "object_type": "normalized_configuration_observation",
+      "observation_state": "observed",
+      "observed_value": 1800,
+      "platform": "macOS",
+      "provider_evidence_id": "ev1-af4fe5879b99a0790bae5293",
+      "schema_version": "1.0.0",
+      "setting_key": "macos.screen_lock.max_idle_seconds",
+      "source_modified_at_utc": "2026-07-18T18:00:00Z"
+    },
+    {
+      "collection_evidence_id": "ev1-032e79cd03b4d2136ff222e9",
+      "content_fingerprint": "sha256:6bdfe79c4e3fa28f877596b2f6cff80e6fc723b5fc143106b5c999052bc3eb3f",
+      "evidence_id": "ev1-6bdfe79c4e3fa28f877596b2",
+      "freshness": {
+        "as_of_utc": "2026-07-18T18:00:00Z",
+        "max_age_seconds": 86400,
+        "state": "unknown"
+      },
+      "object_type": "normalized_configuration_observation",
+      "observation_state": "unsupported",
+      "observed_value": null,
+      "platform": "macOS",
+      "provider_evidence_id": "ev1-af4fe5879b99a0790bae5293",
+      "schema_version": "1.0.0",
+      "setting_key": "macos.screen_lock.unsupported_demo_setting",
+      "source_modified_at_utc": "2026-07-18T18:00:00Z"
+    }
+  ],
+  "provider": {
+    "content_fingerprint": "sha256:af4fe5879b99a0790bae52937048e5f65815f1014e8ed63e80d97ff0188f5199",
+    "evidence_id": "ev1-af4fe5879b99a0790bae5293",
+    "object_type": "provider_metadata",
+    "provider": "synthetic-intune",
+    "provider_version": "1.0.0",
+    "schema_version": "1.0.0",
+    "source_api_version": "v1.0-fixture"
+  },
+  "publication": {
+    "publication_policy_version": "evidenceops-publication-v1.0.0",
+    "published_at_utc": "2026-07-18T18:00:00Z",
+    "sanitized_content_fingerprint": "sha256:1087b49d67bd23de41e5af492f369512c60f88c871b2348ff7474359ce9206f2",
+    "source_private_fingerprint": "sha256:500f92d8e31b0369698a0454484c1ce1693cfca0ad809d9989ca2c3ecb7e09b8"
+  },
+  "schema_version": "1.0.0",
+  "source_type": "curated-synthetic-fixture",
+  "synthetic": true
+}

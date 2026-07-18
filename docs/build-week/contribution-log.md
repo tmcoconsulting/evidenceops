@@ -11,7 +11,7 @@ subagent produced repository content during this phase.
 | --- | --- | --- | --- |
 | 2026-07-18 | Secure project, evidence engine, and sanitizer foundation | Human-directed Codex implementation | `a5dbe3703e530297cfda165e69338791a419d403` |
 | 2026-07-18 | Synthetic documentation and demo site | Human-directed Codex implementation | `b0a283b3848a523f80fd6501273872725d44161d` |
-| 2026-07-18 | GitHub governance, CI, and Pages automation | Human-directed Codex implementation | `0a2dbc3906ae6274e2f9d4a79d2ce620ae417368` |
+| 2026-07-18 | GitHub governance, CI, and historical Pages automation (later retired) | Human-directed Codex implementation | `0a2dbc3906ae6274e2f9d4a79d2ce620ae417368` |
 | 2026-07-18 | Validation evidence record | Human-directed Codex implementation | This document's follow-up commit |
 
 ## Commands and checks
@@ -63,3 +63,19 @@ usage rights, so the site uses text and original CSS only.
 - Unclassified field pass-through
 - Model-authored compliance verdicts
 - A custom domain before separate access and rollback verification
+
+## Phase 1 work
+
+Phase 1 also occurred entirely in this primary Codex thread. It reimplemented the minimum concepts
+behind the existing provider-neutral contract and imported no code, history, tenant configuration,
+or proprietary material from `intune-apple-gitops` or any other repository.
+
+| Date | Milestone | Commit |
+| --- | --- | --- |
+| 2026-07-18 | Schema, deterministic evidence, and synthetic fixture | Recorded after commit |
+| 2026-07-18 | GET-only Intune adapter and private/public boundary | Recorded after commit |
+| 2026-07-18 | GPT adapter, verifier, CLI, local static demo, and documentation | Recorded after commit |
+| 2026-07-18 | Four-finding security remediation and Cloudflare-next decision | Pending review commit |
+
+Exact Phase 1 commands, results, limitations, and commit hashes are maintained in the
+[Phase 1 validation record](phase-1-validation.md).

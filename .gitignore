@@ -17,6 +17,8 @@ venv/
 
 # Documentation output
 site/
+docs/private/
+build/
 
 # Editors and operating systems
 .DS_Store

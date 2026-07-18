@@ -9,8 +9,9 @@ requirements from their authoritative source before submission.
 - [ ] Apache License 2.0 and `NOTICE` are present
 - [ ] `main` is protected and verified
 - [ ] Issues and Discussions are enabled; Wiki is disabled
-- [ ] CI and Pages workflows pass
-- [ ] GitHub Pages is publicly reachable
+- [ ] CI passes with read-only repository permission
+- [ ] Confirm the retired GitHub Pages workflow is absent
+- [ ] Cloudflare hosting status is described accurately (not deployed in this checkpoint)
 - [ ] Dependency and secret alerts supported by the plan are enabled
 
 ## Product and security evidence

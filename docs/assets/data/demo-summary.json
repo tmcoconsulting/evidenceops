@@ -1,31 +1,9 @@
 {
-  "schema_version": "1.0",
-  "synthetic": true,
-  "source_type": "curated-synthetic-fixture",
-  "summary": {
-    "evaluated_controls": 12,
-    "compliant_controls": 9,
-    "drifted_controls": 2,
-    "approved_exceptions": 1
-  },
-  "controls": [
-    {
-      "control_ref": "SYN-MAC-001",
-      "title": "Screen lock timeout",
-      "status": "compliant",
-      "evidence_kind": "deterministic"
-    },
-    {
-      "control_ref": "SYN-MAC-002",
-      "title": "Disk encryption required",
-      "status": "drifted",
-      "evidence_kind": "deterministic"
-    },
-    {
-      "control_ref": "SYN-MAC-003",
-      "title": "Operating system update window",
-      "status": "approved-exception",
-      "evidence_kind": "deterministic"
-    }
-  ]
+  "content_fingerprint": "sha256:9c61de63d277052e4a00e79d34359cba7905b40544fd8267a8224e5d117a3d18",
+  "evidence_id": "ev1-9c61de63d277052e4a00e79d",
+  "label": "4 deterministic findings; 4 typed claims verified; 14 generated fields quarantined; adversarial policy rejection=True; narrative=ev1-1de59a99d298c42664cf82a0",
+  "object_type": "evidence_reference",
+  "reference_kind": "phase1_synthetic_demo",
+  "referenced_evidence_id": "ev1-04f92c86e33811b55faf0024",
+  "schema_version": "1.0.0"
 }

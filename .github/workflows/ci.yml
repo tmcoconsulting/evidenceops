@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Phase 0 validation
+    name: Phase 1 public validation
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -49,6 +49,11 @@ jobs:
 
       - name: Unit tests
         run: python -m pytest
+
+      - name: Rebuild and verify synthetic static-demo data
+        run: |
+          python -m evidenceops rebuild-static-demo
+          git diff --exit-code -- docs/assets/data
 
       - name: Static security checks
         run: python -m bandit -r evidenceops scripts -c pyproject.toml
