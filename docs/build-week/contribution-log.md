@@ -96,6 +96,7 @@ or proprietary material from `intune-apple-gitops` or any other repository.
 | 2026-07-19 | Routine deployment isolated from custom-domain management | `aa9c8fa` |
 | 2026-07-19 | Reviewed deployment-isolation squash merge | `3e4954dfe50ddaaa06e5f38114abe26591fe10ea` |
 | 2026-07-19 | Bot-Fight-safe active Worker version proof | `18b94c3` |
+| 2026-07-19 | Reviewed active-version proof squash merge | `f1dd37be822c07677621907168fc372c6ccc0ae0` |
 
 Exact Phase 1 commands, results, limitations, and commit hashes are maintained in the
 [Phase 1 validation record](phase-1-validation.md).
@@ -131,9 +132,14 @@ OIDC collection, sanitization, public scanning, aggregate reporting, and cleanup
 boundary was a one-day scanned-public-package handoff; it retained no private package and did not
 weaken the fixture-safe deployment default. After separate review and merge, a protected run
 created exactly one scanned public artifact and the selected package was revalidated and deployed.
-Production now reports live sanitized evidence and fixture narrative mode. The remaining review
-boundary removes the already-provisioned custom domain from routine Wrangler uploads so the narrow
+Production now reports live sanitized evidence and fixture narrative mode. A later review boundary
+removed the already-provisioned custom domain from routine Wrangler uploads so the narrow
 deployment token needs no zone-route permission. After TJ reviewed and merged that boundary, the
 protected upload succeeded but a cloud-runner curl was managed-challenged by Bot Fight Mode. The
 follow-up preserves the edge control and proves the snapshot-bound Worker version is the only active
-100%-traffic deployment through Cloudflare's authenticated control plane.
+100%-traffic deployment through Cloudflare's authenticated control plane. TJ reviewed and merged
+that proof. Protected deployment `29703512007` passed validation, exact public-package selection,
+upload, and control-plane proof; independent production checks matched the live sanitized snapshot.
+TJ then authorized one further protected-main audit retry. Run `29703823180` passed OIDC, GET-only
+collection, sanitization, scanning, and cleanup with artifact retention disabled. The
+documentation-only final report remains pending TJ review.

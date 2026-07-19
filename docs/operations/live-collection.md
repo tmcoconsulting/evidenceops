@@ -131,6 +131,11 @@ The Entra application retains pre-existing delegated permissions that are not us
 application-permission workflow. EvidenceOps does not remove unrelated permissions automatically.
 No client secret exists or is needed.
 
+After final deployment verification, TJ authorized one additional protected-main audit retry.
+Run `29703823180` again passed environment-scoped OIDC, all configured GET-only families,
+publication-policy validation, public scanning, and cleanup. `prepare_publication=false`, so no
+public artifact was uploaded and no private evidence was retained.
+
 ## Retention and deletion
 
 - Private directories/files use `0700`/`0600` where supported.

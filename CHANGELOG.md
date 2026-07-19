@@ -8,5 +8,7 @@
 - Added dynamic Mission Control assets and a bounded evidence-grounded `/api/ask` assistant.
 - Expanded least-privilege Graph permission documentation to four read-only resource families.
 - Preserved fixture-first Cloudflare hosting, no Intune writes, and fail-closed publication/model egress.
+- Completed the reviewed live sanitized publication, Bot-Fight-safe deployment proof, independent
+  production validation, and final protected-main GET-only audit retry.
 
 See the Build Week contribution and decision logs for commit-level evidence after review.

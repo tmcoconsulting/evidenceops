@@ -5,26 +5,26 @@ requirements from their authoritative source before submission.
 
 ## Public repository
 
-- [ ] Repository is public and owned by `tmcoconsulting`
-- [ ] Apache License 2.0 and `NOTICE` are present
-- [ ] `main` is protected and verified
-- [ ] Issues and Discussions are enabled; Wiki is disabled
-- [ ] CI passes with read-only repository permission
-- [ ] Confirm the retired GitHub Pages workflow is absent
-- [ ] Cloudflare runtime is locally and externally validated at the documented custom domain
-- [ ] Dependency and secret alerts supported by the plan are enabled
+- [x] Repository is public and owned by `tmcoconsulting`
+- [x] Apache License 2.0 and `NOTICE` are present
+- [x] `main` is protected and verified
+- [x] Issues and Discussions are enabled; Wiki is disabled
+- [x] CI passes with read-only repository permission
+- [x] Confirm the retired GitHub Pages workflow is absent
+- [x] Cloudflare runtime is locally and externally validated at the documented custom domain
+- [x] Dependency security updates, secret scanning, and push protection supported by the plan are enabled
 
 ## Product and security evidence
 
-- [ ] Every demo surface clearly declares whether its evidence is synthetic or sanitized live data
-- [ ] Production reports sanitized live evidence and fixture narrative mode without implying a live
+- [x] Every demo surface clearly declares whether its evidence is synthetic or sanitized live data
+- [x] Production reports sanitized live evidence and fixture narrative mode without implying a live
       model call
-- [ ] No live tenant, person, device, group, or credential data is committed
-- [ ] Sanitizer fails closed on unknown fields
-- [ ] Generated site passes prohibited-pattern scanning
-- [ ] Read-only provider and human-approval boundaries are documented
-- [ ] Current limitations and rejected choices are visible
-- [ ] Commit hashes and exact validation commands are recorded
+- [x] No live tenant, person, device, group, or credential data is committed
+- [x] Sanitizer fails closed on unknown fields
+- [x] Generated site passes prohibited-pattern scanning
+- [x] Read-only provider and human-approval boundaries are documented
+- [x] Current limitations and rejected choices are visible
+- [x] Commit hashes and exact validation commands are recorded
 
 ## Private submission metadata
 
