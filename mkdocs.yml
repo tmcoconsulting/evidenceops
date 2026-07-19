@@ -85,11 +85,13 @@ markdown_extensions:
 extra_css:
   - assets/stylesheets/extra.css?v=20260719-responsive
   - assets/stylesheets/settings-matrix.css?v=20260719-audit
+  - assets/stylesheets/assistant-evidence-context.css?v=20260719-audit
 
 extra_javascript:
   - assets/javascripts/mission-control.js
   - assets/javascripts/evidenceops-api.js
   - assets/javascripts/settings-matrix.js
+  - assets/javascripts/assistant-evidence-context.js
 
 plugins:
   - search
