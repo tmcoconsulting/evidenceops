@@ -148,7 +148,12 @@
           true,
         );
         addDetail(list, "Observed", formatValue(finding.observed_value), true);
-        addDetail(list, "Approved target", formatValue(finding.expected_value), true);
+        addDetail(
+          list,
+          "Approved target",
+          formatValue(finding.expected_value),
+          true,
+        );
         addDetail(
           list,
           "Technical state",
@@ -183,7 +188,11 @@
           "CIS Level 2",
           "Baseline not loaded; EvidenceOps does not infer Level 2 coverage",
         );
-        addDetail(list, "Required technical change", deterministicChange(finding));
+        addDetail(
+          list,
+          "Required technical change",
+          deterministicChange(finding),
+        );
         addDetail(
           list,
           "Public-safe evidence",
@@ -198,7 +207,11 @@
         panel.append(detail);
       }
 
-      const link = create("a", "md-button", "Open the complete settings matrix");
+      const link = create(
+        "a",
+        "md-button",
+        "Open the complete settings matrix",
+      );
       link.href = "../settings-matrix/";
       panel.append(link);
     } catch (error) {
