@@ -84,7 +84,7 @@ egress target is accepted from a request.
 Browser BYOK is deliberately unsupported. It would make EvidenceOps a credential processor and
 requires its own browser storage, transit, redaction, support, exfiltration, and abuse design.
 
-## Production validation and remaining gates
+## Production validation and remaining operations
 
 Completed: account/zone verification, preview and production deployment, custom-domain/TLS checks,
 static/API/header tests, fixture verification, rate-limit proof, secure Worker-secret transfer,
@@ -98,15 +98,13 @@ cross-origin, and frame protections. `/api/ready` validates the Mission schema, 
 mode metadata, and runtime configuration; `/api/health` remains a deliberately narrower liveness
 signal.
 
-Remaining:
+Remaining operations:
 
-1. merge the control-plane deployment proof that preserves Bot Fight Mode, then complete one green
-   protected workflow retry and independent unauthenticated browser check;
-2. keep `CLOUDFLARE_DEPLOY_ENABLED=false` outside an explicitly reviewed deployment window;
-3. review Cloudflare observability/alert retention in the dashboard;
-4. use `wrangler deployments list --env production` and
+1. keep `CLOUDFLARE_DEPLOY_ENABLED=false` outside an explicitly reviewed deployment window;
+2. review Cloudflare observability/alert retention in the dashboard;
+3. use `wrangler deployments list --env production` and
    `wrangler rollback <known-good-version> --env production` for rollback; and
-5. leave OpenAI mode off by default unless a separately reviewed operational policy authorizes it.
+4. leave OpenAI mode off by default unless a separately reviewed operational policy authorizes it.
 
 The active account token `evidenceops-github-deploy` has only `Workers Scripts Write` on the TMCO
 Consulting account, and the protected workflow proved that GitHub holds that working token without
@@ -126,6 +124,11 @@ network immediately afterward. EvidenceOps preserves Bot Fight Mode and instead 
 reviewed snapshot ID as a Worker-version message, then verifies through Wrangler that the exact
 version is the sole active deployment at 100% traffic. Public HTTP, browser rendering, and header
 validation remain a separate unauthenticated post-run operator check.
+
+Protected-main deployment run `29703512007` completed that corrected path. The snapshot-bound
+version was the sole active deployment at 100% traffic, and independent HTTPS, browser, status,
+Mission-package, TLS, and header checks passed. Bot Fight Mode remained enabled, and the emergency
+deployment flag was restored and re-read as `false`.
 
 Cloudflare documents [Worker secrets](https://developers.cloudflare.com/workers/configuration/secrets/),
 [custom domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/),

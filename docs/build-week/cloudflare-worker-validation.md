@@ -235,3 +235,25 @@ required headers. The follow-up does not weaken Bot Fight Mode: it binds the exp
 the Worker version message and verifies that version is the sole active 100%-traffic deployment
 through the authenticated Cloudflare control plane. Public HTTP and browser verification remain an
 independent operator gate.
+
+## 2026-07-19 final deployment verification
+
+TJ reviewed and merged the Bot-Fight-safe active-version proof as
+`f1dd37be822c07677621907168fc372c6ccc0ae0`. Protected-main deployment `29703512007` completed in
+success: the reviewed-window guard, locked installs, complete public matrix, exact artifact
+selector, sanitized-package download, repeated publication scan, staging, snapshot pin, Worker
+upload, and control-plane verifier all passed. `CLOUDFLARE_DEPLOY_ENABLED` was restored and re-read
+as `false`.
+
+A fresh read-only Wrangler query independently confirmed the expected snapshot-bound version is
+the sole active deployment at 100% traffic. Unauthenticated HTTPS checks passed for the root,
+dashboard, live demo, Mission asset, status, health, and readiness routes. The runtime reported live
+sanitized tenant data and fixture narrative mode. TLS, CSP, HSTS, frame, MIME, referrer,
+permissions, cache, and cross-origin headers passed. The exact downloaded Mission package passed
+schema/fingerprint validation and public-artifact scanning.
+
+The fixture assistant answered a supported question with two accepted typed claims, no rejected
+claims, three evidence references, prose quarantine, and required human review while making no
+model call. An unsupported question returned the exact insufficient-evidence response. Production
+remains in fixture narrative mode; the separate single bounded Terra success remains the proof of
+the operational model path.

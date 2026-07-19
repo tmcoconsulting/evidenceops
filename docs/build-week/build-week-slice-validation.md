@@ -314,18 +314,27 @@ Local validation passed with 208 Python tests, one credential-gated local live t
 branch coverage, 43 Worker tests, both dependency audits, Ruff, Mypy, Bandit, repository/public
 scans, deterministic rebuild, strict MkDocs, generated bindings, and all Wrangler dry-runs.
 
-## Outstanding gate
+## Final protected-main verification
 
-Review and merge the Bot-Fight-safe control-plane deployment proof, then complete one green
-protected-main deployment retry using the already reviewed audit run ID. Keep the environment
-enable flag false before and immediately after that bounded window, then repeat the independent
-unauthenticated HTTP/browser checks. This review gate is separate from the completed GET-only audit,
-sanitized publication, and successful Worker activation.
+TJ reviewed and merged the Bot-Fight-safe proof as
+`f1dd37be822c07677621907168fc372c6ccc0ae0`. Protected deployment run `29703512007` then passed the
+reviewed-window gate, complete public validation, exact artifact selection, revalidation, staging,
+Worker upload, and authenticated active-version proof. The expected snapshot-bound version was the
+sole active deployment at 100% traffic. `CLOUDFLARE_DEPLOY_ENABLED` was restored and independently
+re-read as `false`.
 
-After the operational gate, run `/feedback` in the primary Codex task and preserve the Session ID
-privately.
+Independent HTTPS checks passed for the root, dashboard, live demo, Mission package, status,
+health, and readiness routes. The runtime matched `LIVE SANITIZED TENANT DATA`, fixture narrative
+mode, and snapshot `mission-d8351dbdfbf9dcc6b46259d5`. TLS, CSP, HSTS, frame, MIME, referrer,
+permissions, cache, and cross-origin headers passed. The downloaded Mission package passed the
+public-artifact scan and reported only allowlisted aggregates.
 
-The bounded model response, protected expanded Intune audit, and reviewed sanitized live publication
-are complete. Phase 1 still must not be called technically complete until the corrected routine
-deployment completes once through the protected main workflow and its exact snapshot verification
-passes.
+TJ then authorized one further protected-main audit retry. Run `29703823180` passed locked
+installation, pre-auth contracts, OIDC, GET-only collection, publication-policy validation, public
+scanning, and ephemeral cleanup. `prepare_publication=false`, so artifact upload was intentionally
+skipped and neither private nor public evidence was retained by the retry.
+
+The bounded model response, protected expanded Intune audit, reviewed live publication, corrected
+deployment, and independent production checks are complete. Phase 1 is technically complete. The
+remaining `/feedback`, media, DevPost, and submission actions require the operator and are recorded
+in the [final implementation report](final-implementation-report.md).

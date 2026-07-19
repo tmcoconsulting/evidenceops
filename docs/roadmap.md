@@ -42,10 +42,15 @@ Public CI never performs live collection.
 - [x] Store `CLOUDFLARE_API_TOKEN` by name in the protected production environment
 - [x] Verify the account deployment token has only `Workers Scripts Write` and prove its GitHub
       secret binding without exposing the value
-- [ ] Merge the Bot-Fight-safe control-plane deployment proof and complete one green orchestration
+- [x] Merge the Bot-Fight-safe control-plane deployment proof and complete one green orchestration
       retry; the emergency enable flag remains `false`
 - [x] Configure the EvidenceOps OpenAI project budget alerts and model limits
 - [x] Validate one bounded live `gpt-5.6-terra` response; keep fixture mode as the public default
+
+Phase 1 technical completion is recorded in the
+[final implementation report](build-week/final-implementation-report.md). External submission,
+media review, and the private `/feedback` identifier remain operator tasks rather than product
+capabilities.
 
 ## Later application scope
 

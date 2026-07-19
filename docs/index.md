@@ -13,11 +13,11 @@
 </div>
 
 <div class="synthetic-banner">
-Phase 1 is a bounded read-only Apple evidence proof. Mission Control is generated from a clearly
-labeled synthetic Mac, iPhone, and iPad environment; no production tenant data is present. The
-expanded collector and permission manifest are implemented and mocked, while the protected live
-audit remains outstanding. Cloudflare serves this synthetic fixture at
-`evidenceops.tmcoconsulting.com`; fixture mode makes no OpenAI request.
+Phase 1 is a bounded read-only Apple evidence proof. Mission Control is generated from a reviewed,
+fail-closed sanitized tenant package and is labeled `LIVE SANITIZED TENANT DATA`; no raw tenant,
+device, user, group, assignment, or credential value is public. The protected GET-only audit and
+Cloudflare deployment are verified. The assistant remains explicitly in fixture narrative mode,
+so the public demonstration makes no OpenAI request.
 </div>
 
 ## The problem
@@ -61,7 +61,7 @@ EvidenceOps starts from a different thesis:
 | Layer | Authority | Phase 1 behavior |
 | --- | --- | --- |
 | Approved baseline and desired state | Git history, pinned mSCP revision, and TMCO demo approval | 98-rule macOS inventory; five rules mapped |
-| Observed state | Read-only provider response | Expanded GET-only Apple/Intune adapter; live validation pending |
+| Observed state | Read-only provider response | Expanded GET-only Apple/Intune adapter; protected live validation passed |
 | Drift result | Deterministic comparison | Assignment, value, conflict, gap, and unsupported states |
 | Public artifact | Sanitization policy and policy gate | Implemented and tested |
 | Assistant | GPT-generated analysis grounded in prefiltered evidence | Deterministic fixture by default; fixed Terra model path is opt-in |
