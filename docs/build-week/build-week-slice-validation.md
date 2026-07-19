@@ -159,6 +159,9 @@ generated bindings, and all three Wrangler dry-runs passed.
 - Production Worker secret name `OPENAI_API_KEY` is present.
 - Protected GitHub environment secret name `CLOUDFLARE_API_TOKEN` is present; its value was not
   retrieved. `CLOUDFLARE_DEPLOY_ENABLED` remains `false`.
+- The authenticated TMCO Consulting Cloudflare account lists active account token
+  `evidenceops-github-deploy` with only `Workers Scripts Write`. GitHub intentionally makes its
+  secret value opaque, so the first protected deployment remains the binding-validity proof.
 - PR #2 passed required CI and CodeQL, was reviewed by TJ, and was squash-merged through protected
   `main`.
 - The reviewed static/Worker revision is deployed at the production custom domain in explicit
@@ -256,8 +259,8 @@ checkpoint.
    private normalized package or a raw response.
 2. Run the publication-preparation input once from protected main, review the sanitized package,
    and pass only that successful run ID to the separate deployment workflow.
-3. Keep the Cloudflare deployment workflow disabled until the environment token's least-privilege
-   scope is independently verified.
+3. Keep the Cloudflare deployment workflow disabled until review; its first protected deployment
+   must prove the opaque GitHub secret is bound to the verified account token.
 4. Run `/feedback` in the primary Codex task and preserve the Session ID privately.
 
 The bounded model response and protected expanded Intune audit are complete. Phase 1 still must not

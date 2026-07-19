@@ -40,8 +40,9 @@ Public CI never performs live collection.
 - [x] Create the Worker/custom domain at `evidenceops.tmcoconsulting.com` and verify DNS/TLS
 - [x] Add disabled-by-default least-privilege GitHub deployment orchestration after manual validation
 - [x] Store `CLOUDFLARE_API_TOKEN` by name in the protected production environment
-- [ ] Verify the Cloudflare token scope and enable the protected workflow; deployment remains
-      disabled with `CLOUDFLARE_DEPLOY_ENABLED=false`
+- [x] Verify the account token `evidenceops-github-deploy` has only `Workers Scripts Write`
+- [ ] Prove the opaque GitHub secret-to-token binding and enable the protected workflow after review;
+      deployment remains disabled with `CLOUDFLARE_DEPLOY_ENABLED=false`
 - [x] Configure the EvidenceOps OpenAI project budget alerts and model limits
 - [x] Validate one bounded live `gpt-5.6-terra` response; keep fixture mode as the public default
 

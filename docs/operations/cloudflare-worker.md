@@ -99,14 +99,14 @@ signal.
 
 Remaining:
 
-1. independently verify that the token stored as the protected GitHub environment secret
-   `CLOUDFLARE_API_TOKEN` is restricted to the TMCO Consulting account with Account `Workers
-   Scripts Edit`; do not add zone, route, DNS, KV, R2, account-settings, membership, user-details,
-   billing, or unrelated-account access. The workflow supplies the exact account ID, so it does not
-   need membership discovery. The secret exists by name, but its value and scope have not been
-   retrieved or claimed as verified;
-2. keep `CLOUDFLARE_DEPLOY_ENABLED=false` until the token scope is validated against the exact
-   workflow, then enable deployment only after review;
+1. after review, prove that the opaque protected GitHub secret is bound to the verified deployment
+   token by completing one protected deployment. The authenticated Cloudflare account view shows
+   the active account token `evidenceops-github-deploy` with only `Workers Scripts Write` on the
+   TMCO Consulting account. It has no zone, route, DNS, KV, R2, account-settings, membership,
+   user-details, billing, or unrelated-account permission. GitHub exposes only the secret name, so
+   its value-to-token association cannot be claimed until that first use succeeds;
+2. keep `CLOUDFLARE_DEPLOY_ENABLED=false` until the publication PR is reviewed and merged, then
+   enable it only for the protected deployment;
 3. review Cloudflare observability/alert retention in the dashboard;
 4. review and merge the one-day sanitized-public-package handoff, run it once from protected main,
    inspect only the public package, and use the separate deployment selector to publish it;

@@ -161,8 +161,12 @@ and passed the public-artifact scan. No deployment was made for this continuatio
   administrator consent. No client secret or Graph request was created.
 - Re-read the protected GitHub environment: the four nonsecret variables are present,
   `CLOUDFLARE_DEPLOY_ENABLED` is `false`, and the secret name `CLOUDFLARE_API_TOKEN` is present.
-  The secret value was not retrieved, printed, or stored, and its Cloudflare scope remains
-  unverified.
+  The secret value was not retrieved, printed, or stored.
+- The authenticated TMCO Consulting Cloudflare account now shows active account token
+  `evidenceops-github-deploy` with only account-level `Workers Scripts Write`. No zone, route, DNS,
+  storage, account-settings, membership, user-details, billing, or unrelated-account permission is
+  attached. GitHub keeps the environment secret value opaque, so the first protected deployment
+  remains the non-disclosing proof that the secret is bound to this token.
 - Re-read the production Worker secret names: `OPENAI_API_KEY` is present. The operator replaced
   its value with the only active key belonging to the project service account
   `evidenceops-cloudflare-production`; no key value was exposed to Codex, GitHub, or the repository.
@@ -179,9 +183,10 @@ and passed the public-artifact scan. No deployment was made for this continuatio
 - The service account is assigned only the custom `evidenceops-responses-runtime` role. That role
   grants Responses API model capability and no file, assistant, thread, eval, fine-tuning, vector,
   project-administration, usage-export, or key-management permission.
-- The protected GitHub environment contains `CLOUDFLARE_API_TOKEN` by name only. Its ownership,
-  validity, and Cloudflare resource scope have not been independently verified; deployment remains
-  disabled through `CLOUDFLARE_DEPLOY_ENABLED=false`.
+- The protected GitHub environment contains `CLOUDFLARE_API_TOKEN` by name only. Account-token
+  scope is independently verified, but the opaque secret-to-token binding and validity remain to be
+  proved by the first reviewed protected deployment. Deployment stays disabled through
+  `CLOUDFLARE_DEPLOY_ENABLED=false` until then.
 - No production rollback was executed because earlier versions used live model mode; the CLI
   deployment history and rollback command were verified instead.
 
