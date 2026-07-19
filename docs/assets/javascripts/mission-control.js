@@ -534,6 +534,15 @@
         const payload = await response.json();
         if (!response.ok)
           throw new Error(payload.message || "Assistant request was rejected");
+        if (
+          !["insufficient_evidence", "typed_claims_verified"].includes(
+            payload.verification?.status,
+          )
+        ) {
+          throw new Error(
+            "Assistant response failed deterministic verification",
+          );
+        }
         appendLine("Question", selectedQuestion);
         appendLine("Answer", payload.answer.direct_answer);
         appendLine("Evidence sufficiency", payload.answer.evidence_sufficiency);

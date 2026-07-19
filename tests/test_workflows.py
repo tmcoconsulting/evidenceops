@@ -119,11 +119,17 @@ def test_browser_boundary_does_not_store_or_accept_byok() -> None:
     browser = (REPOSITORY_ROOT / "docs/assets/javascripts/evidenceops-api.js").read_text(
         encoding="utf-8"
     )
+    mission_browser = (REPOSITORY_ROOT / "docs/assets/javascripts/mission-control.js").read_text(
+        encoding="utf-8"
+    )
     router = (REPOSITORY_ROOT / "worker/src/security.ts").read_text(encoding="utf-8")
     for prohibited in ("localStorage", "sessionStorage", "innerHTML", "X-OpenAI-Key"):
         assert prohibited not in browser
     assert 'request.headers.has("X-OpenAI-Key")' in router
     assert 'request.headers.has("Authorization")' in router
+    verifier_gate = mission_browser.index('"insufficient_evidence", "typed_claims_verified"')
+    answer_render = mission_browser.index('appendLine("Answer", payload.answer.direct_answer)')
+    assert verifier_gate < answer_render
 
 
 def test_static_asset_headers_set_core_browser_controls() -> None:

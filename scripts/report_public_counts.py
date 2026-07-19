@@ -3,24 +3,26 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 from typing import cast
 
 from evidenceops.domain import JsonValue, validate_evidence_object
-from evidenceops.evidence import load_evidence_package, validate_public_mission_snapshot
+from evidenceops.evidence import MISSION_SCHEMA_VERSION, validate_public_mission_snapshot
 from evidenceops.sanitization import assert_public_safe
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("package", type=Path)
-    args = parser.parse_args()
-    loaded = load_evidence_package(args.package)
-    if isinstance(loaded, dict) and loaded.get("schema_version") == "evidenceops-mission-v2":
+    args = parser.parse_args(argv)
+    loaded = json.loads(args.package.read_text(encoding="utf-8"))
+    if isinstance(loaded, dict) and loaded.get("schema_version") == MISSION_SCHEMA_VERSION:
         package = validate_public_mission_snapshot(loaded)
         assert_public_safe(package)
         metrics = cast(dict[str, JsonValue], package["metrics"])
-        print("## Sanitized live Apple validation")
+        print("## Sanitized Apple validation")
+        print(f"- data mode: {package['data_mode']}")
         for field in (
             "baseline_rule_count",
             "alignment_denominator",

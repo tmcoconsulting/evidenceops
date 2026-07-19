@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 from collections.abc import Callable, Sequence
+from threading import Lock
 from typing import Final, Protocol, cast
 
 DEFAULT_DELEGATED_SCOPES: Final = (
@@ -54,11 +55,20 @@ class DeviceCodeTokenProvider:
         self._prompt = prompt
         self._scopes = tuple(dict.fromkeys(scopes))
         self._token: str | None = None
+        self._acquisition_lock = Lock()
 
     def get_token(self) -> str:
         """Run a device-code flow once and retain the token only in process memory."""
         if self._token is not None:
             return self._token
+        with self._acquisition_lock:
+            if self._token is not None:
+                return self._token
+            self._token = self._acquire_token()
+            return self._token
+
+    def _acquire_token(self) -> str:
+        """Acquire exactly one token while the caller holds the process-local lock."""
         try:
             msal = importlib.import_module("msal")
         except ModuleNotFoundError as exc:
@@ -85,7 +95,6 @@ class DeviceCodeTokenProvider:
             error = result.get("error")
             safe_error = error if isinstance(error, str) else "unknown_error"
             raise TokenAcquisitionError(f"device-code authentication failed: {safe_error}")
-        self._token = token
         return token
 
 
