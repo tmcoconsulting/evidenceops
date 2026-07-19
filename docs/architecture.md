@@ -73,10 +73,16 @@ OpenAI request. A package that merely has the public object shape cannot bypass 
 data. It is currently a local build artifact only. The GitHub Pages deployment workflow was removed
 after security review; executable public workflows now have read-only repository permission.
 
-The selected next milestone is Cloudflare Workers Static Assets, with `site/` as the assets
-directory and selective Worker-first routing only for same-origin `/api/*` routes such as
-`/api/status` and `/api/narrative`. No Worker source, Wrangler configuration, Cloudflare secret,
-DNS record, deployment workflow, or production deployment is part of this remediation.
+The exact-pinned Cloudflare Workers runtime serves `site/` as Static Assets. Only `/api/*` routes
+run Worker code first. `/api/status` exposes a deliberately small non-secret status contract;
+`/api/narrative` accepts only same-origin bounded JSON, applies the publication and credential
+gates again, rate limits before parsing, and then uses either the exact synthetic fixture or one
+bounded OpenAI Responses API request. Static assets retain their direct-serving path.
+
+The Worker ports the package schema and deterministic narrative verifier into strict TypeScript and
+imports the same credential/public-value catalogs and strict narrative JSON schema as Python. The
+production environment is configured for `gpt-5.6-sol`, but no secret, custom domain, deployment
+workflow, Cloudflare resource, DNS record, or production deployment has been created.
 
 ## Phase 1 modules
 

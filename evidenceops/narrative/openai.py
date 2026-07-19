@@ -9,6 +9,7 @@ import urllib.error
 import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Final, Protocol, cast
 
 from evidenceops.domain import (
@@ -24,6 +25,7 @@ DEFAULT_OPENAI_MODEL: Final = "gpt-5.6-sol"
 RESPONSES_ENDPOINT: Final = "https://api.openai.com/v1/responses"
 MAX_PACKAGE_BYTES: Final = 256 * 1024
 MAX_RESPONSE_BYTES: Final = 1024 * 1024
+MODEL_OUTPUT_SCHEMA_PATH: Final = Path(__file__).with_name("narrative-model-output.schema.json")
 
 
 class NarrativeGenerationError(ValueError):
@@ -171,60 +173,13 @@ class OpenAINarrativeAdapter:
 
 
 def _model_output_schema() -> dict[str, JsonValue]:
-    explanation = {
-        "type": "object",
-        "additionalProperties": False,
-        "properties": {
-            "finding_evidence_id": {"type": "string"},
-            "deterministic_status": {"type": "string"},
-            "deterministic_claim": {
-                "type": "object",
-                "additionalProperties": False,
-                "properties": {
-                    "claim_code": {"type": "string", "enum": ["finding_status"]},
-                    "claim_value": {
-                        "type": "string",
-                        "enum": [
-                            "observed",
-                            "matches desired state",
-                            "differs from desired state",
-                            "additional evidence required",
-                            "human review required",
-                            "not evaluated",
-                        ],
-                    },
-                },
-                "required": ["claim_code", "claim_value"],
-            },
-            "change_or_drift_explanation": {"type": "string"},
-            "technical_impact": {"type": "string"},
-            "evidence_references": {"type": "array", "items": {"type": "string"}},
-        },
-        "required": [
-            "finding_evidence_id",
-            "deterministic_status",
-            "deterministic_claim",
-            "change_or_drift_explanation",
-            "technical_impact",
-            "evidence_references",
-        ],
-    }
-    properties: dict[str, JsonValue] = {
-        "executive_summary": {"type": "string"},
-        "drift_explanations": {"type": "array", "items": cast(JsonValue, explanation)},
-        "limitations": {"type": "array", "items": {"type": "string"}},
-        "additional_evidence_required": {"type": "array", "items": {"type": "string"}},
-        "suggested_human_review_questions": {
-            "type": "array",
-            "items": {"type": "string"},
-        },
-    }
-    return {
-        "type": "object",
-        "additionalProperties": False,
-        "properties": properties,
-        "required": list(properties),
-    }
+    try:
+        loaded = json.loads(MODEL_OUTPUT_SCHEMA_PATH.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise NarrativeGenerationError("narrative model-output schema could not be loaded") from exc
+    if not isinstance(loaded, dict) or not all(isinstance(key, str) for key in loaded):
+        raise NarrativeGenerationError("narrative model-output schema was not an object")
+    return cast(dict[str, JsonValue], loaded)
 
 
 def _extract_structured_output(response: dict[str, JsonValue]) -> dict[str, JsonValue]:

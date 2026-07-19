@@ -2,8 +2,9 @@
 
 This Phase 1 model covers the public repository, unprivileged CI, local static build, live read-only
 adapter, private evidence writer, sanitizer, OpenAI boundary, deterministic verifier, and
-synthetic demo. The planned Cloudflare runtime is included as a review trigger, not an implemented
-trust boundary.
+synthetic demo, and the locally validated Cloudflare Worker/static-assets runtime. Cloudflare
+resources, DNS, production secrets, and external production behavior remain outside the validated
+state because nothing has been deployed.
 
 ## Assets
 
@@ -24,7 +25,7 @@ trust boundary.
 | Publication | Private package and runtime key | Sanitized public package |
 | OpenAI | External service and generated object | Deterministic verifier |
 | Static build | Repository content | Scanned local `site/` artifact |
-| Future Cloudflare runtime | Browser/API request and Worker secrets | Not implemented; next milestone |
+| Cloudflare runtime | Browser request and future Worker secret | Same-origin bounded API, publication gate, rate limiter, verifier |
 
 ## Primary threats and controls
 
@@ -41,6 +42,10 @@ trust boundary.
 | Device-code token persists | Tenant access | In-memory MSAL cache; no token logging | Managed workstation controls |
 | Pseudonym correlation leaks identity | Re-identification | Runtime-only key and content scans | Key rotation/mapping governance |
 | Action dependency compromised | Build compromise | Immutable action SHAs and least privilege | Organization dependency review |
+| Browser submits a key or cross-site request | Key exposure or spend abuse | BYOK/authorization headers rejected; strict Origin/Sec-Fetch-Site | Revisit only under a dedicated BYOK threat model |
+| Public client floods narrative route | Cost or availability loss | Native rate binding, request bound, one attempt, timeout | Account budget alerts, WAF/abuse telemetry, authenticated tier if needed |
+| Model or upstream returns oversized/hostile JSON | Resource exhaustion or false evidence | Response bound, strict schema, shared scanner, deterministic verifier | Production alerting and evaluation corpus |
+| Logs disclose input or secret | Data or credential exposure | Structured allowlisted metadata only; no body/header logging | Verify Cloudflare log sinks and retention before deployment |
 
 ## Abuse cases covered by tests
 
@@ -65,5 +70,5 @@ service availability are outside this proof.
 
 Update this model before expanding Graph endpoints/settings/permissions, adding a provider,
 creating a credentialed workflow, changing retention, accepting model tools, adding authentication,
-deploying tenant-specific infrastructure, adding Worker/API routes or BYOK, provisioning a secret
-or custom domain, or introducing a new public field.
+adding Worker/API routes or BYOK, changing rate/spend controls, provisioning a secret or custom
+domain, deploying tenant-specific infrastructure, or introducing a new public field.

@@ -36,7 +36,10 @@ python -m pip install -r requirements-dev.txt
 python -m pip install --no-build-isolation --no-deps .
 python -m pytest
 python -m evidenceops run-demo
-mkdocs serve
+mkdocs build --strict
+npm ci --ignore-scripts --no-audit --no-fund
+npm run validate:worker
+npm run dev
 ```
 
 The complete demonstration is credential-free and writes only synthetic public artifacts under
@@ -48,9 +51,10 @@ See the [getting-started guide](docs/getting-started.md) and
 
 EvidenceOps is an early **Phase 1 proof**, not a compliance product or autonomous endpoint manager.
 Live collection is opt-in, private, and requires separately approved Microsoft Graph read
-permission. GitHub Pages deployment has been retired. The next hosting milestone is a separately
-reviewed Cloudflare Workers Static Assets application at the planned
-`evidenceops.tmcoconsulting.com` hostname; it is not implemented or deployed yet. See the
-[roadmap](docs/roadmap.md) for explicitly deferred work.
+permission. GitHub Pages deployment has been retired. A locally validated Cloudflare Workers
+Static Assets runtime now serves the same synthetic site and implements bounded same-origin
+`/api/status` and `/api/narrative` routes. It has not been deployed, attached to DNS, or supplied
+with a Cloudflare secret. See the [Worker runbook](docs/operations/cloudflare-worker.md) and
+[roadmap](docs/roadmap.md).
 
 Copyright 2026 TMCO Consulting, LLC. Licensed under the [Apache License 2.0](LICENSE).

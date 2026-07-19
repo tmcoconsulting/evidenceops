@@ -1,8 +1,8 @@
 # Deployment Models
 
-Phase 1 currently implements only the credential-free local build and the Python application core.
-The remaining models document selected or possible deployment boundaries; they do not create
-tenant infrastructure, Cloudflare resources, DNS, secrets, or credentialed workflows.
+Phase 1 implements the credential-free local build, Python application core, and a locally
+validated Worker/static-assets runtime. The models below do not create tenant infrastructure,
+Cloudflare resources, DNS, secrets, or credentialed workflows.
 
 ## 1. Current local synthetic static artifact
 
@@ -10,25 +10,27 @@ Public CI uses no tenant or OpenAI credential. It regenerates tracked synthetic 
 `site/` with MkDocs, and scans that directory. Operators can serve the result locally. `site/` is a
 build artifact, not evidence that a hosting platform or production API is operational.
 
-## 2. Selected next milestone: Cloudflare Workers Static Assets
+## 2. Implemented runtime, pending Cloudflare deployment
 
-The planned public runtime is a Worker at `evidenceops.tmcoconsulting.com` serving the scanned
-`site/` directory as static assets. Only `/api/*` should run Worker code first; the initial
-same-origin endpoints are `/api/status` and `/api/narrative`. Cloudflare documents selective
+The public runtime code is a Worker intended for `evidenceops.tmcoconsulting.com`, serving the
+scanned `site/` directory as static assets. Only `/api/*` runs Worker code first; the same-origin
+endpoints are `/api/status` and `/api/narrative`. Cloudflare documents selective
 [`run_worker_first`](https://developers.cloudflare.com/workers/static-assets/binding/#run_worker_first)
 routing and encrypted [Worker secrets](https://developers.cloudflare.com/workers/configuration/secrets/).
 
-The next milestone must add, review, and test:
+The repository now includes:
 
-1. an exact-pinned Wrangler toolchain and configuration whose assets directory is `site/`;
-2. a small typed Worker with explicit method, origin, body-size, timeout, and response limits;
-3. `/api/status` with no sensitive operational metadata;
-4. `/api/narrative` accepting only a bounded sanitized evidence package and preserving the existing
-   typed output and deterministic verification contract;
-5. the EvidenceOps Project service-account/project key as a Cloudflare Worker secret only;
-6. rate, spend, abuse, logging-redaction, CSP, and human-approval controls;
-7. custom-domain and rollback verification; and
-8. a least-privilege GitHub deployment workflow only after the runtime is independently validated.
+1. exact-pinned Wrangler/TypeScript/workerd tooling and a `site/` assets configuration;
+2. a small typed Worker with explicit method, origin, body-size, timeout, and response bounds;
+3. a non-secret `/api/status` contract;
+4. `/api/narrative`, which repeats publication scanning and preserves typed-claim verification;
+5. native rate-limit binding, allowlisted logs, static CSP/security headers, and fixture mode; and
+6. credential-free CI contract tests, generated-binding checks, and bundle dry-run.
+
+The remaining deployment work is to review the runtime, create the Cloudflare resource/custom
+domain, configure provider-side budget/abuse controls, place the EvidenceOps Project key in a
+Worker secret, validate TLS/headers/rollback, and only then add least-privilege GitHub deployment
+orchestration. See the [Worker runbook](cloudflare-worker.md).
 
 OpenAI recommends keeping API keys out of code/public repositories and exposing them through a
 secret manager. It also recommends human review for high-stakes output:

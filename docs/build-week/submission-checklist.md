@@ -11,7 +11,7 @@ requirements from their authoritative source before submission.
 - [ ] Issues and Discussions are enabled; Wiki is disabled
 - [ ] CI passes with read-only repository permission
 - [ ] Confirm the retired GitHub Pages workflow is absent
-- [ ] Cloudflare hosting status is described accurately (not deployed in this checkpoint)
+- [ ] Cloudflare runtime is locally validated and hosting status is described accurately (not deployed)
 - [ ] Dependency and secret alerts supported by the plan are enabled
 
 ## Product and security evidence

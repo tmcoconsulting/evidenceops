@@ -5,7 +5,7 @@
 **Branch:** `codex/phase-1-read-only-proof`
 
 **Starting commit:** `29ea77ebfb84f39b3a8e7bd4972ce55a2d0b2f24`
-**Final commit:** pending final milestone commit
+**Security-remediated review commit:** `ccec44bd674c761fe3e4b335c56442f6ef7be912`
 
 ## Starting evidence
 
@@ -41,8 +41,9 @@ The Codex Security scan reported one high and three medium findings:
 
 The remediation removes the deployment sink, centralizes credential detection at four gates,
 requires exact unique finding-ID coverage, verifies only typed deterministic claims, and
-quarantines all generated prose for human review. Cloudflare Workers Static Assets is documented as
-the next milestone but is not provisioned or deployed.
+quarantines all generated prose for human review. Cloudflare Workers Static Assets was documented
+as the next milestone and was not provisioned or deployed in this commit. The follow-on runtime
+work has a separate validation record.
 
 ## Local validation
 

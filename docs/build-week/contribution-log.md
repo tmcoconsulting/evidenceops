@@ -75,7 +75,13 @@ or proprietary material from `intune-apple-gitops` or any other repository.
 | 2026-07-18 | Schema, deterministic evidence, and synthetic fixture | Recorded after commit |
 | 2026-07-18 | GET-only Intune adapter and private/public boundary | Recorded after commit |
 | 2026-07-18 | GPT adapter, verifier, CLI, local static demo, and documentation | Recorded after commit |
-| 2026-07-18 | Four-finding security remediation and Cloudflare-next decision | Pending review commit |
+| 2026-07-18 | Four-finding security remediation and Cloudflare-next decision | `ccec44bd674c761fe3e4b335c56442f6ef7be912` |
+| 2026-07-18 | Local Cloudflare Worker/static-assets runtime and API boundary | Pending review commit |
 
 Exact Phase 1 commands, results, limitations, and commit hashes are maintained in the
 [Phase 1 validation record](phase-1-validation.md).
+
+The follow-on Cloudflare runtime was implemented in this same primary thread on
+`codex/cloudflare-worker-runtime`. It adds no Graph access, real tenant data, paid model request,
+Cloudflare resource, secret, DNS change, deployment, or supporting-agent contribution. Its checks
+are recorded in the [Worker validation record](cloudflare-worker-validation.md).

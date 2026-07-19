@@ -185,3 +185,28 @@ bindings. A browser-supplied key would create additional exposure surfaces and i
 "easy" addition without those controls. See OpenAI
 [production practices](https://developers.openai.com/api/docs/guides/production-best-practices)
 and Cloudflare [Worker secrets](https://developers.cloudflare.com/workers/configuration/secrets/).
+
+## 2026-07-18 — Implement a small same-origin Worker before provisioning
+
+**Decision:** Implement and independently validate a strict TypeScript Worker and Static Assets
+configuration before creating Cloudflare resources, DNS, secrets, or deployment automation. Serve
+static paths directly and run only `/api/*` Worker-first. Default to fixture mode; make OpenAI mode
+explicit and never silently fall back.
+
+**Why:** The runtime boundary can be reviewed, tested in workerd, bundled, and scanned without
+creating external state or consuming model credits. Same-origin checks, byte/time/rate bounds,
+allowlisted logs, shared publication scans, typed verification, and static security headers become
+evidence before production authorization is granted.
+
+**Dependencies:** Worker development dependencies are exact-pinned in `package.json` and fully
+resolved in `package-lock.json`: Wrangler `4.112.0`, TypeScript `7.0.2`, Vitest `4.1.10`, Cloudflare
+Vitest pool `0.18.6`, Oxlint `1.74.0`, Oxlint TypeScript companion `0.25.0`, Prettier `3.9.5`, and
+Node types `26.1.1`. They are build/test tools, not Worker runtime packages. Their declared licenses
+are MIT, Apache-2.0, or `MIT OR Apache-2.0`, compatible with the repository's Apache-2.0 source
+license. Public CI uses Node 22 and `npm ci` against the lock.
+
+**Sources:** Cloudflare documents [Static Assets bindings](https://developers.cloudflare.com/workers/static-assets/binding/),
+[Vitest integration](https://developers.cloudflare.com/workers/testing/vitest-integration/), and
+[secret bindings](https://developers.cloudflare.com/workers/configuration/secrets/). OpenAI
+documents the [Responses API](https://developers.openai.com/api/reference/resources/responses/methods/create)
+and [structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs).

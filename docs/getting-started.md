@@ -30,6 +30,21 @@ four deterministic outcomes, machine-verified typed status claims, generated pro
 human review, and an adversarial verdict rejected for an additional policy reason. The fixture
 demonstrates the GPT contract but is clearly labeled as not originating from a live model call.
 
+To validate the same static artifact behind the local Cloudflare Worker boundary, install Node.js
+22 or later and run:
+
+```bash
+npm ci --ignore-scripts --no-audit --no-fund
+python -m evidenceops rebuild-static-demo
+mkdocs build --strict
+npm run validate:worker
+npm run dev
+```
+
+`npm run dev` starts fixture mode and explicitly disables Wrangler `.env`/`.dev.vars` loading. The
+Live Demo panel enables `/api/narrative` only after `/api/status` confirms a supported Worker mode.
+Fixture mode makes no OpenAI request. Stop the local process when the review is complete.
+
 ## Command boundary
 
 ```text
@@ -51,10 +66,10 @@ Live collection requires a separately approved Entra app and explicit authentica
 `EVIDENCEOPS_PSEUDONYM_KEY` of at least 32 bytes. Optional narrative generation reads
 `OPENAI_API_KEY` and defaults to `gpt-5.6-sol`.
 
-No successful paid model call is required or claimed by the static demo. The selected future
-Cloudflare runtime will use a dedicated EvidenceOps Project service-account/project key stored only
-as a Worker secret. This repository does not create that key or secret. BYOK is deferred pending a
-separate browser-key threat model.
+No successful paid model call is required or claimed by the static demo. A future production
+deployment will use a dedicated EvidenceOps Project service-account/project key stored only as a
+Cloudflare Worker secret. No Worker secret is configured by the repository or its CI. BYOK is
+deferred pending a separate browser-key threat model.
 
 EvidenceOps does not load `.env` files. Environment-variable names appear in `.env.example`, but
 operators must use a local process environment or managed secret store. Never add a real value to
@@ -72,6 +87,8 @@ python scripts/check_secrets.py
 python -m pip_audit -r requirements-dev.txt
 mkdocs build --strict
 python scripts/check_public_artifacts.py site
+npm run validate:worker
+npm audit --audit-level=moderate
 ```
 
 The test command enforces 90% branch-aware coverage. All public artifacts must pass the final scan.
@@ -79,6 +96,6 @@ The test command enforces 90% branch-aware coverage. All public artifacts must p
 ## Static-build hosting compatibility
 
 `mkdocs build --strict` produces `site/` with relative navigation and self-contained public assets.
-That directory is suitable as the input to the selected future Cloudflare Workers Static Assets
-milestone. There is currently no Wrangler configuration, Worker API, custom domain, DNS record,
-deployment workflow, or production deployment.
+The exact-pinned Wrangler configuration serves `site/` through Workers Static Assets and routes
+only `/api/*` through Worker code first. The runtime and API are locally testable; there is no
+Cloudflare resource, DNS record, deployment workflow, production secret, or production deployment.

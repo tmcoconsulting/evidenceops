@@ -23,15 +23,17 @@ Roadmap items describe intent, not operational capability or delivery commitment
 Live TMCO validation remains pending until approved Entra client/tenant configuration or a
 short-lived Graph token is available. Public CI never performs live collection.
 
-## Selected next milestone: Cloudflare runtime (not implemented)
+## Cloudflare runtime — implemented locally, deployment pending
 
-- Add an exact-pinned Cloudflare Workers toolchain and Static Assets configuration for `site/`
-- Implement same-origin `/api/status` and `/api/narrative` with strict method/body/rate limits
-- Store a dedicated EvidenceOps Project OpenAI key only as a Cloudflare Worker secret
-- Preserve fixture mode when API credits or the service key are unavailable
-- Add Worker tests, log redaction, CSP/security headers, spend controls, and abuse protections
-- Configure `evidenceops.tmcoconsulting.com`, rollback, and least-privilege GitHub deployment only
-  after the runtime passes independent review
+- [x] Add exact-pinned Worker tooling and Static Assets configuration for `site/`
+- [x] Implement `/api/status` and `/api/narrative` with method/origin/body/rate/timeout limits
+- [x] Preserve explicit fixture mode with no model call or synthetic fallback from OpenAI mode
+- [x] Add workerd tests, allowlisted logging, shared egress scans, security headers, and dry-run CI
+- [ ] Independently review the Worker runtime and production configuration
+- [ ] Configure the EvidenceOps Project key as a Worker secret (never a repository/CI secret)
+- [ ] Verify Cloudflare/OpenAI budget alerts, abuse monitoring, log retention, and rollback
+- [ ] Create the Worker/custom domain at `evidenceops.tmcoconsulting.com` and verify DNS/TLS
+- [ ] Add least-privilege GitHub deployment orchestration only after manual deployment validation
 
 ## Later application scope
 

@@ -49,23 +49,41 @@ class SanitizationPolicy:
 
 DEFAULT_POLICY_MANIFEST: Final = Path(__file__).with_name("publication-policy.v1.json")
 
-_PROHIBITED_PUBLIC_VALUE_PATTERNS: Final = (
-    ("email address", re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE)),
-    ("IP address", re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")),
-    (
-        "UUID-like identifier",
-        re.compile(
-            r"\b[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b",
-            re.IGNORECASE,
-        ),
-    ),
-    ("raw fixture marker", re.compile(r"RAW_FIXTURE_MARKER")),
-    ("serial-like value", re.compile(r"\b(?:SERIAL|S/N|SN)[-: ]?[A-Z0-9]{6,}\b", re.IGNORECASE)),
-    (
-        "domain name",
-        re.compile(r"\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}\b", re.IGNORECASE),
-    ),
-)
+_PUBLIC_VALUE_CATALOG: Final = Path(__file__).with_name("public-value-patterns.v1.json")
+
+
+def _load_public_value_patterns() -> tuple[tuple[str, re.Pattern[str]], ...]:
+    try:
+        loaded = json.loads(_PUBLIC_VALUE_CATALOG.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError("public value pattern catalog could not be loaded") from exc
+    if not isinstance(loaded, dict) or set(loaded) != {"catalog_version", "patterns"}:
+        raise RuntimeError("public value pattern catalog has unexpected or missing fields")
+    patterns = loaded.get("patterns")
+    if not isinstance(loaded.get("catalog_version"), str) or not isinstance(patterns, list):
+        raise RuntimeError("public value pattern catalog metadata is invalid")
+    compiled: list[tuple[str, re.Pattern[str]]] = []
+    for entry in patterns:
+        if not isinstance(entry, dict) or set(entry) != {"label", "expression", "flags"}:
+            raise RuntimeError("public value pattern entry has unexpected or missing fields")
+        label = entry.get("label")
+        expression = entry.get("expression")
+        flags = entry.get("flags")
+        if (
+            not isinstance(label, str)
+            or not label
+            or not isinstance(expression, str)
+            or not expression
+            or flags not in {"", "i"}
+        ):
+            raise RuntimeError("public value pattern entry is invalid")
+        compiled.append((label, re.compile(expression, re.IGNORECASE if flags == "i" else 0)))
+    if not compiled:
+        raise RuntimeError("public value pattern catalog must not be empty")
+    return tuple(compiled)
+
+
+_PROHIBITED_PUBLIC_VALUE_PATTERNS: Final = _load_public_value_patterns()
 
 
 def load_policy_manifest(path: Path = DEFAULT_POLICY_MANIFEST) -> SanitizationPolicy:

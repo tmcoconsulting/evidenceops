@@ -23,8 +23,10 @@ In Phase 1 it inspected and validated the existing repository, researched offici
 OpenAI contracts, implemented schema/provider/publication/narrative/verifier/CLI code, extended the
 synthetic static demo, updated the threat model, and executed the validation recorded in the Phase
 1 document. It then remediated four validated Codex Security findings in place and recorded the
-Cloudflare-next deployment decision. No supporting agent or unrelated repository supplied project
-code.
+Cloudflare-next deployment decision. After TJ reviewed and committed that checkpoint, Codex added
+the separately reviewable local Worker/static-assets runtime, same-origin API contracts, workerd
+tests, CI dry-run validation, and deployment runbook. No supporting agent or unrelated repository
+supplied project code.
 
 The local Codex CLI reported version `0.145.0-alpha.18`. A current official Codex manual fetched
 during Phase 0 documented the GPT-5.6 Sol family and Extra High/Max reasoning controls. The manual
@@ -37,8 +39,8 @@ The optional adapter asks GPT-5.6 to draft concise structured analysis from a bo
 package. It has no tools and cannot collect, publish, remediate, change a status, approve an
 exception, or decide compliance. A deterministic verifier checks exact finding coverage and typed
 status claims; it quarantines all unrestricted prose before human review. Public CI and the local
-static demo use an offline fixture and require no API key. Production Cloudflare/OpenAI operation
-remains a later milestone.
+static demo use an offline fixture and require no API key. The Worker OpenAI transport is mocked in
+tests. Production Cloudflare/OpenAI operation and live model output remain later milestones.
 
 ## Authorship and ownership
 

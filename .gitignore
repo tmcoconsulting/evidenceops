@@ -20,6 +20,13 @@ site/
 docs/private/
 build/
 
+# Cloudflare Worker local tooling
+node_modules/
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
 # Editors and operating systems
 .DS_Store
 .idea/

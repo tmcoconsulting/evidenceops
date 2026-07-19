@@ -13,6 +13,7 @@ Collection is privileged even when it is read-only.
 5. **Deterministic findings remain authoritative.** GPT cannot select or alter finding status.
 6. **Human judgment remains visible.** Verification is not approval or certification.
 7. **Fork isolation.** Public CI receives no Graph, tenant, or OpenAI credential.
+8. **No browser keys.** The Worker rejects authorization and BYOK headers at its public boundary.
 
 ## Read-only integration boundary
 
@@ -60,10 +61,16 @@ Public CI uses only repository content and read-only `contents` permission. The 
 Pages workflow and its `pages: write`/deployment OIDC permissions were removed. Executable actions
 are pinned to immutable commit SHAs, and no public workflow performs live collection or deployment.
 
-Cloudflare Workers Static Assets is the selected next hosting milestone, not a completed control.
-The future OpenAI service key must exist only as a Worker secret; no key is committed or placed in
-public GitHub CI. Same-origin `/api/*` routes require a separate threat model and validation before
-deployment.
+The public Worker runtime is implemented but not deployed. It uses Worker-first routing only for
+`/api/*`, exact methods, same-origin checks, a 256 KiB request bound, compressed-body rejection,
+native rate limiting, a 30-second OpenAI timeout, a 1 MiB upstream-response bound, one non-retrying
+model request, and generic error responses. Logs contain request IDs, method, route, status, and
+event code—not headers, IP addresses, evidence, prompts, responses, or secrets. Static assets carry
+the security headers in `docs/_headers`.
+
+Public CI installs exact-pinned Worker dependencies, runs workerd contract tests, checks generated
+bindings, and performs a Wrangler dry-run only. It has `contents: read`, no deployment action, and
+no Cloudflare/OpenAI credential. A future OpenAI service key must exist only as a Worker secret.
 
 ## Residual risks
 
@@ -72,3 +79,5 @@ deployment.
   live publication.
 - A valid narrative may still be incomplete, poorly worded, or operationally misleading.
 - A repository administrator can bypass controls outside this codebase.
+- An unauthenticated public narrative endpoint remains an abuse/spend target even with native rate
+  limiting; production requires provider-side budget alerts, operational monitoring, and rollback.

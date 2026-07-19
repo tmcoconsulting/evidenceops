@@ -14,8 +14,8 @@
 
 <div class="synthetic-banner">
 Phase 1 is a narrow read-only proof. The static demo is synthetic, live TMCO validation is still
-outstanding, and no production tenant data is present. Cloudflare hosting is selected next but is
-not implemented or deployed.
+outstanding, and no production tenant data is present. The Cloudflare Worker runtime is implemented
+for local validation but is not deployed or connected to the production hostname.
 </div>
 
 ## The problem
@@ -100,7 +100,8 @@ Read the [data-handling policy](data-handling.md), [threat model](threat-model.m
 - Live TMCO Microsoft Graph/Intune validation has not been performed.
 - The site uses generated evidence objects derived only from curated synthetic input.
 - Control mappings, exception persistence, signed manifests, and auditor exports are deferred.
-- GPT-5.6 production runtime use and Cloudflare same-origin API routes are not operational.
+- Cloudflare same-origin API routes pass local contract tests but are not operational in production.
+- The OpenAI path is mocked in tests; no paid GPT-5.6 call has been validated.
 - GitHub Pages deployment was retired; `site/` is currently a local build artifact.
 - Phase 0 was validated on Python 3.14 locally and targets Python 3.12 in CI; neither result is a
   production-readiness or compliance certification.
