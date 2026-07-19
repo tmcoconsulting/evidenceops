@@ -15,8 +15,10 @@
 - `2d57a5f` — operating controls, demonstration package, and validation record
 - `b4a042c` — anchored review and contribution records
 - `c1fca86` — fail-closed health/readiness contracts and repository-controlled HSTS
+- `b071a89` — hardened PR checkpoint validation record
+- `1c057c7` — non-executing Python and JavaScript/TypeScript CodeQL analysis
 
-All five commits remain pending TJ's review in PR #2. None uses a `Human-Reviewed` trailer.
+All seven commits remain pending TJ's review in PR #2. None uses a `Human-Reviewed` trailer.
 
 ## Implemented and locally verified
 
@@ -102,10 +104,13 @@ The opt-in live Intune test remains the one skipped Python test. The Worker suit
 assistant, sanitized 429-classification, health/readiness, Mission-status, and security-header code
 changed.
 
-GitHub Actions CI run `29698602715` completed successfully for PR #2 head
-`c1fca865064423924ebb2094a0e24474630f49fc`, including installation from both locks, Python tests,
+GitHub Actions CI run `29698879517` completed successfully for PR #2 head
+`1c057c74cfe220dd8a446c1821325f443a3598e8`, including installation from both locks, Python tests,
 Worker tests, dependency audits, secret/public scans, strict documentation build, and all Wrangler
-dry-runs.
+dry-runs. CodeQL run `29698879532` completed successfully for both Python and
+JavaScript/TypeScript. GitHub's separate aggregate `CodeQL` check remains queued because default
+setup is `not-configured`; it is not a required branch-protection context and the PR remains
+mergeable. The checked-in workflow establishes the default-branch baseline after merge.
 
 ## External control-plane verification
 
@@ -140,16 +145,21 @@ dry-runs.
   retrieved. `CLOUDFLARE_DEPLOY_ENABLED` remains `false`.
 - PR #2 is pushed, mergeable, ready for TJ review, and has a successful required CI run.
 - The existing production custom domain and fixture deployment were not changed in this milestone.
-- Local Wrangler dry-runs passed. The interactive Wrangler control-plane login had expired, so the
-  new assets could not be previewed or deployed from this session without a fresh operator login.
+- The authenticated Cloudflare session was reverified and the scanned fixture assets from PR head
+  `1c057c7` were deployed only to the credential-free preview Worker. `/`, `/api/health`,
+  `/api/ready`, `/api/status`, and fixture `/api/ask` returned HTTPS success. Readiness verified the
+  Mission fingerprint, the API reported synthetic fixture mode, the assistant performed no model
+  call, typed claims verified, generated prose remained quarantined, and human review remained
+  required. Production, DNS, the custom domain, and secrets were not changed.
 - The browser control policy blocked local-loopback visual inspection. Static build, Workerd tests,
   and artifact scans passed, but desktop/mobile visual QA of this exact revision remains manual.
 
 ## Outstanding gates
 
-1. TJ reviews the five commits and PR #2 diff.
-2. Refresh the local Wrangler login or validate the protected deployment token, deploy the fixture
-   revision, and recheck the public custom domain, TLS, headers, desktop, and mobile views.
+1. TJ reviews the seven commits and PR #2 diff.
+2. After review, deploy the fixture revision to production and recheck the public custom domain,
+   TLS, headers, desktop, and mobile views. Keep the protected deployment workflow disabled until
+   the environment token's least-privilege Cloudflare scope is independently verified.
 3. Make at most one bounded synthetic `gpt-5.6-terra` request; accept it only if structured output,
    references, typed claims, content scan, and prose quarantine pass. Return production to fixture
    mode afterward.
