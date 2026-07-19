@@ -25,6 +25,22 @@ import {
 const OPENAI_RESPONSES_ENDPOINT = "https://api.openai.com/v1/responses";
 const FIXTURE_MODEL = "deterministic-offline-fixture-not-a-model-call";
 const MAX_OUTPUT_TOKENS = 1600;
+const MAX_UPSTREAM_ERROR_BYTES = 16 * 1024;
+const SAFE_UPSTREAM_ERROR_TOKEN = /^[a-z][a-z0-9_]{0,63}$/;
+
+interface UpstreamErrorMetadata {
+  code: string | null;
+  type: string | null;
+}
+
+type UpstreamFailure =
+  | "capacity"
+  | "configuration"
+  | "model"
+  | "quota"
+  | "rate"
+  | "request"
+  | "service";
 
 export interface NarrativeApiResult {
   mode: RuntimeMode;
@@ -146,12 +162,8 @@ async function createOpenAINarrative(
     );
   }
   if (!response.ok) {
-    const failure = classifyUpstreamFailure(response.status);
-    if (response.body !== null) {
-      await response.body.cancel(
-        "EvidenceOps suppresses upstream error bodies",
-      );
-    }
+    const metadata = await readUpstreamErrorMetadata(response);
+    const failure = classifyUpstreamFailure(response.status, metadata);
     if (failure === "configuration") {
       throw new HttpError(
         503,
@@ -164,6 +176,20 @@ async function createOpenAINarrative(
         503,
         "narrative_capacity_unavailable",
         "narrative capacity is unavailable",
+      );
+    }
+    if (failure === "quota") {
+      throw new HttpError(
+        503,
+        "narrative_quota_unavailable",
+        "narrative quota is unavailable",
+      );
+    }
+    if (failure === "rate") {
+      throw new HttpError(
+        503,
+        "narrative_upstream_rate_limited",
+        "the narrative service rate limit was reached",
       );
     }
     if (failure === "model") {
@@ -207,7 +233,28 @@ async function createOpenAINarrative(
 
 function classifyUpstreamFailure(
   status: number,
-): "capacity" | "configuration" | "model" | "request" | "service" {
+  metadata: UpstreamErrorMetadata,
+): UpstreamFailure {
+  const discriminators = new Set(
+    [metadata.code, metadata.type].filter(
+      (value): value is string => value !== null,
+    ),
+  );
+  if (
+    discriminators.has("model_not_found") ||
+    discriminators.has("model_not_supported")
+  ) {
+    return "model";
+  }
+  if (
+    discriminators.has("insufficient_quota") ||
+    discriminators.has("billing_hard_limit_reached")
+  ) {
+    return "quota";
+  }
+  if (discriminators.has("rate_limit_exceeded")) {
+    return "rate";
+  }
   if (status === 401 || status === 403) {
     return "configuration";
   }
@@ -221,6 +268,78 @@ function classifyUpstreamFailure(
     return "request";
   }
   return "service";
+}
+
+async function readUpstreamErrorMetadata(
+  response: Response,
+): Promise<UpstreamErrorMetadata> {
+  if (response.body === null) {
+    return { code: null, type: null };
+  }
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const result = await reader.read();
+      if (result.done) {
+        break;
+      }
+      total += result.value.byteLength;
+      if (total > MAX_UPSTREAM_ERROR_BYTES) {
+        await cancelUpstreamErrorBody(
+          reader,
+          "EvidenceOps suppresses oversized error bodies",
+        );
+        return { code: null, type: null };
+      }
+      chunks.push(result.value);
+    }
+  } catch {
+    await cancelUpstreamErrorBody(
+      reader,
+      "EvidenceOps suppresses unreadable error bodies",
+    );
+    return { code: null, type: null };
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(
+      new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes),
+    );
+  } catch {
+    return { code: null, type: null };
+  }
+  if (!isRecord(parsed) || !isRecord(parsed.error)) {
+    return { code: null, type: null };
+  }
+  return {
+    code: safeUpstreamErrorToken(parsed.error.code),
+    type: safeUpstreamErrorToken(parsed.error.type),
+  };
+}
+
+async function cancelUpstreamErrorBody(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  reason: string,
+): Promise<void> {
+  try {
+    await reader.cancel(reason);
+  } catch {
+    // A failed cancellation must not expose or change upstream error handling.
+  }
+}
+
+function safeUpstreamErrorToken(value: unknown): string | null {
+  return typeof value === "string" && SAFE_UPSTREAM_ERROR_TOKEN.test(value)
+    ? value
+    : null;
 }
 
 function openAIRequest(

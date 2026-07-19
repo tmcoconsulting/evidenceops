@@ -350,6 +350,68 @@ describe("Worker routes", () => {
     });
   });
 
+  it.each([
+    [
+      "insufficient_quota",
+      "narrative_quota_unavailable",
+      "narrative quota is unavailable",
+    ],
+    [
+      "rate_limit_exceeded",
+      "narrative_upstream_rate_limited",
+      "the narrative service rate limit was reached",
+    ],
+  ])(
+    "distinguishes sanitized OpenAI 429 code %s without exposing its body",
+    async (upstreamCode, errorCode, message) => {
+      const privateDetail = `ghp_${"A".repeat(40)}`;
+      await expect(
+        handleRequest(
+          narrativeRequest(),
+          environment("openai", { apiKey: TEST_API_KEY }),
+          {
+            outboundFetch: async () =>
+              Response.json(
+                {
+                  error: {
+                    code: upstreamCode,
+                    message: privateDetail,
+                    type: "invalid_request_error",
+                  },
+                },
+                { status: 429 },
+              ),
+          },
+        ),
+      ).rejects.toMatchObject({ code: errorCode, message, status: 503 });
+    },
+  );
+
+  it("fails safely when an upstream error body exceeds the metadata bound", async () => {
+    await expect(
+      handleRequest(
+        narrativeRequest(),
+        environment("openai", { apiKey: TEST_API_KEY }),
+        {
+          outboundFetch: async () =>
+            Response.json(
+              {
+                error: {
+                  code: "insufficient_quota",
+                  message: "x".repeat(17 * 1024),
+                },
+              },
+              { status: 429 },
+            ),
+        },
+      ),
+    ).rejects.toMatchObject({
+      code: "narrative_capacity_unavailable",
+      message: "narrative capacity is unavailable",
+      status: 503,
+    });
+  });
+
   it("classifies transport failure without exposing exception text", async () => {
     await expect(
       handleRequest(
