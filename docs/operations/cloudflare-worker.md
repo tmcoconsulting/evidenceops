@@ -2,9 +2,11 @@
 
 ## Current state
 
-The Worker runtime is implemented and validated locally. It is **not deployed**. No Cloudflare
-resource, DNS record, custom-domain attachment, production secret, or deployment workflow has been
-created. The default configuration is fixture mode and does not call OpenAI.
+The Worker runtime is deployed at `https://evidenceops.tmcoconsulting.com/` in explicit fixture
+mode. The credential-free preview is available at
+`https://evidenceops-preview.tmco-consulting.workers.dev/`. The custom domain/TLS, Static Assets,
+dual native rate limiters, and encrypted `OPENAI_API_KEY` binding are active. Fixture mode does not
+call OpenAI.
 
 Cloudflare Workers Static Assets serves the scanned MkDocs `site/` directory. The
 [`run_worker_first`](https://developers.cloudflare.com/workers/static-assets/binding/#run_worker_first)
@@ -38,44 +40,63 @@ The narrative route enforces, in order:
 
 1. exact method and same-origin `Origin`/`Sec-Fetch-Site` checks;
 2. rejection of browser `Authorization` and `X-OpenAI-Key` headers;
-3. native rate limiting keyed by a one-way request-origin/client digest that is never logged;
-4. JSON-only, identity-encoded input with a 256 KiB limit and strict UTF-8;
+3. client-keyed and global native rate limits; the one-way client digest is never logged;
+4. JSON-only, identity-encoded input with a 64 KiB limit and strict UTF-8;
 5. the explicit publication-field policy and shared credential/public-value catalog;
 6. strict public-package schema and evidence-reference validation;
 7. exact fixture identity in fixture mode, or one bounded Responses API request in OpenAI mode;
 8. strict model-output schema, repeated egress scan, and deterministic verifier; and
 9. a human-review-required response with generated prose quarantined.
 
-OpenAI mode pins `gpt-5.6-sol`, uses `store: false`, exposes no tools, makes no retry, times out
-after 30 seconds, and reads at most 1 MiB of response JSON. It never falls back to fixture output.
-The model call is mocked in tests; no paid request is claimed.
+OpenAI mode pins `gpt-5.6-terra`, uses `store: false`, exposes no tools, makes no retry, times out
+after 20 seconds, caps output at 1,600 tokens, and reads at most 256 KiB of response JSON. It never
+falls back to fixture output.
+The public production deployment remains in explicit fixture mode while the OpenAI project returns
+capacity unavailable. A bounded production request proved that the Worker reached OpenAI, but no
+model output was returned or accepted. Fixture mode makes no OpenAI request and does not silently
+fall back from a failed live call.
 
 ## Secret and logging boundary
 
-The future service key belongs only in an encrypted
+The project-scoped runtime key belongs only in the encrypted
 [Worker secret](https://developers.cloudflare.com/workers/configuration/secrets/). It must not be a
 Wrangler plain-text variable, GitHub public-CI secret, browser value, repository file, build
 argument, or log field. The Worker logs only event code, request ID, method, route, and status. It
 does not log client IPs, headers, packages, prompts, model responses, or error bodies.
 
+The `global_fetch_strictly_public` compatibility flag forces the fixed OpenAI hostname through its
+public route rather than treating it as an implicit Worker-to-Worker service binding. No arbitrary
+egress target is accepted from a request.
+
 Browser BYOK is deliberately unsupported. It would make EvidenceOps a credential processor and
 requires its own browser storage, transit, redaction, support, exfiltration, and abuse design.
 
-## Production-change checklist (not yet executed)
+## Production validation and remaining gates
 
-Before any production command:
+Completed: account/zone verification, preview and production deployment, custom-domain/TLS checks,
+static/API/header tests, fixture verification, rate-limit proof, and secure Worker-secret transfer.
+The bounded live request reached OpenAI and returned capacity unavailable; no output was accepted.
 
-1. Review `wrangler.jsonc`, the Worker diff, dependency audit, dry-run bundle, and threat model.
-2. Verify the Cloudflare account/zone actor and authorization for `tmcoconsulting.com`.
-3. Establish OpenAI project budget limits/alerts and Cloudflare abuse/rate monitoring.
-4. Confirm log destinations and retention do not exceed the documented allowlist.
-5. Create the Worker secret interactively for the `production` environment; never echo it.
-6. Deploy manually to a preview or controlled production target and capture the version ID.
-7. Verify `/api/status`, static navigation/assets, CSP/security headers, API rejection paths, TLS,
-   and `evidenceops.tmcoconsulting.com` from outside the operator workstation.
-8. Exercise Cloudflare version rollback before adding automated deployment.
-9. Add GitHub orchestration only with a protected environment and the minimum Cloudflare
-   deployment credential or supported short-lived mechanism.
+Remaining:
+
+1. sign in to **OpenAI Platform → EvidenceOps project → Limits**; set a small `$5` monthly soft
+   budget with 50%, 80%, and 100% alerts, allow only `gpt-5.6-terra`, and start with at most 5 RPM
+   and 25,000 TPM (or the lowest supported values that still allow the bounded demo); this budget
+   is an alert threshold and does not stop spending;
+2. if the project UI permits, create service account `evidenceops-cloudflare-runtime`, transfer its
+   replacement project key directly to the existing Worker secret, validate once in synthetic mode,
+   and then revoke the current user-owned project key;
+3. in **Cloudflare → My Profile → API Tokens**, create `evidenceops-github-deploy` restricted to the
+   TMCO Consulting account and `tmcoconsulting.com` zone with Account `Workers Scripts Edit` and
+   `Account Settings Read`, Zone `Workers Routes Edit`, and User `User Details Read` plus
+   `Memberships Read`; do not add KV, R2, DNS, billing, or unrelated-account access;
+4. store the one-time value only as the protected GitHub environment secret
+   `CLOUDFLARE_API_TOKEN`, then change `CLOUDFLARE_DEPLOY_ENABLED` to `true` after review;
+5. review Cloudflare observability/alert retention in the dashboard;
+6. use `wrangler deployments list --env production` and
+   `wrangler rollback <known-good-version> --env production` for rollback; and
+7. enable OpenAI mode only after a single bounded request succeeds and the dashboard label is
+   revalidated.
 
 Cloudflare documents [Worker secrets](https://developers.cloudflare.com/workers/configuration/secrets/),
 [custom domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/),

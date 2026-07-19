@@ -64,12 +64,13 @@ exception command. Live mode never falls back to synthetic mode.
 Live collection requires a separately approved Entra app and explicit authentication choice; see
 [Live Collection](operations/live-collection.md). Publication requires a runtime-only
 `EVIDENCEOPS_PSEUDONYM_KEY` of at least 32 bytes. Optional narrative generation reads
-`OPENAI_API_KEY` and defaults to `gpt-5.6-sol`.
+`OPENAI_API_KEY` and pins `gpt-5.6-terra` for the bounded cost-conscious runtime.
 
-No successful paid model call is required or claimed by the static demo. A future production
-deployment will use a dedicated EvidenceOps Project service-account/project key stored only as a
-Cloudflare Worker secret. No Worker secret is configured by the repository or its CI. BYOK is
-deferred pending a separate browser-key threat model.
+No successful paid model call is required or claimed by the static demo. Production has a dedicated
+EvidenceOps Project key stored only as the encrypted Cloudflare Worker secret `OPENAI_API_KEY`.
+The value is not present in the repository or GitHub. Production remains in explicit fixture mode
+because the bounded OpenAI validation returned capacity unavailable. BYOK is deferred pending a
+separate browser-key threat model.
 
 EvidenceOps does not load `.env` files. Environment-variable names appear in `.env.example`, but
 operators must use a local process environment or managed secret store. Never add a real value to
@@ -97,5 +98,5 @@ The test command enforces 90% branch-aware coverage. All public artifacts must p
 
 `mkdocs build --strict` produces `site/` with relative navigation and self-contained public assets.
 The exact-pinned Wrangler configuration serves `site/` through Workers Static Assets and routes
-only `/api/*` through Worker code first. The runtime and API are locally testable; there is no
-Cloudflare resource, DNS record, deployment workflow, production secret, or production deployment.
+only `/api/*` through Worker code first. The production fixture deployment is available at
+`https://evidenceops.tmcoconsulting.com/`; it uses synthetic data and makes no model request.

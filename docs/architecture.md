@@ -56,8 +56,8 @@ fingerprints, reference-graph validation, and a second content scan.
 ## Narrative boundary
 
 The opt-in narrative service uses the OpenAI Responses API with `store: false`, no tools, a strict
-JSON schema, and a 256 KiB sanitized-package limit. The documented Build Week model is
-`gpt-5.6-sol`. The verifier treats the returned object as untrusted and checks its schema, evidence
+JSON schema, and a 64 KiB sanitized-package limit. The documented Build Week model is
+`gpt-5.6-terra`. The verifier treats the returned object as untrusted and checks its schema, evidence
 IDs, exact finding coverage, typed deterministic claim codes/values, limitations, and human-review
 language. Only a `finding_status` claim whose typed value equals the authoritative finding can be
 machine-verified. Free-form executive, explanation, impact, limitation, and question text remains
@@ -81,8 +81,9 @@ bounded OpenAI Responses API request. Static assets retain their direct-serving 
 
 The Worker ports the package schema and deterministic narrative verifier into strict TypeScript and
 imports the same credential/public-value catalogs and strict narrative JSON schema as Python. The
-production environment is configured for `gpt-5.6-sol`, but no secret, custom domain, deployment
-workflow, Cloudflare resource, DNS record, or production deployment has been created.
+deployed production environment pins `gpt-5.6-terra`, stores its project key only as a Worker
+secret, and serves the custom domain in explicit fixture mode while project capacity is unavailable.
+The GitHub deployment workflow remains disabled until a narrow Cloudflare token is configured.
 
 ## Phase 1 modules
 

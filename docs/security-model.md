@@ -58,19 +58,23 @@ not grant approval. Human assessors retain final judgment.
 ## Workflow boundary
 
 Public CI uses only repository content and read-only `contents` permission. The privileged GitHub
-Pages workflow and its `pages: write`/deployment OIDC permissions were removed. Executable actions
-are pinned to immutable commit SHAs, and no public workflow performs live collection or deployment.
+Pages workflow/site and its `pages: write`/deployment OIDC permissions were removed. Executable
+actions are pinned to immutable commit SHAs. Separate main-only workflows target the protected
+`production` environment; Cloudflare deployment is disabled until its narrow token exists, and the
+manual Intune audit cannot authenticate until the environment-scoped Entra FIC is configured.
 
-The public Worker runtime is implemented but not deployed. It uses Worker-first routing only for
-`/api/*`, exact methods, same-origin checks, a 256 KiB request bound, compressed-body rejection,
-native rate limiting, a 30-second OpenAI timeout, a 1 MiB upstream-response bound, one non-retrying
-model request, and generic error responses. Logs contain request IDs, method, route, status, and
-event code—not headers, IP addresses, evidence, prompts, responses, or secrets. Static assets carry
+The public Worker runtime is deployed in fixture mode. It uses Worker-first routing only for
+`/api/*`, exact methods, same-origin checks, a 64 KiB request bound, compressed-body rejection,
+native client and global rate limiting, a 20-second OpenAI timeout, a 256 KiB upstream-response
+bound, one non-retrying model request, and generic error responses. Logs contain request IDs,
+method, route, status, and event code—not headers, IP addresses, evidence, prompts, responses, or
+secrets. Cloudflare's privileged live-tail transport includes platform request metadata, so tail
+access is administrative and stored invocation logs are disabled. Static assets carry
 the security headers in `docs/_headers`.
 
 Public CI installs exact-pinned Worker dependencies, runs workerd contract tests, checks generated
-bindings, and performs a Wrangler dry-run only. It has `contents: read`, no deployment action, and
-no Cloudflare/OpenAI credential. A future OpenAI service key must exist only as a Worker secret.
+bindings, and performs Wrangler dry-runs only. It has `contents: read` and no Cloudflare/OpenAI
+credential. The production OpenAI project key exists only as a Worker secret.
 
 ## Residual risks
 

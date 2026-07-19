@@ -50,11 +50,11 @@ See the [getting-started guide](docs/getting-started.md) and
 ## Project status
 
 EvidenceOps is an early **Phase 1 proof**, not a compliance product or autonomous endpoint manager.
-Live collection is opt-in, private, and requires separately approved Microsoft Graph read
-permission. GitHub Pages deployment has been retired. A locally validated Cloudflare Workers
-Static Assets runtime now serves the same synthetic site and implements bounded same-origin
-`/api/status` and `/api/narrative` routes. It has not been deployed, attached to DNS, or supplied
-with a Cloudflare secret. See the [Worker runbook](docs/operations/cloudflare-worker.md) and
-[roadmap](docs/roadmap.md).
+Live collection is opt-in, private, and still awaits Entra federation/admin-consent validation.
+GitHub Pages has been disabled. The Cloudflare Worker now serves the synthetic site at
+[evidenceops.tmcoconsulting.com](https://evidenceops.tmcoconsulting.com/) with bounded same-origin
+`/api/status` and `/api/narrative` routes. Production is deliberately in fixture mode because the
+bounded OpenAI validation reached the API but returned capacity unavailable. See the
+[Worker runbook](docs/operations/cloudflare-worker.md) and [roadmap](docs/roadmap.md).
 
 Copyright 2026 TMCO Consulting, LLC. Licensed under the [Apache License 2.0](LICENSE).

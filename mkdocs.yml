@@ -1,5 +1,6 @@
 site_name: EvidenceOps
 site_description: Continuous audit evidence for regulated endpoint-management teams
+site_url: https://evidenceops.tmcoconsulting.com/
 repo_url: https://github.com/tmcoconsulting/evidenceops
 repo_name: tmcoconsulting/evidenceops
 edit_uri: edit/main/docs/

@@ -76,12 +76,16 @@ or proprietary material from `intune-apple-gitops` or any other repository.
 | 2026-07-18 | GET-only Intune adapter and private/public boundary | Recorded after commit |
 | 2026-07-18 | GPT adapter, verifier, CLI, local static demo, and documentation | Recorded after commit |
 | 2026-07-18 | Four-finding security remediation and Cloudflare-next decision | `ccec44bd674c761fe3e4b335c56442f6ef7be912` |
-| 2026-07-18 | Local Cloudflare Worker/static-assets runtime and API boundary | Pending review commit |
+| 2026-07-18 | Human-reviewed Cloudflare Worker/static-assets checkpoint | `7683c69f9eaca9f67ec220de5fb9f1a19fe9b3df` |
+| 2026-07-18 | Runtime spend/log/egress hardening | `f8994d9` |
+| 2026-07-18 | Protected audit and deployment workflow support | `925e0f8` |
+| 2026-07-18 | Cloudflare/OpenAI egress fix and safe fixture production guard | `cfd9975` |
 
 Exact Phase 1 commands, results, limitations, and commit hashes are maintained in the
 [Phase 1 validation record](phase-1-validation.md).
 
-The follow-on Cloudflare runtime was implemented in this same primary thread on
-`codex/cloudflare-worker-runtime`. It adds no Graph access, real tenant data, paid model request,
-Cloudflare resource, secret, DNS change, deployment, or supporting-agent contribution. Its checks
-are recorded in the [Worker validation record](cloudflare-worker-validation.md).
+The follow-on Cloudflare runtime and deployment were completed in this same primary thread on
+`codex/cloudflare-worker-runtime` with no supporting-agent contribution. No Graph access or real
+tenant data occurred. Cloudflare resources, the custom domain, a project-scoped OpenAI key/Worker
+secret, GitHub environment controls, and bounded synthetic external validation are recorded in the
+[Worker validation record](cloudflare-worker-validation.md).

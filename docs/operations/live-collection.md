@@ -80,7 +80,21 @@ Human review of a sanitized live package is required before any public placement
 ## TMCO test-tenant validation status
 
 The adapter has mocked contract coverage for pagination, empty collections, assignments, malformed
-fields, hostile next links, 401/403/404/429, and transient 5xx behavior. This Phase 1 branch has not
-yet called the TMCO tenant because no tenant/client configuration or Graph token was available in
-the execution environment. No endpoint is reported as live-validated until a read-only call is
-actually observed and privately recorded.
+fields, hostile next links, 401/403/404/429, and transient 5xx behavior. The repository now contains
+a manual-only, main-only `intune-audit.yml` workflow targeting the protected `production`
+environment. It requests only `contents: read` and `id-token: write`, obtains a process-scoped Graph
+token, writes private evidence only to ignored ephemeral storage, publishes/scans in memory and
+ignored build paths, reports aggregate sanitized counts, and deletes both packages at job end.
+
+Live TMCO validation remains outstanding because the Entra application still needs an
+environment-scoped federated identity credential and verified administrator consent. The required
+credential is:
+
+```text
+issuer: https://token.actions.githubusercontent.com
+subject: repo:tmcoconsulting/evidenceops:environment:production
+audience: api://AzureADTokenExchange
+```
+
+No endpoint is reported as live-validated until a controlled workflow run succeeds. Do not add a
+client secret or broaden the documented application permission.

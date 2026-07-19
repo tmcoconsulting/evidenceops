@@ -11,12 +11,12 @@ requirements from their authoritative source before submission.
 - [ ] Issues and Discussions are enabled; Wiki is disabled
 - [ ] CI passes with read-only repository permission
 - [ ] Confirm the retired GitHub Pages workflow is absent
-- [ ] Cloudflare runtime is locally validated and hosting status is described accurately (not deployed)
+- [ ] Cloudflare fixture runtime is locally and externally validated at the documented custom domain
 - [ ] Dependency and secret alerts supported by the plan are enabled
 
 ## Product and security evidence
 
-- [ ] Demo and dashboard are clearly synthetic
+- [ ] Demo and dashboard are clearly synthetic and production reports fixture mode
 - [ ] No live tenant, person, device, group, or credential data is committed
 - [ ] Sanitizer fails closed on unknown fields
 - [ ] Generated site passes prohibited-pattern scanning

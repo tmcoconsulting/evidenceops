@@ -119,9 +119,9 @@ minimization reduces disclosure, retention, and future schema-change risk.
 
 ## 2026-07-18 — Constrain GPT with structure and verification
 
-**Decision:** Send only a validated public package (maximum 256 KiB) to the OpenAI Responses API,
+**Decision:** Send only a validated public package (maximum 64 KiB) to the OpenAI Responses API,
 with no tools, `store: false`, strict `json_schema`, and the configured Build Week model
-`gpt-5.6-sol`. Treat the returned object as untrusted.
+`gpt-5.6-terra`. Treat the returned object as untrusted.
 
 **Why:** OpenAI documents [structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 and the [Responses API](https://developers.openai.com/api/reference/resources/responses/methods/create).
@@ -210,3 +210,23 @@ license. Public CI uses Node 22 and `npm ci` against the lock.
 [secret bindings](https://developers.cloudflare.com/workers/configuration/secrets/). OpenAI
 documents the [Responses API](https://developers.openai.com/api/reference/resources/responses/methods/create)
 and [structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
+
+## 2026-07-18 — Deploy fixture-first and keep BYOK rejected
+
+**Decision:** Deploy `evidenceops` with Workers Static Assets, a Worker Custom Domain, dual native
+rate limiters, and a fixed `gpt-5.6-terra` model policy. Store the dedicated EvidenceOps Project key
+only as the Worker secret `OPENAI_API_KEY`. Keep production in explicit fixture mode after the
+single bounded live validation returned capacity unavailable. Do not accept browser-supplied keys.
+
+**Why:** Terra is the documented balanced GPT-5.6 cost/capability tier. The public fixture preserves
+the end-to-end deterministic demonstration without a chargeable retry loop or misleading live-mode
+label. BYOK would make the application a browser credential processor and expand storage,
+exfiltration, support, logging, and abuse boundaries.
+
+**Sources:** OpenAI documents [GPT-5.6 Terra](https://developers.openai.com/api/docs/models/gpt-5.6-terra)
+as the balanced cost/capability tier with Responses API and structured-output support. Cloudflare
+documents the [Workers fetch request-context and public-routing rules](https://developers.cloudflare.com/workers/runtime-apis/fetch/).
+
+**Operational boundary:** GitHub deployment is main-only, environment-protected, and disabled until
+a narrowly scoped Cloudflare API token is stored. The manual Intune workflow is likewise main-only
+and cannot authenticate until the exact environment-scoped Entra federated identity is configured.

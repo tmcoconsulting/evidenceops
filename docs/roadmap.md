@@ -20,20 +20,22 @@ Roadmap items describe intent, not operational capability or delivery commitment
 - Credential-free end-to-end CLI and polished local synthetic static walkthrough
 - Shared credential detection across publication, repository/static scans, and model egress
 
-Live TMCO validation remains pending until approved Entra client/tenant configuration or a
-short-lived Graph token is available. Public CI never performs live collection.
+Live TMCO validation remains pending until the environment-scoped Entra federated identity and
+application permission receive administrator consent. Public CI never performs live collection.
 
-## Cloudflare runtime — implemented locally, deployment pending
+## Cloudflare runtime — fixture production deployed
 
 - [x] Add exact-pinned Worker tooling and Static Assets configuration for `site/`
 - [x] Implement `/api/status` and `/api/narrative` with method/origin/body/rate/timeout limits
 - [x] Preserve explicit fixture mode with no model call or synthetic fallback from OpenAI mode
 - [x] Add workerd tests, allowlisted logging, shared egress scans, security headers, and dry-run CI
-- [ ] Independently review the Worker runtime and production configuration
-- [ ] Configure the EvidenceOps Project key as a Worker secret (never a repository/CI secret)
+- [x] Independently review the Worker runtime and production configuration
+- [x] Configure an EvidenceOps Project key as a Worker secret (never a repository/CI secret)
 - [ ] Verify Cloudflare/OpenAI budget alerts, abuse monitoring, log retention, and rollback
-- [ ] Create the Worker/custom domain at `evidenceops.tmcoconsulting.com` and verify DNS/TLS
-- [ ] Add least-privilege GitHub deployment orchestration only after manual deployment validation
+- [x] Create the Worker/custom domain at `evidenceops.tmcoconsulting.com` and verify DNS/TLS
+- [x] Add disabled-by-default least-privilege GitHub deployment orchestration after manual validation
+- [ ] Configure a narrow Cloudflare deployment token and enable the protected workflow
+- [ ] Configure OpenAI budget alerts/limits and enable live mode only after usable capacity exists
 
 ## Later application scope
 

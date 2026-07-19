@@ -21,7 +21,8 @@ that MkDocs discovered ignored `docs/private/`; both boundaries were corrected i
 - Explicit single-permission manifest and in-memory authentication providers
 - Restrictive private writer and field-manifest/publication policy
 - Four-outcome deterministic desired-state fixture
-- Optional `gpt-5.6-sol` Responses API adapter and deterministic verifier
+- Optional fixed-model Responses API adapter and deterministic verifier (production pin now
+  `gpt-5.6-terra`)
 - Six-command operator surface and synthetic local-static artifacts
 
 ## Security-remediation baseline
@@ -70,9 +71,9 @@ python scripts/check_public_artifacts.py site           PASS — public scan pas
 The focused security corpus contains regression cases for all six GitHub token prefixes, all four
 credential gates, duplicate/missing/unknown narrative finding IDs, typed-claim mismatch and unknown
 claim code, contradictory status synonyms, removal of privileged Pages permissions/workflow
-chaining, and the legitimate synthetic controls. `tests/test_workflows.py` also verifies that the
-only executable workflow is read-only CI and every referenced action is pinned to a 40-character
-commit SHA.
+chaining, and the legitimate synthetic controls. Follow-on tests verify read-only public CI plus
+main-only, protected-environment audit/deployment workflows; every referenced action is pinned to a
+40-character commit SHA.
 
 The MkDocs command continues to print the upstream Material/MkDocs 2.0 warning already recorded in
 the decision log; it exits successfully under the exact-pinned MkDocs 1.6.1 toolchain.
@@ -86,3 +87,6 @@ the decision log; it exits successfully under the exact-pinned MkDocs 1.6.1 tool
 - **Intune mutations:** none. The provider transport exposes only GET, and no apply command exists.
 
 No real TMCO configuration, identity, device, group, tenant, or credential value is recorded here.
+The later Cloudflare/OpenAI external results are recorded separately in
+[Cloudflare Worker Validation](cloudflare-worker-validation.md); they do not retroactively change
+the claims of this security-remediation checkpoint.

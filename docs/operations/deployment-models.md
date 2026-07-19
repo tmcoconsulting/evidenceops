@@ -1,8 +1,8 @@
 # Deployment Models
 
-Phase 1 implements the credential-free local build, Python application core, and a locally
-validated Worker/static-assets runtime. The models below do not create tenant infrastructure,
-Cloudflare resources, DNS, secrets, or credentialed workflows.
+Phase 1 implements the credential-free local build, Python application core, and a deployed
+Worker/static-assets fixture runtime. Live tenant federation and successful model generation remain
+incomplete.
 
 ## 1. Current local synthetic static artifact
 
@@ -10,7 +10,7 @@ Public CI uses no tenant or OpenAI credential. It regenerates tracked synthetic 
 `site/` with MkDocs, and scans that directory. Operators can serve the result locally. `site/` is a
 build artifact, not evidence that a hosting platform or production API is operational.
 
-## 2. Implemented runtime, pending Cloudflare deployment
+## 2. Current public Cloudflare fixture deployment
 
 The public runtime code is a Worker intended for `evidenceops.tmcoconsulting.com`, serving the
 scanned `site/` directory as static assets. Only `/api/*` runs Worker code first; the same-origin
@@ -27,10 +27,11 @@ The repository now includes:
 5. native rate-limit binding, allowlisted logs, static CSP/security headers, and fixture mode; and
 6. credential-free CI contract tests, generated-binding checks, and bundle dry-run.
 
-The remaining deployment work is to review the runtime, create the Cloudflare resource/custom
-domain, configure provider-side budget/abuse controls, place the EvidenceOps Project key in a
-Worker secret, validate TLS/headers/rollback, and only then add least-privilege GitHub deployment
-orchestration. See the [Worker runbook](cloudflare-worker.md).
+The Worker and preview exist, the custom domain/TLS are active, dual native rate limiters are
+bound, and `OPENAI_API_KEY` exists only as an encrypted Worker secret. The main-only deployment
+workflow is present but explicitly disabled until a narrow Cloudflare token is stored in the
+protected GitHub environment. Production remains in fixture mode after OpenAI returned capacity
+unavailable. See the [Worker runbook](cloudflare-worker.md).
 
 OpenAI recommends keeping API keys out of code/public repositories and exposing them through a
 secret manager. It also recommends human review for high-stakes output:

@@ -14,8 +14,8 @@
 
 <div class="synthetic-banner">
 Phase 1 is a narrow read-only proof. The static demo is synthetic, live TMCO validation is still
-outstanding, and no production tenant data is present. The Cloudflare Worker runtime is implemented
-for local validation but is not deployed or connected to the production hostname.
+outstanding, and no production tenant data is present. The Cloudflare Worker serves this synthetic
+fixture at `evidenceops.tmcoconsulting.com`; fixture mode makes no OpenAI request.
 </div>
 
 ## The problem
@@ -62,7 +62,7 @@ EvidenceOps starts from a different thesis:
 | Observed state | Read-only provider response | GET-only Intune adapter; live validation pending |
 | Drift result | Deterministic comparison | Implemented and tested |
 | Public artifact | Sanitization policy and policy gate | Implemented and tested |
-| Narrative | GPT-generated analysis grounded in evidence | Adapter implemented; fixture/mocked validation only |
+| Narrative | GPT-generated analysis grounded in evidence | Adapter/transport reached OpenAI; project capacity unavailable, so production is fixture mode |
 | Narrative claims | Typed deterministic claim codes | Verified; free prose quarantined |
 | Acceptance | Human reviewer | Required boundary |
 
@@ -100,9 +100,9 @@ Read the [data-handling policy](data-handling.md), [threat model](threat-model.m
 - Live TMCO Microsoft Graph/Intune validation has not been performed.
 - The site uses generated evidence objects derived only from curated synthetic input.
 - Control mappings, exception persistence, signed manifests, and auditor exports are deferred.
-- Cloudflare same-origin API routes pass local contract tests but are not operational in production.
-- The OpenAI path is mocked in tests; no paid GPT-5.6 call has been validated.
-- GitHub Pages deployment was retired; `site/` is currently a local build artifact.
+- Cloudflare same-origin API routes are operational in production with synthetic fixture data only.
+- The OpenAI path reached the API but returned capacity unavailable; no live narrative was accepted.
+- GitHub Pages is disabled; local `site/` output is deployed as Cloudflare Workers Static Assets.
 - Phase 0 was validated on Python 3.14 locally and targets Python 3.12 in CI; neither result is a
   production-readiness or compliance certification.
 

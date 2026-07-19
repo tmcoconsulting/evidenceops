@@ -2,9 +2,9 @@
 
 This Phase 1 model covers the public repository, unprivileged CI, local static build, live read-only
 adapter, private evidence writer, sanitizer, OpenAI boundary, deterministic verifier, and
-synthetic demo, and the locally validated Cloudflare Worker/static-assets runtime. Cloudflare
-resources, DNS, production secrets, and external production behavior remain outside the validated
-state because nothing has been deployed.
+synthetic demo, and the deployed Cloudflare Worker/static-assets runtime. The public custom domain,
+encrypted OpenAI secret binding, fixture API behavior, TLS, headers, and rate limits are in scope.
+Live Intune federation and successful model-generated output remain outside the validated state.
 
 ## Assets
 
@@ -25,7 +25,7 @@ state because nothing has been deployed.
 | Publication | Private package and runtime key | Sanitized public package |
 | OpenAI | External service and generated object | Deterministic verifier |
 | Static build | Repository content | Scanned local `site/` artifact |
-| Cloudflare runtime | Browser request and future Worker secret | Same-origin bounded API, publication gate, rate limiter, verifier |
+| Cloudflare runtime | Browser request and Worker secret | Same-origin bounded API, publication gate, dual rate limiters, verifier |
 
 ## Primary threats and controls
 
@@ -45,7 +45,7 @@ state because nothing has been deployed.
 | Browser submits a key or cross-site request | Key exposure or spend abuse | BYOK/authorization headers rejected; strict Origin/Sec-Fetch-Site | Revisit only under a dedicated BYOK threat model |
 | Public client floods narrative route | Cost or availability loss | Native rate binding, request bound, one attempt, timeout | Account budget alerts, WAF/abuse telemetry, authenticated tier if needed |
 | Model or upstream returns oversized/hostile JSON | Resource exhaustion or false evidence | Response bound, strict schema, shared scanner, deterministic verifier | Production alerting and evaluation corpus |
-| Logs disclose input or secret | Data or credential exposure | Structured allowlisted metadata only; no body/header logging | Verify Cloudflare log sinks and retention before deployment |
+| Logs disclose input or secret | Data or credential exposure | Structured allowlisted metadata only; stored invocation logs disabled | Administrative live tail exposes platform metadata; restrict access and retention |
 
 ## Abuse cases covered by tests
 
@@ -69,6 +69,6 @@ service availability are outside this proof.
 ## Review triggers
 
 Update this model before expanding Graph endpoints/settings/permissions, adding a provider,
-creating a credentialed workflow, changing retention, accepting model tools, adding authentication,
+enabling a credentialed workflow, changing retention, accepting model tools, adding authentication,
 adding Worker/API routes or BYOK, changing rate/spend controls, provisioning a secret or custom
 domain, deploying tenant-specific infrastructure, or introducing a new public field.
