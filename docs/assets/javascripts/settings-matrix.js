@@ -61,8 +61,7 @@
     if (value === "Aligned") return "matrix-state-aligned";
     if (value === "Conflicting policy") return "matrix-state-conflict";
     if (value === "Missing from tenant") return "matrix-state-missing";
-    if (value === "Unsupported by provider")
-      return "matrix-state-unsupported";
+    if (value === "Unsupported by provider") return "matrix-state-unsupported";
     if (value === "Human review required" || value === "Collection gap")
       return "matrix-state-review";
     return "matrix-state-drift";
@@ -79,8 +78,7 @@
 
   const hasMappings = (requirement) =>
     frameworkColumns.some(
-      ({ key }) =>
-        key !== "cis_lvl2" && frameworkIds(requirement, key).length,
+      ({ key }) => key !== "cis_lvl2" && frameworkIds(requirement, key).length,
     );
 
   const buildRequiredChange = (row) => {
@@ -114,11 +112,7 @@
   };
 
   const renderState = (label) => {
-    const badge = create(
-      "span",
-      `matrix-state ${stateClass(label)}`,
-      label,
-    );
+    const badge = create("span", `matrix-state ${stateClass(label)}`, label);
     badge.setAttribute(
       "title",
       "Technical evidence state; not a framework verdict",
@@ -205,8 +199,7 @@
       const findingsByRequirement = new Map(
         mission.findings
           .filter(
-            (item) =>
-              isRecord(item) && typeof item.requirement_id === "string",
+            (item) => isRecord(item) && typeof item.requirement_id === "string",
           )
           .map((item) => [item.requirement_id, item]),
       );
@@ -235,9 +228,7 @@
                 (value) => typeof value === "string",
               )
             : [];
-          const evidence = evidenceIds.map((id) =>
-            resourcesByEvidence.get(id),
-          );
+          const evidence = evidenceIds.map((id) => resourcesByEvidence.get(id));
           const settingKey =
             isRecord(finding) && typeof finding.setting_key === "string"
               ? finding.setting_key
@@ -261,9 +252,7 @@
         outcome.append(option);
       }
 
-      const mapped = rows.filter(({ requirement }) =>
-        hasMappings(requirement),
-      );
+      const mapped = rows.filter(({ requirement }) => hasMappings(requirement));
       const aligned = mapped.filter(
         ({ requirement }) => requirement.outcome === "Aligned",
       ).length;
@@ -282,10 +271,7 @@
       summary.replaceChildren();
       for (const [value, label] of summaryValues) {
         const card = create("article", "matrix-summary-card");
-        card.append(
-          create("strong", "", value),
-          create("span", "", label),
-        );
+        card.append(create("strong", "", value), create("span", "", label));
         summary.append(card);
       }
 
@@ -336,11 +322,7 @@
             ...evidenceIds,
             ...evidence.flatMap((item) =>
               isRecord(item)
-                ? [
-                    item.title,
-                    item.resource_family,
-                    item.source_api_version,
-                  ]
+                ? [item.title, item.resource_family, item.source_api_version]
                 : [],
             ),
             ...frameworkColumns.flatMap(({ key }) =>
@@ -364,8 +346,7 @@
           ...frameworkColumns.map(({ label }) => label),
           "Required change",
         ];
-        for (const label of headers)
-          headerRow.append(create("th", "", label));
+        for (const label of headers) headerRow.append(create("th", "", label));
 
         const body = table.tBodies[0] || table.createTBody();
         body.replaceChildren();
@@ -420,17 +401,14 @@
             create(
               "span",
               "matrix-cell-note",
-              requirement.assignment_summary ||
-                "Assignment state unavailable",
+              requirement.assignment_summary || "Assignment state unavailable",
             ),
           );
           tr.append(stateCell);
           for (const { key } of frameworkColumns) {
             tr.append(renderFrameworkCell(requirement, key));
           }
-          tr.append(
-            create("td", "matrix-required-change", requiredChange),
-          );
+          tr.append(create("td", "matrix-required-change", requiredChange));
         }
 
         count.textContent = `${filtered.length} of ${rows.length} baseline requirements shown`;
