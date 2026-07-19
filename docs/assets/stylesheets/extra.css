@@ -16,7 +16,11 @@
   border-radius: 1.25rem;
   color: var(--evidenceops-ink);
   background:
-    radial-gradient(circle at 85% 16%, rgba(0, 167, 189, 0.22), transparent 30%),
+    radial-gradient(
+      circle at 85% 16%,
+      rgba(0, 167, 189, 0.22),
+      transparent 30%
+    ),
     linear-gradient(135deg, #f8fbff 0%, var(--evidenceops-mist) 100%);
 }
 
@@ -177,6 +181,15 @@
   --mission-surface: rgba(247, 250, 255, 0.9);
   display: grid;
   gap: 2rem;
+}
+
+/* Let grid children shrink so the drift table scrolls inside its own wrapper on narrow screens. */
+.mission-shell > *,
+.mission-header > *,
+.mission-section-heading > *,
+.mission-metrics > *,
+.mission-summary-grid > * {
+  min-width: 0;
 }
 
 .mission-banner {

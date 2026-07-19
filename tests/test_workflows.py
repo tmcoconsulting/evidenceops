@@ -138,3 +138,15 @@ def test_static_asset_headers_set_core_browser_controls() -> None:
         "X-Frame-Options: DENY",
     ):
         assert expected in headers
+
+
+def test_mission_control_bounds_grid_content_on_narrow_viewports() -> None:
+    stylesheet = (REPOSITORY_ROOT / "docs" / "assets" / "stylesheets" / "extra.css").read_text(
+        encoding="utf-8"
+    )
+    assert ".mission-shell > *," in stylesheet
+    assert ".mission-summary-grid > *" in stylesheet
+    assert "min-width: 0;" in stylesheet
+    assert ".mission-table-wrap {\n  overflow-x: auto;" in stylesheet
+    mkdocs = (REPOSITORY_ROOT / "mkdocs.yml").read_text(encoding="utf-8")
+    assert "assets/stylesheets/extra.css?v=20260719-responsive" in mkdocs
