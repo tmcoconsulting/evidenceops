@@ -17,8 +17,10 @@
 - `c1fca86` — fail-closed health/readiness contracts and repository-controlled HSTS
 - `b071a89` — hardened PR checkpoint validation record
 - `1c057c7` — non-executing Python and JavaScript/TypeScript CodeQL analysis
+- `b58db77` — preview and CodeQL evidence record
+- `73d6b2b` — browser-proven responsive Mission Control containment
 
-All seven commits remain pending TJ's review in PR #2. None uses a `Human-Reviewed` trailer.
+All nine commits remain pending TJ's review in PR #2. None uses a `Human-Reviewed` trailer.
 
 ## Implemented and locally verified
 
@@ -56,7 +58,7 @@ All seven commits remain pending TJ's review in PR #2. None uses a `Human-Review
   PASS — no issues in 51 source files
 
 .venv/bin/python -m pytest
-  PASS — 187 passed, 1 skipped, 91.13% branch-aware coverage
+  PASS — 188 passed, 1 skipped, 91.13% branch-aware coverage
 
 .venv/bin/python -m bandit -r evidenceops scripts -c pyproject.toml
   PASS — no findings after classifying one synthetic service-health label
@@ -104,13 +106,18 @@ The opt-in live Intune test remains the one skipped Python test. The Worker suit
 assistant, sanitized 429-classification, health/readiness, Mission-status, and security-header code
 changed.
 
-GitHub Actions CI run `29698879517` completed successfully for PR #2 head
-`1c057c74cfe220dd8a446c1821325f443a3598e8`, including installation from both locks, Python tests,
+GitHub Actions CI run `29699259859` completed successfully for PR #2 head
+`b58db77dfc47bc3db12103b82ecff3d0d1ebb598`, including installation from both locks, Python tests,
 Worker tests, dependency audits, secret/public scans, strict documentation build, and all Wrangler
-dry-runs. CodeQL run `29698879532` completed successfully for both Python and
+dry-runs. CodeQL run `29699259854` completed successfully for both Python and
 JavaScript/TypeScript. GitHub's separate aggregate `CodeQL` check remains queued because default
 setup is `not-configured`; it is not a required branch-protection context and the PR remains
 mergeable. The checked-in workflow establishes the default-branch baseline after merge.
+
+The follow-up responsive fix at `73d6b2b` completed the same full local matrix with 188 passing
+Python tests, one credential-gated live test skipped, 91.13% branch coverage, and 43 passing Worker
+tests. Both exact-lock dependency audits, Bandit, the repository/public scanners, strict docs build,
+generated bindings, and all three Wrangler dry-runs passed.
 
 ## External control-plane verification
 
@@ -152,11 +159,19 @@ mergeable. The checked-in workflow establishes the default-branch baseline after
   call, typed claims verified, generated prose remained quarantined, and human review remained
   required. Production, DNS, the custom domain, and secrets were not changed.
 - The browser control policy blocked local-loopback visual inspection. Static build, Workerd tests,
-  and artifact scans passed, but desktop/mobile visual QA of this exact revision remains manual.
+  and artifact scans passed at the earlier checkpoint.
+- A later authenticated real-browser pass exercised the deployed preview at desktop and mobile
+  breakpoints. Desktop rendering, high-severity filtering, the FileVault traceability dialog,
+  fixture-assistant readiness, and console-error checks passed. The first 375-pixel mobile pass
+  exposed page-level horizontal overflow; `73d6b2b` added grid-child containment and a versioned
+  stylesheet reference. After redeploying only the preview, the document and viewport were both
+  375 pixels wide with no page-level overflow, while the 1,040-pixel drift table remained contained
+  in its 341-pixel horizontal-scroll wrapper. Mobile rendering and both browser consoles then
+  passed. Production remained unchanged.
 
 ## Outstanding gates
 
-1. TJ reviews the seven commits and PR #2 diff.
+1. TJ reviews the nine commits and PR #2 diff.
 2. After review, deploy the fixture revision to production and recheck the public custom domain,
    TLS, headers, desktop, and mobile views. Keep the protected deployment workflow disabled until
    the environment token's least-privilege Cloudflare scope is independently verified.

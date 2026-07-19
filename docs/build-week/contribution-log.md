@@ -87,6 +87,8 @@ or proprietary material from `intune-apple-gitops` or any other repository.
 | 2026-07-19 | Fail-closed health/readiness and HSTS hardening | `c1fca86` |
 | 2026-07-19 | Hardened PR checkpoint validation record | `b071a89` |
 | 2026-07-19 | Non-executing Python and JavaScript/TypeScript CodeQL analysis | `1c057c7` |
+| 2026-07-19 | Preview and CodeQL evidence record | `b58db77` |
+| 2026-07-19 | Browser-proven responsive Mission Control containment | `73d6b2b` |
 
 Exact Phase 1 commands, results, limitations, and commit hashes are maintained in the
 [Phase 1 validation record](phase-1-validation.md).
@@ -109,3 +111,6 @@ approval, merge, and public-submission authority. No Intune write or raw tenant 
 The same task then deployed the scanned fixture revision to the credential-free Cloudflare preview,
 validated its health/readiness/status/assistant boundaries, and added CodeQL without executing
 repository code. Production and live-tenant state were left unchanged pending human review.
+An authenticated desktop/mobile browser pass then found and remediated a narrow-screen overflow in
+the preview. The table remains locally scrollable, the page itself fits the mobile viewport, and a
+regression guard preserves the required grid containment and versioned stylesheet reference.
