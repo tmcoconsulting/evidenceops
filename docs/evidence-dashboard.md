@@ -19,6 +19,7 @@
     <a href="#drift">Drift</a>
     <a href="#platforms">Platforms</a>
     <a href="#frameworks">Framework evidence</a>
+    <a href="../settings-matrix/">Settings matrix</a>
     <a href="#quality">Data quality</a>
     <a href="#assistant">AI assistant</a>
   </nav>
@@ -81,7 +82,9 @@
     <h2 id="frameworks-title">Supplemental technical evidence coverage</h2>
     <div class="mission-callout">
       Crosswalk identifiers come from the pinned mSCP source. They indicate relevant technical
-      evidence—not certification, control satisfaction, or an assessor conclusion.
+      evidence—not certification, control satisfaction, or an assessor conclusion. Open the
+      <a href="../settings-matrix/">settings and baseline matrix</a> to see each mapped Intune
+      setting, its observed and approved values, framework identifiers, and required technical change.
     </div>
     <div class="mission-summary-grid" data-framework-summary></div>
   </section>
@@ -107,8 +110,10 @@
   <section id="assistant" aria-labelledby="assistant-title">
     <h2 id="assistant-title">Evidence-grounded AI assistant</h2>
     <p>
-      The model receives only a bounded sanitized evidence package. Deterministic findings remain
-      authoritative; all prose is generated analysis subject to human review.
+      The assistant receives only a bounded sanitized evidence subset. It may explain observed and
+      approved settings, reviewed framework identifiers, and deterministic change guidance already
+      present in the package. It cannot invent a mapping, change Intune, or decide compliance; all
+      prose remains subject to human review.
     </p>
     <div class="mission-assistant" data-mission-assistant data-runtime-state="loading">
       <div>
@@ -118,7 +123,7 @@
       </div>
       <div class="mission-questions" aria-label="Supported question examples">
         <button type="button" data-question="What are the highest-severity findings?">Highest-severity findings</button>
-        <button type="button" data-question="Which FileVault requirements are not aligned?">FileVault drift</button>
+        <button type="button" data-question="For FileVault, what is observed, what is required, which framework identifiers map to it, and what needs to change?">FileVault setting and mappings</button>
         <button type="button" data-question="What changed since the previous collection?">Changes since prior collection</button>
         <button type="button" data-question="Which devices are noncompliant?">Privacy-safe device posture</button>
       </div>
