@@ -134,6 +134,15 @@ describe("Worker routes", () => {
     );
     expect(response.status).toBe(200);
     expect(response.headers.get("X-Request-ID")).toMatch(/^[0-9a-f-]+$/);
+    expect(response.headers.get("Strict-Transport-Security")).toBe(
+      "max-age=31536000",
+    );
+    expect(response.headers.get("Content-Security-Policy")).toContain(
+      "default-src 'none'",
+    );
+    expect(response.headers.get("Cross-Origin-Opener-Policy")).toBe(
+      "same-origin",
+    );
     const text = await response.text();
     expect(text).not.toContain(secret);
     const status = JSON.parse(text);
@@ -143,8 +152,66 @@ describe("Worker routes", () => {
       model_configured: true,
       byok_supported: false,
       intune_write_capability: false,
+      data_mode: "SYNTHETIC DEMO DATA",
+      live_intune_collection_performed: false,
+      source_snapshot_id: missionFixture.snapshot_id,
     });
     expect(status).not.toHaveProperty("ai_model_call_performed");
+  });
+
+  it("separates liveness from fail-closed evidence readiness", async () => {
+    const health = await worker.fetch(
+      new Request(`${ORIGIN}/api/health`),
+      environment("fixture", { mission: { invalid: true } }),
+    );
+    expect(health.status).toBe(200);
+    await expect(health.json()).resolves.toMatchObject({
+      service: "EvidenceOps Worker",
+      status: "ok",
+    });
+
+    const ready = await worker.fetch(
+      new Request(`${ORIGIN}/api/ready`),
+      environment(),
+    );
+    expect(ready.status).toBe(200);
+    await expect(ready.json()).resolves.toMatchObject({
+      narrative_mode: "fixture",
+      status: "ready",
+      mission: {
+        data_mode: "SYNTHETIC DEMO DATA",
+        snapshot_id: missionFixture.snapshot_id,
+      },
+    });
+
+    const invalidMission = await worker.fetch(
+      new Request(`${ORIGIN}/api/ready`),
+      environment("fixture", { mission: { invalid: true } }),
+    );
+    expect(invalidMission.status).toBe(503);
+    await expect(invalidMission.json()).resolves.toMatchObject({
+      error: "mission_schema_rejected",
+    });
+
+    const missingLiveKey = await worker.fetch(
+      new Request(`${ORIGIN}/api/ready`),
+      environment("openai"),
+    );
+    expect(missingLiveKey.status).toBe(503);
+    await expect(missingLiveKey.json()).resolves.toMatchObject({
+      error: "runtime_not_ready",
+    });
+  });
+
+  it("allows only GET on health and readiness routes", async () => {
+    for (const route of ["health", "ready"]) {
+      const response = await worker.fetch(
+        new Request(`${ORIGIN}/api/${route}`, { method: "POST" }),
+        environment(),
+      );
+      expect(response.status).toBe(405);
+      expect(response.headers.get("Allow")).toBe("GET");
+    }
   });
 
   it("reports an unavailable live model without silently selecting fixture mode", async () => {

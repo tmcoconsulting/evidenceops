@@ -72,6 +72,14 @@ interface MissionDocument {
   changes: Record<string, JsonValue>;
 }
 
+export interface MissionStatus {
+  baseline_version: string;
+  content_fingerprint: string;
+  data_mode: string;
+  evidence_timestamp: string;
+  snapshot_id: string;
+}
+
 interface AssistantClaim {
   claim_code: string;
   subject_id: string;
@@ -227,6 +235,20 @@ async function loadMission(
   await verifyMissionIdentity(mission);
   assertMissionEgressSafe(mission);
   return mission;
+}
+
+export async function readMissionStatus(
+  request: Request,
+  env: WorkerEnv,
+): Promise<MissionStatus> {
+  const mission = await loadMission(request, env);
+  return {
+    baseline_version: mission.baseline.benchmark_version,
+    content_fingerprint: mission.content_fingerprint,
+    data_mode: mission.data_mode,
+    evidence_timestamp: mission.collection.collected_at_utc,
+    snapshot_id: mission.snapshot_id,
+  };
 }
 
 function validateMission(value: unknown): MissionDocument {

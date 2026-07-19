@@ -67,16 +67,19 @@ package records its policy version and canonical SHA-256 identity.
 retired. The exact-pinned Cloudflare Worker runs first only for `/api/*`; static assets otherwise
 remain direct-serving.
 
-`/api/status` exposes a deliberately small, non-secret status contract. `/api/narrative` verifies a
-complete public evidence package. `/api/ask` accepts only a bounded question and current snapshot
-ID, loads the validated package server-side, classifies a closed set of evidence intents, and
-constructs a small intent-specific context. Both POST routes enforce exact methods and JSON shape,
-same-origin, compressed/body-size rejection, content scans, native per-client and global rate
-limits, timeout and output bounds, and generic errors.
+`/api/health` reports process liveness. `/api/ready` validates the runtime configuration and
+fingerprint-verified Mission package. `/api/status` exposes a deliberately small, non-secret status
+contract derived from that package. `/api/narrative` verifies a complete public evidence package.
+`/api/ask` accepts only a bounded question and current snapshot ID, loads the validated package
+server-side, classifies a closed set of evidence intents, and constructs a small intent-specific
+context. Both POST routes enforce exact methods and JSON shape, same-origin,
+compressed/body-size rejection, content scans, native per-client and global rate limits, timeout
+and output bounds, and generic errors.
 
 Production pins `gpt-5.6-terra`; the project service-account key exists only as the encrypted Worker
 secret `OPENAI_API_KEY`. Fixture mode performs no model request and never silently substitutes for
-a failed live request. Static assets carry the CSP and browser security headers in `docs/_headers`.
+a failed live request. Static assets carry repository-controlled CSP, HSTS, and browser security
+headers in `docs/_headers`; JSON API responses set the corresponding restrictive controls in code.
 
 ## AI and verifier boundary
 

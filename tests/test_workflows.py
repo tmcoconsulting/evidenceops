@@ -125,6 +125,7 @@ def test_static_asset_headers_set_core_browser_controls() -> None:
         "frame-ancestors 'none'",
         "Permissions-Policy:",
         "Referrer-Policy: no-referrer",
+        "Strict-Transport-Security: max-age=31536000",
         "X-Content-Type-Options: nosniff",
         "X-Frame-Options: DENY",
     ):

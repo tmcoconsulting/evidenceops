@@ -76,7 +76,9 @@ a 256 KiB upstream-response bound, one non-retrying model request, and generic e
 method, route, status, and event code—not headers, IP addresses, evidence, prompts, responses, or
 secrets. Cloudflare's privileged live-tail transport includes platform request metadata, so tail
 access is administrative and stored invocation logs are disabled. Static assets carry
-the security headers in `docs/_headers`.
+the security headers in `docs/_headers`; JSON responses set CSP, HSTS, MIME, referrer,
+permissions, cross-origin, and frame protections in code. Separate liveness and fail-closed
+readiness routes prevent a running Worker from being mistaken for a usable evidence runtime.
 
 Public CI installs exact-pinned Worker dependencies, runs workerd contract tests, checks generated
 bindings, and performs Wrangler dry-runs only. It has `contents: read` and no Cloudflare/OpenAI

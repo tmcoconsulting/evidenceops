@@ -339,13 +339,19 @@ export function jsonResponse(
 ): Response {
   const headers = new Headers(extraHeaders);
   headers.set("Cache-Control", "no-store");
+  headers.set(
+    "Content-Security-Policy",
+    "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+  );
   headers.set("Content-Type", "application/json; charset=utf-8");
+  headers.set("Cross-Origin-Opener-Policy", "same-origin");
   headers.set("Cross-Origin-Resource-Policy", "same-origin");
   headers.set(
     "Permissions-Policy",
     "camera=(), geolocation=(), microphone=(), payment=()",
   );
   headers.set("Referrer-Policy", "no-referrer");
+  headers.set("Strict-Transport-Security", "max-age=31536000");
   headers.set("X-Content-Type-Options", "nosniff");
   headers.set("X-Frame-Options", "DENY");
   return new Response(JSON.stringify(payload), { status, headers });

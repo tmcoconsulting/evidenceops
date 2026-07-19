@@ -33,7 +33,10 @@ Running the narrative produces the tracked fixture and reports `Model call perfo
 
 | Route | Method | Public behavior |
 | --- | --- | --- |
-| `/api/status` | `GET` | Returns mode, model name, synthetic/public boundary, and safety flags; never a secret |
+| `/api/health` | `GET` | Process liveness only; it does not claim that evidence or OpenAI is ready |
+| `/api/ready` | `GET` | Fails closed unless the runtime mode and fingerprint-verified Mission package are usable |
+| `/api/status` | `GET` | Returns mode, safe Mission identity/data mode, model name, and safety flags; never a secret |
+| `/api/ask` | `POST` | Accepts a bounded question plus current snapshot ID and answers from server-selected safe evidence |
 | `/api/narrative` | `POST` | Accepts one sanitized public package; returns narrative plus deterministic verification |
 
 The narrative route enforces, in order:
@@ -87,6 +90,11 @@ static/API/header tests, fixture verification, rate-limit proof, initial secure 
 transfer, exact Entra environment federation, and required Graph application consent. The bounded
 live request reached OpenAI and returned capacity unavailable; no output was accepted. Production
 was returned to fixture mode.
+
+Repository-controlled static and JSON responses declare CSP, HSTS, MIME, referrer, permissions,
+cross-origin, and frame protections. `/api/ready` validates the Mission schema, fingerprint, data
+mode metadata, and runtime configuration; `/api/health` remains a deliberately narrower liveness
+signal.
 
 Remaining:
 
