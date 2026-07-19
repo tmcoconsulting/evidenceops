@@ -8,6 +8,14 @@
 
 **Human review:** required
 
+## Review commits
+
+- `ce4522d` — comprehensive GET-only Apple/Intune collection
+- `3dd8902` — pinned mSCP baseline, deterministic Mission Control, and bounded assistant
+- `2d57a5f` — operating controls, demonstration package, and validation record
+
+All three commits remain pending TJ's review. None uses a `Human-Reviewed` trailer.
+
 ## Implemented and locally verified
 
 - Comprehensive GET-only Apple/Intune resource-family provider with pagination, bounded

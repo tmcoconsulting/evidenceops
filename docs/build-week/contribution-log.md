@@ -80,7 +80,9 @@ or proprietary material from `intune-apple-gitops` or any other repository.
 | 2026-07-18 | Runtime spend/log/egress hardening | `f8994d9` |
 | 2026-07-18 | Protected audit and deployment workflow support | `925e0f8` |
 | 2026-07-18 | Cloudflare/OpenAI egress fix and safe fixture production guard | `cfd9975` |
-| 2026-07-19 | Comprehensive Apple collector, pinned baseline, Mission Control, and bounded assistant | Pending review commit |
+| 2026-07-19 | Comprehensive GET-only Apple collector | `ce4522d` |
+| 2026-07-19 | Pinned baseline, Mission Control, and bounded assistant | `3dd8902` |
+| 2026-07-19 | Controls, demo package, and validation documentation | `2d57a5f` |
 
 Exact Phase 1 commands, results, limitations, and commit hashes are maintained in the
 [Phase 1 validation record](phase-1-validation.md).
