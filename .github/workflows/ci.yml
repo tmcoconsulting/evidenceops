@@ -97,4 +97,5 @@ jobs:
       - name: Build Worker bundle without deploying
         run: |
           npm run worker:dry-run
+          npm run worker:dry-run:preview
           npm run worker:dry-run:production

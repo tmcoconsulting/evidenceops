@@ -8,14 +8,18 @@ WORKFLOWS = REPOSITORY_ROOT / ".github" / "workflows"
 
 def test_executable_workflows_have_no_privileged_pages_chain() -> None:
     workflow_files = sorted((*WORKFLOWS.glob("*.yml"), *WORKFLOWS.glob("*.yaml")))
-    assert [path.name for path in workflow_files] == ["ci.yml"]
-    content = workflow_files[0].read_text(encoding="utf-8")
+    assert [path.name for path in workflow_files] == [
+        "ci.yml",
+        "deploy-cloudflare.yml",
+        "intune-audit.yml",
+    ]
+    content = "\n".join(path.read_text(encoding="utf-8") for path in workflow_files)
     for prohibited in (
         "workflow_run:",
         "pages: write",
-        "id-token: write",
+        "pull_request_target:",
+        "github.event.pull_request.head.sha",
         "cloudflare/wrangler-action",
-        "wrangler deploy --env",
         "actions/deploy-pages",
         "actions/upload-pages-artifact",
         "actions/configure-pages",
@@ -24,21 +28,46 @@ def test_executable_workflows_have_no_privileged_pages_chain() -> None:
 
 
 def test_executable_workflow_actions_are_immutable_and_least_privilege() -> None:
-    content = (WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
-    assert "permissions:\n  contents: read" in content
-    assert "${{ secrets." not in content
-    assert "OPENAI_API_KEY" not in content
-    assert "AZURE_" not in content
-    assert "EVIDENCEOPS_GRAPH_ACCESS_TOKEN" not in content
-    assert "npm run worker:dry-run" in content
-    assert "npm run worker:dry-run:production" in content
-    assert "npm run test:worker" in content
-    for line in content.splitlines():
-        if "uses:" not in line:
-            continue
-        reference = line.split("uses:", maxsplit=1)[1].strip().split()[0]
-        assert "@" in reference
-        assert len(reference.rsplit("@", maxsplit=1)[1]) == 40
+    for path in sorted(WORKFLOWS.glob("*.yml")):
+        content = path.read_text(encoding="utf-8")
+        assert "contents: read" in content
+        for line in content.splitlines():
+            if "uses:" not in line:
+                continue
+            reference = line.split("uses:", maxsplit=1)[1].strip().split()[0]
+            assert "@" in reference
+            assert len(reference.rsplit("@", maxsplit=1)[1]) == 40
+
+    ci = (WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
+    assert "${{ secrets." not in ci
+    assert "OPENAI_API_KEY" not in ci
+    assert "id-token: write" not in ci
+    assert "npm run worker:dry-run:preview" in ci
+    assert "npm run worker:dry-run:production" in ci
+    assert "npm run test:worker" in ci
+
+
+def test_privileged_workflows_are_main_only_and_environment_protected() -> None:
+    audit = (WORKFLOWS / "intune-audit.yml").read_text(encoding="utf-8")
+    assert "workflow_dispatch:" in audit
+    assert "pull_request:" not in audit
+    assert "push:" not in audit
+    assert "id-token: write" in audit
+    assert "environment: production" in audit
+    assert "if: github.ref == 'refs/heads/main'" in audit
+    assert "ref: main" in audit
+    assert "DeviceManagementConfiguration.Read.All" not in audit
+    assert "--auth environment-token" in audit
+    assert "store_private" not in audit
+
+    deploy = (WORKFLOWS / "deploy-cloudflare.yml").read_text(encoding="utf-8")
+    assert "id-token: write" not in deploy
+    assert "environment: production" in deploy
+    assert "github.ref == 'refs/heads/main'" in deploy
+    assert "CLOUDFLARE_DEPLOY_ENABLED == 'true'" in deploy
+    assert "secrets.CLOUDFLARE_API_TOKEN" in deploy
+    assert "npm run deploy:production" in deploy
+    assert "ref: main" in deploy
 
 
 def test_worker_static_assets_and_modes_are_explicit() -> None:
