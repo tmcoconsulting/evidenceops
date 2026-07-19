@@ -83,6 +83,8 @@ or proprietary material from `intune-apple-gitops` or any other repository.
 | 2026-07-19 | Comprehensive GET-only Apple collector | `ce4522d` |
 | 2026-07-19 | Pinned baseline, Mission Control, and bounded assistant | `3dd8902` |
 | 2026-07-19 | Controls, demo package, and validation documentation | `2d57a5f` |
+| 2026-07-19 | Review-record anchoring | `b4a042c` |
+| 2026-07-19 | Fail-closed health/readiness and HSTS hardening | `c1fca86` |
 
 Exact Phase 1 commands, results, limitations, and commit hashes are maintained in the
 [Phase 1 validation record](phase-1-validation.md).

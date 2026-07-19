@@ -13,8 +13,10 @@
 - `ce4522d` — comprehensive GET-only Apple/Intune collection
 - `3dd8902` — pinned mSCP baseline, deterministic Mission Control, and bounded assistant
 - `2d57a5f` — operating controls, demonstration package, and validation record
+- `b4a042c` — anchored review and contribution records
+- `c1fca86` — fail-closed health/readiness contracts and repository-controlled HSTS
 
-All three commits remain pending TJ's review. None uses a `Human-Reviewed` trailer.
+All five commits remain pending TJ's review in PR #2. None uses a `Human-Reviewed` trailer.
 
 ## Implemented and locally verified
 
@@ -36,6 +38,8 @@ All three commits remain pending TJ's review. None uses a `Human-Reviewed` trail
 - Same-origin `/api/ask` with closed intent classification, bounded server-side evidence
   prefiltering, strict structured output, exact typed claims, reference verification, and prose
   quarantine.
+- Separate `/api/health` liveness, fingerprint-validating `/api/ready`, Mission-derived status, and
+  repository-controlled HSTS/CSP/API response headers.
 
 ## Commands and results
 
@@ -74,7 +78,7 @@ npm run worker:types:check
   PASS
 
 npm run test:worker
-  PASS — 41 workerd contract tests
+  PASS — 43 workerd contract tests
 
 .venv/bin/python -m evidenceops rebuild-static-demo (twice)
   PASS — complete docs/assets/data SHA-256 lists identical
@@ -88,16 +92,20 @@ npm run test:worker
 npm run worker:dry-run
 npm run worker:dry-run:preview
 npm run worker:dry-run:production
-  PASS — 115 static-asset entries, 86.70 KiB upload / 18.77 KiB gzip, no deployment
+  PASS — 115 static-asset entries, 88.54 KiB upload / 19.04 KiB gzip, no deployment
 
 git diff --check
   PASS
 ```
 
-The opt-in live Intune test remains the one skipped Python test. The Worker suite was completed
-after the assistant and sanitized 429-classification code changed. A later attempt to repeat its
-local loopback run after `npm ci` was blocked by the execution environment's usage gate; the locked
-dependencies and Worker sources were unchanged, and all non-loopback Worker checks passed again.
+The opt-in live Intune test remains the one skipped Python test. The Worker suite passed after the
+assistant, sanitized 429-classification, health/readiness, Mission-status, and security-header code
+changed.
+
+GitHub Actions CI run `29698602715` completed successfully for PR #2 head
+`c1fca865064423924ebb2094a0e24474630f49fc`, including installation from both locks, Python tests,
+Worker tests, dependency audits, secret/public scans, strict documentation build, and all Wrangler
+dry-runs.
 
 ## External control-plane verification
 
@@ -130,6 +138,7 @@ dependencies and Worker sources were unchanged, and all non-loopback Worker chec
 - Production Worker secret name `OPENAI_API_KEY` is present.
 - Protected GitHub environment secret name `CLOUDFLARE_API_TOKEN` is present; its value was not
   retrieved. `CLOUDFLARE_DEPLOY_ENABLED` remains `false`.
+- PR #2 is pushed, mergeable, ready for TJ review, and has a successful required CI run.
 - The existing production custom domain and fixture deployment were not changed in this milestone.
 - Local Wrangler dry-runs passed. The interactive Wrangler control-plane login had expired, so the
   new assets could not be previewed or deployed from this session without a fresh operator login.
@@ -138,7 +147,7 @@ dependencies and Worker sources were unchanged, and all non-loopback Worker chec
 
 ## Outstanding gates
 
-1. TJ reviews the new commits and pull-request diff.
+1. TJ reviews the five commits and PR #2 diff.
 2. Refresh the local Wrangler login or validate the protected deployment token, deploy the fixture
    revision, and recheck the public custom domain, TLS, headers, desktop, and mobile views.
 3. Make at most one bounded synthetic `gpt-5.6-terra` request; accept it only if structured output,
