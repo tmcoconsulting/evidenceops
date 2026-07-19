@@ -1,8 +1,8 @@
 # Deployment Models
 
 Phase 1 implements the credential-free local build, Python application core, and a deployed
-Worker/static-assets fixture runtime. Live tenant federation and successful model generation remain
-incomplete.
+Worker/static-assets fixture runtime. The Entra trust and required Graph application consent are
+configured, but live tenant execution and successful model generation remain incomplete.
 
 ## 1. Current local synthetic static artifact
 
@@ -45,10 +45,11 @@ storage, and clearly separated from the TMCO-funded service-account path.
 
 ## 3. Later private collection and sanitized publication
 
-Where GitHub plan and policy support the design, keep collection in a private repository and use a
-protected environment for publication. Authenticate GitHub Actions to Entra with OIDC/workload
-identity federation, constrain the federated subject to the repository, branch/tag, and protected
-environment, and grant only application `DeviceManagementConfiguration.Read.All`.
+The current public repository uses a manual, main-only collection workflow and the protected
+`production` environment. GitHub Actions authenticates to Entra with OIDC/workload identity
+federation; the federated subject is constrained to this repository and environment, and the
+EvidenceOps-required application permission is only `DeviceManagementConfiguration.Read.All`.
+The workflow has not yet executed against the tenant.
 
 The private workflow should:
 

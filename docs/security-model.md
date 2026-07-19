@@ -61,7 +61,8 @@ Public CI uses only repository content and read-only `contents` permission. The 
 Pages workflow/site and its `pages: write`/deployment OIDC permissions were removed. Executable
 actions are pinned to immutable commit SHAs. Separate main-only workflows target the protected
 `production` environment; Cloudflare deployment is disabled until its narrow token exists, and the
-manual Intune audit cannot authenticate until the environment-scoped Entra FIC is configured.
+manual Intune audit has an exact environment-scoped Entra FIC plus consented read-only application
+permission. It remains unexecuted until reviewed code reaches `main`; no client secret exists.
 
 The public Worker runtime is deployed in fixture mode. It uses Worker-first routing only for
 `/api/*`, exact methods, same-origin checks, a 64 KiB request bound, compressed-body rejection,

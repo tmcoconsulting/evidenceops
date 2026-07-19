@@ -229,4 +229,19 @@ documents the [Workers fetch request-context and public-routing rules](https://d
 
 **Operational boundary:** GitHub deployment is main-only, environment-protected, and disabled until
 a narrowly scoped Cloudflare API token is stored. The manual Intune workflow is likewise main-only
-and cannot authenticate until the exact environment-scoped Entra federated identity is configured.
+and may authenticate only through the exact environment-scoped Entra federated identity. The trust
+and required application consent are configured, but no feature-branch or live Graph run was made.
+
+## 2026-07-18 — Activate exact Entra environment federation without running collection
+
+**Decision:** Add `github-evidenceops-production` with the exact GitHub environment subject and
+grant administrator consent only to application `DeviceManagementConfiguration.Read.All`. Create
+no client secret and do not execute the audit until reviewed code reaches `main`.
+
+**Why:** The environment subject excludes pull requests and arbitrary branches from the workload
+identity. Keeping execution post-merge preserves the protected-code boundary while allowing the
+existing manual workflow to use a short-lived Graph token later.
+
+**Pre-existing state:** Eight consented delegated permissions remain on the application. They are
+not used by the EvidenceOps application-only workflow, were not added for this proof, and were not
+removed automatically because their ownership and unrelated consumers require human review.

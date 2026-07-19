@@ -89,3 +89,8 @@ The follow-on Cloudflare runtime and deployment were completed in this same prim
 tenant data occurred. Cloudflare resources, the custom domain, a project-scoped OpenAI key/Worker
 secret, GitHub environment controls, and bounded synthetic external validation are recorded in the
 [Worker validation record](cloudflare-worker-validation.md).
+
+The same thread later configured the exact Entra production-environment federation and required
+Graph application consent without making a tenant request or creating a client secret. It also
+added bounded, code-aware OpenAI 429 classification while keeping upstream bodies and messages out
+of responses and logs. These later changes remain pending TJ human review in draft PR #1.

@@ -86,15 +86,35 @@ environment. It requests only `contents: read` and `id-token: write`, obtains a 
 token, writes private evidence only to ignored ephemeral storage, publishes/scans in memory and
 ignored build paths, reports aggregate sanitized counts, and deletes both packages at job end.
 
-Live TMCO validation remains outstanding because the Entra application still needs an
-environment-scoped federated identity credential and verified administrator consent. The required
-credential is:
+The existing Entra application now has the following environment-scoped federated identity
+credential, which was created and then independently re-opened in the Entra control plane:
 
 ```text
+name: github-evidenceops-production
 issuer: https://token.actions.githubusercontent.com
 subject: repo:tmcoconsulting/evidenceops:environment:production
 audience: api://AzureADTokenExchange
 ```
 
-No endpoint is reported as live-validated until a controlled workflow run succeeds. Do not add a
-client secret or broaden the documented application permission.
+Application `DeviceManagementConfiguration.Read.All` is present and shows administrator consent.
+No Entra client secret exists or was created. The application also retains these pre-existing
+delegated permissions, all already consented before the EvidenceOps application permission was
+added:
+
+- `DeviceManagementApps.Read.All`
+- `DeviceManagementCloudCA.Read.All`
+- `DeviceManagementConfiguration.Read.All`
+- `DeviceManagementManagedDevices.Read.All`
+- `DeviceManagementRBAC.Read.All`
+- `DeviceManagementScripts.Read.All`
+- `DeviceManagementServiceConfig.Read.All`
+- `User.Read`
+
+The EvidenceOps production workflow does not request or use those delegated permissions. Several
+are broader than the narrow configuration collection proof; they were left unchanged because they
+pre-date this project and require application-owner review before removal.
+
+Live TMCO validation remains outstanding. The privileged workflow is manual, checks out reviewed
+`main`, and targets the protected `production` environment, so it must not be executed from this
+feature branch. No endpoint is reported as live-validated until that controlled post-merge run
+succeeds. Do not add a client secret or broaden the documented application permission.

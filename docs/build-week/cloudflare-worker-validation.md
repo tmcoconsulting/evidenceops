@@ -14,6 +14,8 @@
 
 **Externally validated egress/runtime fix:** `cfd9975`
 
+**Reported branch checkpoint:** `27611c143f96311002441629d696047f60000240`
+
 ## Scope
 
 This milestone adds and deploys the Worker/static-assets runtime selected after Phase 1 security
@@ -42,7 +44,7 @@ npm ci --ignore-scripts --no-audit --no-fund
 
 npm run validate:worker
   PASS — Prettier, type-aware Oxlint, strict runtime/test TypeScript,
-         25 workerd contract tests, generated-binding check, and fixture/preview/production dry-runs
+         28 workerd contract tests, generated-binding check, and fixture/preview/production dry-runs
 
 npm audit --audit-level=moderate
   PASS — 0 vulnerabilities
@@ -99,7 +101,39 @@ generated-prose entries quarantined, and human review required. The local proces
 The workerd corpus verifies same-origin and method enforcement, browser-key rejection, native rate
 handling, compression/content-length/byte bounds, shared credential patterns, unknown fields,
 tampered fingerprints, fixture identity, one fixed OpenAI request, no silent fallback, exact
-finding coverage, unknown claims, unsupported verdicts, and unrestricted-prose quarantine.
+finding coverage, unknown claims, unsupported verdicts, unrestricted-prose quarantine, and bounded
+sanitized distinction between quota and request-rate 429 responses.
+
+## Continuation validation after operator-control inspection
+
+An isolated Python environment was created outside the repository from `requirements-dev.txt`, and
+the package was installed with `--no-build-isolation --no-deps`. A clean `npm ci` installed the 89
+exact-lock packages. The complete local matrix then passed:
+
+```text
+Ruff format/lint                         PASS
+Mypy                                    PASS — 41 source files
+Pytest                                  PASS — 152 passed, 1 live test skipped,
+                                               91.13% branch-aware coverage
+Bandit                                  PASS — 2,829 lines, no findings
+repository secret scan                  PASS
+pip-audit / npm audit                   PASS — no known vulnerabilities
+Prettier / Oxlint / strict TypeScript    PASS
+Worker contract tests                   PASS — 28 passed
+generated bindings                      PASS
+synthetic demo comparison               PASS — two independent outputs identical
+synthetic/public-artifact scans          PASS
+MkDocs strict build                     PASS — documented upstream warning only
+fixture/preview/production dry-runs      PASS
+git diff --check                        PASS
+```
+
+Production and preview status endpoints returned HTTPS success in explicit fixture mode with model
+`gpt-5.6-terra`, no Intune write capability, and BYOK disabled. The production custom domain
+returned CSP, HSTS, frame, MIME, referrer, permissions, and cross-origin headers. A production
+fixture request used only the tracked synthetic package, performed no model call, accepted four
+typed deterministic claims, quarantined fourteen generated-prose claims, required human review,
+and passed the public-artifact scan. No deployment was made for this continuation patch.
 
 ## External validation
 
@@ -121,14 +155,27 @@ finding coverage, unknown claims, unsupported verdicts, and unrestricted-prose q
 - Disabled the legacy GitHub Pages site/environment. Created a branch-restricted GitHub production
   environment and nonsecret variables; Cloudflare deployment remains disabled pending a narrow
   environment token.
+- Created and independently re-read the exact Entra federated credential
+  `github-evidenceops-production` for the protected GitHub `production` environment. Added only the
+  required application `DeviceManagementConfiguration.Read.All` permission and verified
+  administrator consent. No client secret or Graph request was created.
+- Re-read the protected GitHub environment: the four nonsecret variables are present,
+  `CLOUDFLARE_DEPLOY_ENABLED` is `false`, and `CLOUDFLARE_API_TOKEN` is absent.
+- Re-read the production Worker secret names: `OPENAI_API_KEY` is present, but its current OpenAI
+  owner cannot be verified from Cloudflare. The last observed key was project-scoped and user-owned;
+  service-account replacement and temporary-key revocation remain unverified.
 
 ## External validation not performed
 
-- No Microsoft Graph or Intune request was made because the Entra FIC/admin-consent state could not
-  be configured without an authenticated Entra administrative session.
+- No Microsoft Graph or Intune request was made. The trust and permission are now configured, but
+  the workflow remains restricted to protected `main` and must not run from this feature branch.
 - OpenAI project budget alerts and per-model limits could not be inspected or changed because the
-  Platform administrative UI required sign-in. A budget would be a soft alert, not a hard cap.
-- A Cloudflare GitHub deployment token was not created because Wrangler OAuth cannot mint API
-  tokens and the dashboard required sign-in.
+  Platform administrative UI still requires sign-in. Service-account ownership, temporary-key
+  revocation, model allowlisting, 5 RPM/25,000 TPM limits, `$5` budget alerts, and usable billing are
+  unverified. A budget would be a soft alert, not a hard cap.
+- No second OpenAI request was made: the service-account and project-control gates were not proven,
+  and production remains fixture-only.
+- A Cloudflare GitHub deployment token was not created. Wrangler OAuth cannot mint API tokens and
+  the protected environment has no `CLOUDFLARE_API_TOKEN`; deployment remains disabled.
 - No production rollback was executed because earlier versions used live model mode; the CLI
   deployment history and rollback command were verified instead.

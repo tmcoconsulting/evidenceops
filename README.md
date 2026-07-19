@@ -50,7 +50,9 @@ See the [getting-started guide](docs/getting-started.md) and
 ## Project status
 
 EvidenceOps is an early **Phase 1 proof**, not a compliance product or autonomous endpoint manager.
-Live collection is opt-in, private, and still awaits Entra federation/admin-consent validation.
+Live collection is opt-in and private. The environment-bound Entra federation and required Graph
+application permission now have administrator consent, but no live tenant request has run: the
+manual audit remains restricted to reviewed `main` through the protected `production` environment.
 GitHub Pages has been disabled. The Cloudflare Worker now serves the synthetic site at
 [evidenceops.tmcoconsulting.com](https://evidenceops.tmcoconsulting.com/) with bounded same-origin
 `/api/status` and `/api/narrative` routes. Production is deliberately in fixture mode because the

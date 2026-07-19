@@ -20,8 +20,11 @@ Roadmap items describe intent, not operational capability or delivery commitment
 - Credential-free end-to-end CLI and polished local synthetic static walkthrough
 - Shared credential detection across publication, repository/static scans, and model egress
 
-Live TMCO validation remains pending until the environment-scoped Entra federated identity and
-application permission receive administrator consent. Public CI never performs live collection.
+- [x] Configure the environment-scoped Entra federated identity and grant administrator consent to
+  application `DeviceManagementConfiguration.Read.All`
+- [ ] Run the manual protected post-merge audit and record sanitized counts only
+
+Public CI never performs live collection.
 
 ## Cloudflare runtime — fixture production deployed
 

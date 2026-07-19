@@ -4,7 +4,8 @@ This Phase 1 model covers the public repository, unprivileged CI, local static b
 adapter, private evidence writer, sanitizer, OpenAI boundary, deterministic verifier, and
 synthetic demo, and the deployed Cloudflare Worker/static-assets runtime. The public custom domain,
 encrypted OpenAI secret binding, fixture API behavior, TLS, headers, and rate limits are in scope.
-Live Intune federation and successful model-generated output remain outside the validated state.
+The environment-bound Entra trust and Graph application consent are configured. Live Intune
+execution and successful model-generated output remain outside the validated state.
 
 ## Assets
 
@@ -34,7 +35,7 @@ Live Intune federation and successful model-generated output remain outside the 
 | Credential committed | Account compromise | Ignore rules and location-only secret scan | Organization incident drill |
 | Private package reaches static/public assets | Re-identification | Separate writer, MkDocs exclusion, path/content scan | Signed publication manifest |
 | Graph adds a sensitive field | Silent disclosure | Explicit normalization and unknown-field publication failure | Live canary contract monitoring |
-| Fork obtains collection credential | Tenant disclosure | No public live workflow or credentials | OIDC subject/environment policy in private repo |
+| Fork obtains collection credential | Tenant disclosure | Manual main-only workflow, protected environment, exact OIDC subject, no client secret | Post-merge runbook validation and environment reviewer |
 | Graph permission or verb expands | Endpoint mutation | One read permission and GET-only transport/tests | Dedicated manifest/AST policy gate |
 | Narrative omits/duplicates evidence | Audit error | Exact unique finding-ID set equality | Broader evaluation corpus |
 | Narrative reverses status in prose | Audit error | Typed claims only; all prose quarantined | Explicit human approval workflow |

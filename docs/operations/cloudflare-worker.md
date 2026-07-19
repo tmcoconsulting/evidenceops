@@ -51,6 +51,10 @@ The narrative route enforces, in order:
 OpenAI mode pins `gpt-5.6-terra`, uses `store: false`, exposes no tools, makes no retry, times out
 after 20 seconds, caps output at 1,600 tokens, and reads at most 256 KiB of response JSON. It never
 falls back to fixture output.
+Upstream error inspection reads at most 16 KiB and retains only a strictly formatted `error.code`
+or `error.type` long enough to distinguish quota exhaustion from request-rate limiting. Upstream
+messages and bodies are never returned or logged; an unknown or oversized 429 remains a generic
+capacity failure.
 The public production deployment remains in explicit fixture mode while the OpenAI project returns
 capacity unavailable. A bounded production request proved that the Worker reached OpenAI, but no
 model output was returned or accepted. Fixture mode makes no OpenAI request and does not silently
@@ -58,11 +62,16 @@ fall back from a failed live call.
 
 ## Secret and logging boundary
 
-The project-scoped runtime key belongs only in the encrypted
+The runtime key belongs only in the encrypted
 [Worker secret](https://developers.cloudflare.com/workers/configuration/secrets/). It must not be a
 Wrangler plain-text variable, GitHub public-CI secret, browser value, repository file, build
 argument, or log field. The Worker logs only event code, request ID, method, route, and status. It
 does not log client IPs, headers, packages, prompts, model responses, or error bodies.
+
+The current control-plane session could verify that `OPENAI_API_KEY` exists as a Worker secret, but
+could not verify its present OpenAI owner. The last directly observed transfer used a
+project-scoped user-owned key. Service-account replacement and revocation of that temporary key
+must therefore remain open gates until the OpenAI project UI and Worker secret are both checked.
 
 The `global_fetch_strictly_public` compatibility flag forces the fixed OpenAI hostname through its
 public route rather than treating it as an implicit Worker-to-Worker service binding. No arbitrary
@@ -74,29 +83,41 @@ requires its own browser storage, transit, redaction, support, exfiltration, and
 ## Production validation and remaining gates
 
 Completed: account/zone verification, preview and production deployment, custom-domain/TLS checks,
-static/API/header tests, fixture verification, rate-limit proof, and secure Worker-secret transfer.
-The bounded live request reached OpenAI and returned capacity unavailable; no output was accepted.
+static/API/header tests, fixture verification, rate-limit proof, initial secure Worker-secret
+transfer, exact Entra environment federation, and required Graph application consent. The bounded
+live request reached OpenAI and returned capacity unavailable; no output was accepted. Production
+was returned to fixture mode.
 
 Remaining:
 
-1. sign in to **OpenAI Platform → EvidenceOps project → Limits**; set a small `$5` monthly soft
-   budget with 50%, 80%, and 100% alerts, allow only `gpt-5.6-terra`, and start with at most 5 RPM
-   and 25,000 TPM (or the lowest supported values that still allow the bounded demo); this budget
-   is an alert threshold and does not stop spending;
-2. if the project UI permits, create service account `evidenceops-cloudflare-runtime`, transfer its
-   replacement project key directly to the existing Worker secret, validate once in synthetic mode,
-   and then revoke the current user-owned project key;
+1. sign in to **OpenAI Platform → EvidenceOps project → Service accounts**; create or verify
+   `evidenceops-cloudflare-runtime`, create one restricted project key, transfer it directly to the
+   existing Worker secret, verify service-account ownership, and revoke the temporary user-owned
+   key;
+2. in **EvidenceOps project → Limits**, set a `$5` monthly soft budget with 50%, 80%, and 100%
+   alerts, allow only `gpt-5.6-terra` where supported, and set at most 5 RPM and 25,000 TPM (or the
+   lowest accepted values); verify usable billing. The budget is an alert, not a hard cap;
 3. in **Cloudflare → My Profile → API Tokens**, create `evidenceops-github-deploy` restricted to the
-   TMCO Consulting account and `tmcoconsulting.com` zone with Account `Workers Scripts Edit` and
-   `Account Settings Read`, Zone `Workers Routes Edit`, and User `User Details Read` plus
-   `Memberships Read`; do not add KV, R2, DNS, billing, or unrelated-account access;
+   TMCO Consulting account with Account `Workers Scripts Edit`; do not add zone, route, DNS, KV,
+   R2, account-settings, membership, user-details, billing, or unrelated-account access. The
+   workflow supplies the exact account ID, so it does not need membership discovery;
 4. store the one-time value only as the protected GitHub environment secret
-   `CLOUDFLARE_API_TOKEN`, then change `CLOUDFLARE_DEPLOY_ENABLED` to `true` after review;
+   `CLOUDFLARE_API_TOKEN`; validate it against the exact workflow while
+   `CLOUDFLARE_DEPLOY_ENABLED=false`, then enable deployment only after review;
 5. review Cloudflare observability/alert retention in the dashboard;
-6. use `wrangler deployments list --env production` and
+6. after merge, manually run the protected GET-only Intune audit and retain only sanitized counts;
+7. use `wrangler deployments list --env production` and
    `wrangler rollback <known-good-version> --env production` for rollback; and
-7. enable OpenAI mode only after a single bounded request succeeds and the dashboard label is
+8. enable OpenAI mode only after a single bounded request succeeds and the dashboard label is
    revalidated.
+
+The current workflow uses `wrangler deploy` while the custom domain remains declarative in
+`wrangler.jsonc`. Cloudflare's [Attach Domain API](https://developers.cloudflare.com/api/resources/workers/subresources/domains/methods/update/)
+accepts `Workers Scripts Write`, and the existing custom-domain operation does not require a zone
+route or DNS permission. Cloudflare scopes `Workers Scripts Edit` at the account resource, not an
+individual Worker, so protected-main execution, the fixed Worker name, and environment review are
+necessary residual controls even for the narrowest practical token. This proposed minimum still
+requires a real token validation before deployment is enabled.
 
 Cloudflare documents [Worker secrets](https://developers.cloudflare.com/workers/configuration/secrets/),
 [custom domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/),

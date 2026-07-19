@@ -85,6 +85,10 @@ deployed production environment pins `gpt-5.6-terra`, stores its project key onl
 secret, and serves the custom domain in explicit fixture mode while project capacity is unavailable.
 The GitHub deployment workflow remains disabled until a narrow Cloudflare token is configured.
 
+The manual Intune workflow uses an exact GitHub `production`-environment federated identity and a
+consented application `DeviceManagementConfiguration.Read.All` permission. It is intentionally not
+run from feature branches; the first live audit remains a protected post-merge validation gate.
+
 ## Phase 1 modules
 
 | Module | Responsibility | Intentional exclusion |
