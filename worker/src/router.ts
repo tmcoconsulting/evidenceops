@@ -2,6 +2,7 @@ import {
   validatePublicPackage,
   verifyPublicPackageIdentity,
 } from "./contracts";
+import { createAssistantAnswer, type AssistantDependencies } from "./assistant";
 import type { WorkerEnv } from "./env";
 import { createNarrative, type NarrativeDependencies } from "./narrative";
 import {
@@ -40,7 +41,46 @@ export async function handleRequest(
       live_intune_collection_performed: false,
       intune_write_capability: false,
       byok_supported: false,
+      assistant_endpoint: "/api/ask",
     });
+  }
+  if (url.pathname === "/api/ask") {
+    if (request.method !== "POST") {
+      return methodNotAllowed("POST");
+    }
+    assertSameOrigin(request);
+    const globalResult = await env.NARRATIVE_GLOBAL_RATE_LIMITER.limit({
+      key: "assistant-global",
+    });
+    if (!globalResult.success) {
+      throw new HttpError(
+        429,
+        "rate_limited",
+        "assistant request rate limit exceeded",
+      );
+    }
+    const { success } = await env.NARRATIVE_RATE_LIMITER.limit({
+      key: await rateLimitKey(request),
+    });
+    if (!success) {
+      throw new HttpError(
+        429,
+        "rate_limited",
+        "assistant request rate limit exceeded",
+      );
+    }
+    const untrusted = await readBoundedJson(request);
+    const assistantDependencies: AssistantDependencies = dependencies ?? {
+      outboundFetch: (input, init) => fetch(input, init),
+    };
+    return jsonResponse(
+      await createAssistantAnswer(
+        request,
+        env,
+        untrusted,
+        assistantDependencies,
+      ),
+    );
   }
   if (url.pathname === "/api/narrative") {
     if (request.method !== "POST") {

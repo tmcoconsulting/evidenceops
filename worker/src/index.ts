@@ -84,7 +84,10 @@ function safeMethod(method: string): "GET" | "POST" | "OTHER" {
 
 function safeRoute(
   path: string,
-): "api-narrative" | "api-other" | "api-status" | "static" {
+): "api-ask" | "api-narrative" | "api-other" | "api-status" | "static" {
+  if (path === "/api/ask") {
+    return "api-ask";
+  }
   if (path === "/api/narrative") {
     return "api-narrative";
   }
