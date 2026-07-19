@@ -41,6 +41,7 @@ _PUBLIC_CONTENT_PATTERNS: Final = (
 
 _NON_CONTENT_ASSET_DIRS: Final = {"javascripts", "stylesheets", "webfonts"}
 _PROHIBITED_PATH_PARTS: Final = {"artifacts", "exports", "private", "raw"}
+_DUPLICATE_FILENAME_SUFFIX: Final = re.compile(r".+ [1-9]\d*(?:\..+)?$")
 _PUBLIC_IDENTIFIER_ALLOWLIST: Final = {
     # Microsoft Graph public permission identifiers documented in the checked-in manifest.
     "06a5fe6d-c49d-46a7-b082-56b1b14103c7",
@@ -89,6 +90,9 @@ def scan(root: Path) -> list[tuple[Path, int, str]]:
     findings: list[tuple[Path, int, str]] = []
     for path in _iter_files(root):
         relative = path.relative_to(root)
+        if _DUPLICATE_FILENAME_SUFFIX.fullmatch(path.name):
+            findings.append((relative, 1, "duplicate-style artifact filename"))
+            continue
         if any(part.lower() in _PROHIBITED_PATH_PARTS for part in relative.parts):
             findings.append((relative, 1, "private-evidence path"))
             continue
