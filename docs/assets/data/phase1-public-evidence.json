@@ -1,10 +1,10 @@
 {
   "collection": {
     "collection_timestamp_utc": "2026-07-18T18:00:00Z",
-    "content_fingerprint": "sha256:032e79cd03b4d2136ff222e9a96b9b0f1a297aa5135c77a09e9806a376895e1b",
+    "content_fingerprint": "sha256:243d017f289a8a0007d5609de55df4fada3afef149b06dae17ed2293f92ca058",
     "desired_state_git_commit_sha": "synthetic-reviewed-commit",
-    "deterministic_algorithm_version": "evidenceops-drift-v1.0.0",
-    "evidence_id": "ev1-032e79cd03b4d2136ff222e9",
+    "deterministic_algorithm_version": "evidenceops-drift-v1.1.0",
+    "evidence_id": "ev1-243d017f289a8a0007d5609d",
     "freshness": {
       "as_of_utc": "2026-07-18T18:00:00Z",
       "max_age_seconds": 86400,
@@ -14,7 +14,7 @@
     "provider_evidence_id": "ev1-af4fe5879b99a0790bae5293",
     "schema_version": "1.0.0"
   },
-  "content_fingerprint": "sha256:04f92c86e33811b55faf002460981d2d6991a09a9e4166470006f0ad445984d6",
+  "content_fingerprint": "sha256:bf5788de43a3d43d37454d25d603e7d200fddfea0b03e8457dfced43f2cc2748",
   "desired_state": [
     {
       "content_fingerprint": "sha256:7156d564f37b26edbfb3e134c6e5669777687df4d4607da8555312aa7da2da37",
@@ -73,15 +73,15 @@
       "title": "Demonstrate an unsupported evaluator"
     }
   ],
-  "evidence_id": "ev1-04f92c86e33811b55faf0024",
+  "evidence_id": "ev1-bf5788de43a3d43d37454d25",
   "evidence_references": [
     {
-      "content_fingerprint": "sha256:dfd44fccff65c75c6b4d3ed479de3ad04354e715478cf171b3696d2c93d558d6",
-      "evidence_id": "ev1-dfd44fccff65c75c6b4d3ed4",
+      "content_fingerprint": "sha256:d4c85e1d0eda3778bf277005f9f3d37e8674fe59524d29b00ca529f06c62332e",
+      "evidence_id": "ev1-d4c85e1d0eda3778bf277005",
       "label": "source collection",
       "object_type": "evidence_reference",
       "reference_kind": "collection_metadata",
-      "referenced_evidence_id": "ev1-032e79cd03b4d2136ff222e9",
+      "referenced_evidence_id": "ev1-243d017f289a8a0007d5609d",
       "schema_version": "1.0.0"
     },
     {
@@ -121,104 +121,104 @@
       "schema_version": "1.0.0"
     },
     {
-      "content_fingerprint": "sha256:bea7d35e231b2a6f3619265c183f80c1a01fb84a1976d0226fb244656ef46acd",
-      "evidence_id": "ev1-bea7d35e231b2a6f3619265c",
+      "content_fingerprint": "sha256:468a8759874979a3c5c4a52431b204af84ef2c1670321ae2d074e7e8156a0394",
+      "evidence_id": "ev1-468a8759874979a3c5c4a524",
       "label": "normalized observation",
       "object_type": "evidence_reference",
       "reference_kind": "normalized_configuration_observation",
-      "referenced_evidence_id": "ev1-8ea4a7be98f990356fcab2b2",
+      "referenced_evidence_id": "ev1-57aea1576d508c25c017cc8b",
       "schema_version": "1.0.0"
     },
     {
-      "content_fingerprint": "sha256:e83a3fb4b9f48053c88de1e70fdd1150af97ab8c1369cac3bd9866a98fbc9485",
-      "evidence_id": "ev1-e83a3fb4b9f48053c88de1e7",
+      "content_fingerprint": "sha256:64cec0de0dfce74b82968d56b2be8d372d52851aec5f3c5bea349b80895b1737",
+      "evidence_id": "ev1-64cec0de0dfce74b82968d56",
       "label": "normalized observation",
       "object_type": "evidence_reference",
       "reference_kind": "normalized_configuration_observation",
-      "referenced_evidence_id": "ev1-084155f978ab938bde61eb7b",
+      "referenced_evidence_id": "ev1-e714bc3d5694da36879178e5",
       "schema_version": "1.0.0"
     },
     {
-      "content_fingerprint": "sha256:88a935b088d61c989b24a92729227e73e3c9c452923b42b5233fb5f561821841",
-      "evidence_id": "ev1-88a935b088d61c989b24a927",
+      "content_fingerprint": "sha256:e33065c198a0f43de77881323405aa49698e32d44c16b552eab137b6d99ab899",
+      "evidence_id": "ev1-e33065c198a0f43de7788132",
       "label": "normalized observation",
       "object_type": "evidence_reference",
       "reference_kind": "normalized_configuration_observation",
-      "referenced_evidence_id": "ev1-6bdfe79c4e3fa28f877596b2",
+      "referenced_evidence_id": "ev1-9eeb4ad9d67fc3d6d4e7dc38",
       "schema_version": "1.0.0"
     },
     {
-      "content_fingerprint": "sha256:d4d5b15cc1233d7c2ee4f4f331c37ad1541c0dd10c767ee041d454b8dac0d039",
-      "evidence_id": "ev1-d4d5b15cc1233d7c2ee4f4f3",
+      "content_fingerprint": "sha256:f7702446554de6065f48ea94f4f957d4019757515c810e993c1f50ad97952ad5",
+      "evidence_id": "ev1-f7702446554de6065f48ea94",
       "label": "deterministic finding",
       "object_type": "evidence_reference",
       "reference_kind": "deterministic_drift_finding",
-      "referenced_evidence_id": "ev1-ecd191c277612b8669db775c",
+      "referenced_evidence_id": "ev1-9fe83b2f63a9b9107943a194",
       "schema_version": "1.0.0"
     },
     {
-      "content_fingerprint": "sha256:52129dfccf686ed13288dcbd18e6425568425d74a3e4ad5d68a4159155034ec4",
-      "evidence_id": "ev1-52129dfccf686ed13288dcbd",
+      "content_fingerprint": "sha256:3f587ce907803eb11f343f6f8802b5aca28d8e0d4ac14ae516b9df717395af94",
+      "evidence_id": "ev1-3f587ce907803eb11f343f6f",
       "label": "deterministic finding",
       "object_type": "evidence_reference",
       "reference_kind": "deterministic_drift_finding",
-      "referenced_evidence_id": "ev1-81658eeb2a8d8930d646dcaf",
+      "referenced_evidence_id": "ev1-00692c1442a1aa1944950d0c",
       "schema_version": "1.0.0"
     },
     {
-      "content_fingerprint": "sha256:27773fccc7d2c3adf2cc8913b10240c24ae525257f34b8212446352ac56a1141",
-      "evidence_id": "ev1-27773fccc7d2c3adf2cc8913",
+      "content_fingerprint": "sha256:f4fe7117131ccc581a80214f61e0561bfd9f5c7bdb20ebe573fce25b8eaa1963",
+      "evidence_id": "ev1-f4fe7117131ccc581a80214f",
       "label": "deterministic finding",
       "object_type": "evidence_reference",
       "reference_kind": "deterministic_drift_finding",
-      "referenced_evidence_id": "ev1-c64986e6dd94a293dc1f3911",
+      "referenced_evidence_id": "ev1-93beffaa2b16e7591f3f4a68",
       "schema_version": "1.0.0"
     },
     {
-      "content_fingerprint": "sha256:54bdf5bb3e8e1557a823f0fb6eba3d99b3d962fca3e899d81acf694e710cb7f0",
-      "evidence_id": "ev1-54bdf5bb3e8e1557a823f0fb",
+      "content_fingerprint": "sha256:c698e9829911f90d2bfeb8e7bea29a2f003367171dd517ae916750b1222a8862",
+      "evidence_id": "ev1-c698e9829911f90d2bfeb8e7",
       "label": "deterministic finding",
       "object_type": "evidence_reference",
       "reference_kind": "deterministic_drift_finding",
-      "referenced_evidence_id": "ev1-2c4d66d5b11ce1df5b32a2fe",
+      "referenced_evidence_id": "ev1-c1b0791bad7da5bee53c519d",
       "schema_version": "1.0.0"
     }
   ],
   "findings": [
     {
       "additional_evidence_required": [],
-      "collection_evidence_id": "ev1-032e79cd03b4d2136ff222e9",
-      "content_fingerprint": "sha256:ecd191c277612b8669db775cb66317b9611a35f0cacb5be64d8291387a608fa2",
+      "collection_evidence_id": "ev1-243d017f289a8a0007d5609d",
+      "content_fingerprint": "sha256:9fe83b2f63a9b9107943a1949a081f495877634433464bcdb63392666901e5d4",
       "desired_state_evidence_id": "ev1-7156d564f37b26edbfb3e134",
       "desired_state_git_commit_sha": "synthetic-reviewed-commit",
-      "deterministic_algorithm_version": "evidenceops-drift-v1.0.0",
-      "evidence_id": "ev1-ecd191c277612b8669db775c",
+      "deterministic_algorithm_version": "evidenceops-drift-v1.1.0",
+      "evidence_id": "ev1-9fe83b2f63a9b9107943a194",
       "input_fingerprints": [
         "sha256:7156d564f37b26edbfb3e134c6e5669777687df4d4607da8555312aa7da2da37",
-        "sha256:8ea4a7be98f990356fcab2b2e28ab2d27152fff0083e0d34ac5defbd98af932e"
+        "sha256:57aea1576d508c25c017cc8b2990887d035368cdf79d6ab7986ec21880b2d955"
       ],
       "object_type": "deterministic_drift_finding",
       "observation_evidence_ids": [
-        "ev1-8ea4a7be98f990356fcab2b2"
+        "ev1-57aea1576d508c25c017cc8b"
       ],
       "schema_version": "1.0.0",
       "status": "matches desired state"
     },
     {
       "additional_evidence_required": [],
-      "collection_evidence_id": "ev1-032e79cd03b4d2136ff222e9",
-      "content_fingerprint": "sha256:81658eeb2a8d8930d646dcaf8c789699d95293daf68dc6aaf74eaeb5df41a036",
+      "collection_evidence_id": "ev1-243d017f289a8a0007d5609d",
+      "content_fingerprint": "sha256:00692c1442a1aa1944950d0cee5ac28b82488f7f2a13f2439f85c51f269f0c56",
       "desired_state_evidence_id": "ev1-5afa05fffab63171195bee7b",
       "desired_state_git_commit_sha": "synthetic-reviewed-commit",
-      "deterministic_algorithm_version": "evidenceops-drift-v1.0.0",
-      "evidence_id": "ev1-81658eeb2a8d8930d646dcaf",
+      "deterministic_algorithm_version": "evidenceops-drift-v1.1.0",
+      "evidence_id": "ev1-00692c1442a1aa1944950d0c",
       "input_fingerprints": [
         "sha256:5afa05fffab63171195bee7bf55a76833beab3c8d67017e7a3bdb0d25bc449b6",
-        "sha256:084155f978ab938bde61eb7b8073fb7fbaa0b1bf519e6b119a9a694be8838f25"
+        "sha256:e714bc3d5694da36879178e5aff4fe840757895d96e7ad15b98fdea540c28021"
       ],
       "object_type": "deterministic_drift_finding",
       "observation_evidence_ids": [
-        "ev1-084155f978ab938bde61eb7b"
+        "ev1-e714bc3d5694da36879178e5"
       ],
       "schema_version": "1.0.0",
       "status": "differs from desired state"
@@ -227,12 +227,12 @@
       "additional_evidence_required": [
         "No normalized observation was present for this desired-state record."
       ],
-      "collection_evidence_id": "ev1-032e79cd03b4d2136ff222e9",
-      "content_fingerprint": "sha256:c64986e6dd94a293dc1f391187765bbcd5ef6a39d8f2d7a55adbdcc377329ce7",
+      "collection_evidence_id": "ev1-243d017f289a8a0007d5609d",
+      "content_fingerprint": "sha256:93beffaa2b16e7591f3f4a68ef95b914a7440080c4f7373c88746aed52a10ede",
       "desired_state_evidence_id": "ev1-4779a8c392bdd82406d5e287",
       "desired_state_git_commit_sha": "synthetic-reviewed-commit",
-      "deterministic_algorithm_version": "evidenceops-drift-v1.0.0",
-      "evidence_id": "ev1-c64986e6dd94a293dc1f3911",
+      "deterministic_algorithm_version": "evidenceops-drift-v1.1.0",
+      "evidence_id": "ev1-93beffaa2b16e7591f3f4a68",
       "input_fingerprints": [
         "sha256:4779a8c392bdd82406d5e287043094c7a923bb97805f2aa9dcff6a00bd7b5d2e"
       ],
@@ -245,19 +245,19 @@
       "additional_evidence_required": [
         "A supported deterministic evaluator is required."
       ],
-      "collection_evidence_id": "ev1-032e79cd03b4d2136ff222e9",
-      "content_fingerprint": "sha256:2c4d66d5b11ce1df5b32a2fe55a22c44e5b53c494722e56b483cc4e95ff8dc13",
+      "collection_evidence_id": "ev1-243d017f289a8a0007d5609d",
+      "content_fingerprint": "sha256:c1b0791bad7da5bee53c519d69429608a12ebbaffd5f1dbfd635af07fab9de4b",
       "desired_state_evidence_id": "ev1-da1256122f1e5a35a9483de5",
       "desired_state_git_commit_sha": "synthetic-reviewed-commit",
-      "deterministic_algorithm_version": "evidenceops-drift-v1.0.0",
-      "evidence_id": "ev1-2c4d66d5b11ce1df5b32a2fe",
+      "deterministic_algorithm_version": "evidenceops-drift-v1.1.0",
+      "evidence_id": "ev1-c1b0791bad7da5bee53c519d",
       "input_fingerprints": [
         "sha256:da1256122f1e5a35a9483de56283de0264fd0f48f095d9068c648dbcea7dcd2c",
-        "sha256:6bdfe79c4e3fa28f877596b2f6cff80e6fc723b5fc143106b5c999052bc3eb3f"
+        "sha256:9eeb4ad9d67fc3d6d4e7dc386c9c4cb820e4bf6edc16e7dd478482e3006b310e"
       ],
       "object_type": "deterministic_drift_finding",
       "observation_evidence_ids": [
-        "ev1-6bdfe79c4e3fa28f877596b2"
+        "ev1-9eeb4ad9d67fc3d6d4e7dc38"
       ],
       "schema_version": "1.0.0",
       "status": "not evaluated"
@@ -267,9 +267,9 @@
   "object_type": "sanitized_public_evidence_package",
   "observations": [
     {
-      "collection_evidence_id": "ev1-032e79cd03b4d2136ff222e9",
-      "content_fingerprint": "sha256:8ea4a7be98f990356fcab2b2e28ab2d27152fff0083e0d34ac5defbd98af932e",
-      "evidence_id": "ev1-8ea4a7be98f990356fcab2b2",
+      "collection_evidence_id": "ev1-243d017f289a8a0007d5609d",
+      "content_fingerprint": "sha256:57aea1576d508c25c017cc8b2990887d035368cdf79d6ab7986ec21880b2d955",
+      "evidence_id": "ev1-57aea1576d508c25c017cc8b",
       "freshness": {
         "as_of_utc": "2026-07-18T18:00:00Z",
         "max_age_seconds": 86400,
@@ -285,9 +285,9 @@
       "source_modified_at_utc": "2026-07-18T18:00:00Z"
     },
     {
-      "collection_evidence_id": "ev1-032e79cd03b4d2136ff222e9",
-      "content_fingerprint": "sha256:084155f978ab938bde61eb7b8073fb7fbaa0b1bf519e6b119a9a694be8838f25",
-      "evidence_id": "ev1-084155f978ab938bde61eb7b",
+      "collection_evidence_id": "ev1-243d017f289a8a0007d5609d",
+      "content_fingerprint": "sha256:e714bc3d5694da36879178e5aff4fe840757895d96e7ad15b98fdea540c28021",
+      "evidence_id": "ev1-e714bc3d5694da36879178e5",
       "freshness": {
         "as_of_utc": "2026-07-18T18:00:00Z",
         "max_age_seconds": 86400,
@@ -303,9 +303,9 @@
       "source_modified_at_utc": "2026-07-18T18:00:00Z"
     },
     {
-      "collection_evidence_id": "ev1-032e79cd03b4d2136ff222e9",
-      "content_fingerprint": "sha256:6bdfe79c4e3fa28f877596b2f6cff80e6fc723b5fc143106b5c999052bc3eb3f",
-      "evidence_id": "ev1-6bdfe79c4e3fa28f877596b2",
+      "collection_evidence_id": "ev1-243d017f289a8a0007d5609d",
+      "content_fingerprint": "sha256:9eeb4ad9d67fc3d6d4e7dc386c9c4cb820e4bf6edc16e7dd478482e3006b310e",
+      "evidence_id": "ev1-9eeb4ad9d67fc3d6d4e7dc38",
       "freshness": {
         "as_of_utc": "2026-07-18T18:00:00Z",
         "max_age_seconds": 86400,
@@ -333,8 +333,8 @@
   "publication": {
     "publication_policy_version": "evidenceops-publication-v1.0.0",
     "published_at_utc": "2026-07-18T18:00:00Z",
-    "sanitized_content_fingerprint": "sha256:1087b49d67bd23de41e5af492f369512c60f88c871b2348ff7474359ce9206f2",
-    "source_private_fingerprint": "sha256:500f92d8e31b0369698a0454484c1ce1693cfca0ad809d9989ca2c3ecb7e09b8"
+    "sanitized_content_fingerprint": "sha256:b2c7102f664ce5ff58b939f0045cfc9d35e9b277ca5d3e8fc5d354b73382e972",
+    "source_private_fingerprint": "sha256:7018ed98d1c7ba9e7bc8be3ea4a2befaa79026e2039d0c7bcbbb314dc0b13365"
   },
   "schema_version": "1.0.0",
   "source_type": "curated-synthetic-fixture",

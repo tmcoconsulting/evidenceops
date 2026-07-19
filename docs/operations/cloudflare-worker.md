@@ -97,13 +97,14 @@ Remaining:
 2. in **EvidenceOps project → Limits**, set a `$5` monthly soft budget with 50%, 80%, and 100%
    alerts, allow only `gpt-5.6-terra` where supported, and set at most 5 RPM and 25,000 TPM (or the
    lowest accepted values); verify usable billing. The budget is an alert, not a hard cap;
-3. in **Cloudflare → My Profile → API Tokens**, create `evidenceops-github-deploy` restricted to the
-   TMCO Consulting account with Account `Workers Scripts Edit`; do not add zone, route, DNS, KV,
-   R2, account-settings, membership, user-details, billing, or unrelated-account access. The
-   workflow supplies the exact account ID, so it does not need membership discovery;
-4. store the one-time value only as the protected GitHub environment secret
-   `CLOUDFLARE_API_TOKEN`; validate it against the exact workflow while
-   `CLOUDFLARE_DEPLOY_ENABLED=false`, then enable deployment only after review;
+3. independently verify that the token stored as the protected GitHub environment secret
+   `CLOUDFLARE_API_TOKEN` is restricted to the TMCO Consulting account with Account `Workers
+   Scripts Edit`; do not add zone, route, DNS, KV, R2, account-settings, membership, user-details,
+   billing, or unrelated-account access. The workflow supplies the exact account ID, so it does not
+   need membership discovery. The secret exists by name, but its value and scope have not been
+   retrieved or claimed as verified;
+4. keep `CLOUDFLARE_DEPLOY_ENABLED=false` until the token scope is validated against the exact
+   workflow, then enable deployment only after review;
 5. review Cloudflare observability/alert retention in the dashboard;
 6. after merge, manually run the protected GET-only Intune audit and retain only sanitized counts;
 7. use `wrangler deployments list --env production` and

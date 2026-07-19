@@ -59,6 +59,11 @@ def test_privileged_workflows_are_main_only_and_environment_protected() -> None:
     assert "DeviceManagementConfiguration.Read.All" not in audit
     assert "--auth environment-token" in audit
     assert "store_private" not in audit
+    assert "python -m pytest -o addopts=''" in audit
+
+    ci = (WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
+    assert "python -m pytest" in ci
+    assert "python -m pytest -o addopts=''" not in ci
 
     deploy = (WORKFLOWS / "deploy-cloudflare.yml").read_text(encoding="utf-8")
     assert "id-token: write" not in deploy

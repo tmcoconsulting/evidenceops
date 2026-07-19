@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from collections import defaultdict
 from collections.abc import Sequence
 from typing import Final, cast
@@ -15,7 +16,7 @@ from evidenceops.domain import (
     validate_evidence_object,
 )
 
-ALGORITHM_VERSION: Final = "evidenceops-drift-v1.0.0"
+ALGORITHM_VERSION: Final = "evidenceops-drift-v1.1.0"
 
 
 def evaluate_desired_state(
@@ -142,9 +143,28 @@ def _compare(
         return EvidenceStatus.ADDITIONAL_EVIDENCE_REQUIRED, [
             "The provider did not return an observed value."
         ]
+    if desired["evaluation_mode"] == "maximum":
+        desired_maximum = _finite_number(desired["desired_value"])
+        observed_value = _finite_number(observation["observed_value"])
+        if desired_maximum is None or observed_value is None:
+            return EvidenceStatus.NOT_EVALUATED, [
+                "Maximum evaluation requires finite numeric desired and observed values."
+            ]
+        if observed_value <= desired_maximum:
+            return EvidenceStatus.MATCHES_DESIRED_STATE, []
+        return EvidenceStatus.DIFFERS_FROM_DESIRED_STATE, []
     if desired["desired_value"] == observation["observed_value"]:
         return EvidenceStatus.MATCHES_DESIRED_STATE, []
     return EvidenceStatus.DIFFERS_FROM_DESIRED_STATE, []
+
+
+def _finite_number(value: JsonValue) -> int | float | None:
+    """Return a comparable JSON number while excluding booleans and non-finite floats."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    if not math.isfinite(value):
+        return None
+    return value
 
 
 def _reference(item: EvidenceObject, label: str) -> EvidenceObject:

@@ -160,7 +160,9 @@ and passed the public-artifact scan. No deployment was made for this continuatio
   required application `DeviceManagementConfiguration.Read.All` permission and verified
   administrator consent. No client secret or Graph request was created.
 - Re-read the protected GitHub environment: the four nonsecret variables are present,
-  `CLOUDFLARE_DEPLOY_ENABLED` is `false`, and `CLOUDFLARE_API_TOKEN` is absent.
+  `CLOUDFLARE_DEPLOY_ENABLED` is `false`, and the secret name `CLOUDFLARE_API_TOKEN` is present.
+  The secret value was not retrieved, printed, or stored, and its Cloudflare scope remains
+  unverified.
 - Re-read the production Worker secret names: `OPENAI_API_KEY` is present, but its current OpenAI
   owner cannot be verified from Cloudflare. The last observed key was project-scoped and user-owned;
   service-account replacement and temporary-key revocation remain unverified.
@@ -175,7 +177,8 @@ and passed the public-artifact scan. No deployment was made for this continuatio
   unverified. A budget would be a soft alert, not a hard cap.
 - No second OpenAI request was made: the service-account and project-control gates were not proven,
   and production remains fixture-only.
-- A Cloudflare GitHub deployment token was not created. Wrangler OAuth cannot mint API tokens and
-  the protected environment has no `CLOUDFLARE_API_TOKEN`; deployment remains disabled.
+- The protected GitHub environment contains `CLOUDFLARE_API_TOKEN` by name only. Its ownership,
+  validity, and Cloudflare resource scope have not been independently verified; deployment remains
+  disabled through `CLOUDFLARE_DEPLOY_ENABLED=false`.
 - No production rollback was executed because earlier versions used live model mode; the CLI
   deployment history and rollback command were verified instead.

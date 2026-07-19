@@ -1,9 +1,9 @@
 {
-  "content_fingerprint": "sha256:9c61de63d277052e4a00e79d34359cba7905b40544fd8267a8224e5d117a3d18",
-  "evidence_id": "ev1-9c61de63d277052e4a00e79d",
-  "label": "4 deterministic findings; 4 typed claims verified; 14 generated fields quarantined; adversarial policy rejection=True; narrative=ev1-1de59a99d298c42664cf82a0",
+  "content_fingerprint": "sha256:4e5abf2dd13694236b9d50d4d3342525d441e61968af2869f0417def3fe0147c",
+  "evidence_id": "ev1-4e5abf2dd13694236b9d50d4",
+  "label": "4 deterministic findings; 4 typed claims verified; 14 generated fields quarantined; adversarial policy rejection=True; narrative=ev1-68ac01abdf23f430950e023c",
   "object_type": "evidence_reference",
   "reference_kind": "phase1_synthetic_demo",
-  "referenced_evidence_id": "ev1-04f92c86e33811b55faf0024",
+  "referenced_evidence_id": "ev1-bf5788de43a3d43d37454d25",
   "schema_version": "1.0.0"
 }

@@ -42,7 +42,7 @@ jobs:
 
       - name: Validate collection and publication contracts
         run: |
-          python -m pytest tests/test_permissions_manifest.py tests/test_intune_provider.py tests/test_publication.py tests/test_sanitization.py
+          python -m pytest -o addopts='' tests/test_permissions_manifest.py tests/test_intune_provider.py tests/test_publication.py tests/test_sanitization.py
           python scripts/check_secrets.py
 
       - name: Authenticate to Microsoft Entra through GitHub OIDC

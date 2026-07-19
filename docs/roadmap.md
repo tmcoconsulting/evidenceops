@@ -37,7 +37,9 @@ Public CI never performs live collection.
 - [ ] Verify Cloudflare/OpenAI budget alerts, abuse monitoring, log retention, and rollback
 - [x] Create the Worker/custom domain at `evidenceops.tmcoconsulting.com` and verify DNS/TLS
 - [x] Add disabled-by-default least-privilege GitHub deployment orchestration after manual validation
-- [ ] Configure a narrow Cloudflare deployment token and enable the protected workflow
+- [x] Store `CLOUDFLARE_API_TOKEN` by name in the protected production environment
+- [ ] Verify the Cloudflare token scope and enable the protected workflow; deployment remains
+      disabled with `CLOUDFLARE_DEPLOY_ENABLED=false`
 - [ ] Configure OpenAI budget alerts/limits and enable live mode only after usable capacity exists
 
 ## Later application scope

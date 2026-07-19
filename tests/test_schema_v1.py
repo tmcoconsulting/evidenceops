@@ -98,7 +98,7 @@ def test_synthetic_flow_covers_all_four_deterministic_states() -> None:
         assert finding["desired_state_evidence_id"]
         assert finding["collection_evidence_id"]
         assert finding["desired_state_git_commit_sha"] == "synthetic-reviewed-commit"
-        assert finding["deterministic_algorithm_version"] == "evidenceops-drift-v1.0.0"
+        assert finding["deterministic_algorithm_version"] == "evidenceops-drift-v1.1.0"
         assert cast(list[str], finding["input_fingerprints"])
 
 

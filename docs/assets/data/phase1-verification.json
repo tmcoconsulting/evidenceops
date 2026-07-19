@@ -1,15 +1,15 @@
 {
   "accepted": false,
   "accepted_claims": [
-    "ev1-2c4d66d5b11ce1df5b32a2fe:finding_status=not evaluated",
-    "ev1-81658eeb2a8d8930d646dcaf:finding_status=differs from desired state",
-    "ev1-c64986e6dd94a293dc1f3911:finding_status=additional evidence required",
-    "ev1-ecd191c277612b8669db775c:finding_status=matches desired state"
+    "ev1-00692c1442a1aa1944950d0c:finding_status=differs from desired state",
+    "ev1-93beffaa2b16e7591f3f4a68:finding_status=additional evidence required",
+    "ev1-9fe83b2f63a9b9107943a194:finding_status=matches desired state",
+    "ev1-c1b0791bad7da5bee53c519d:finding_status=not evaluated"
   ],
-  "content_fingerprint": "sha256:a1232a718eb690de2a607011c05c7eacb98ee9e5339976b54c194db4e1851263",
-  "evidence_id": "ev1-a1232a718eb690de2a607011",
+  "content_fingerprint": "sha256:4e0d3bd962d083eb0bc6fc45ec3b5a2f30e81acb099005df93f6033272c34594",
+  "evidence_id": "ev1-4e0d3bd962d083eb0bc6fc45",
   "human_review_required": true,
-  "narrative_evidence_id": "ev1-1de59a99d298c42664cf82a0",
+  "narrative_evidence_id": "ev1-68ac01abdf23f430950e023c",
   "object_type": "narrative_verification_result",
   "reasons": [
     "free-form generated analysis is not machine-verifiable and remains quarantined for human review"
@@ -31,6 +31,6 @@
     "generated prose quarantined: drift_explanations[3].technical_impact"
   ],
   "schema_version": "1.0.0",
-  "source_package_evidence_id": "ev1-04f92c86e33811b55faf0024",
+  "source_package_evidence_id": "ev1-bf5788de43a3d43d37454d25",
   "verifier_version": "evidenceops-narrative-verifier-v1.1.0"
 }
