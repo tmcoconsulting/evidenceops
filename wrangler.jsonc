@@ -3,7 +3,7 @@
   "name": "evidenceops-fixture",
   "main": "worker/src/index.ts",
   "compatibility_date": "2026-07-18",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": ["global_fetch_strictly_public", "nodejs_compat"],
   "workers_dev": false,
   "send_metrics": false,
   "assets": {
@@ -86,7 +86,7 @@
         },
       ],
       "vars": {
-        "EVIDENCEOPS_MODE": "openai",
+        "EVIDENCEOPS_MODE": "fixture",
         "OPENAI_MODEL": "gpt-5.6-terra",
       },
       "secrets": {

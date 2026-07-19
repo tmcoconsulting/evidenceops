@@ -4,6 +4,7 @@ import type { WorkerEnv } from "./env";
 import { isRecord } from "./evidence";
 import {
   assertPublicSafe,
+  hasUsableOpenAIKey,
   HttpError,
   OPENAI_TIMEOUT_MS,
   readBoundedResponse,
@@ -114,10 +115,7 @@ async function createOpenAINarrative(
   packageDocument: PublicEvidencePackage,
   dependencies: NarrativeDependencies,
 ): Promise<NarrativeApiResult> {
-  if (
-    typeof env.OPENAI_API_KEY !== "string" ||
-    env.OPENAI_API_KEY.length === 0
-  ) {
+  if (!hasUsableOpenAIKey(env.OPENAI_API_KEY)) {
     throw new HttpError(
       503,
       "narrative_not_configured",
@@ -136,37 +134,56 @@ async function createOpenAINarrative(
       body: JSON.stringify(openAIRequest(packageDocument, model)),
       signal: AbortSignal.timeout(OPENAI_TIMEOUT_MS),
     });
-  } catch {
+  } catch (error) {
+    const timedOut =
+      error instanceof DOMException && error.name === "TimeoutError";
     throw new HttpError(
-      502,
-      "upstream_generation_failed",
-      "narrative generation failed",
+      timedOut ? 504 : 502,
+      timedOut ? "upstream_timeout" : "upstream_connection_failed",
+      timedOut
+        ? "the narrative request timed out"
+        : "the narrative service connection failed",
     );
   }
   if (!response.ok) {
+    const failure = classifyUpstreamFailure(response.status);
     if (response.body !== null) {
       await response.body.cancel(
         "EvidenceOps suppresses upstream error bodies",
       );
     }
-    if (response.status === 401 || response.status === 403) {
+    if (failure === "configuration") {
       throw new HttpError(
         503,
         "narrative_not_configured",
         "OpenAI narrative mode is unavailable",
       );
     }
-    if (response.status === 429) {
+    if (failure === "capacity") {
       throw new HttpError(
         503,
         "narrative_capacity_unavailable",
         "narrative capacity is unavailable",
       );
     }
+    if (failure === "model") {
+      throw new HttpError(
+        503,
+        "narrative_model_unavailable",
+        "the configured narrative model is unavailable",
+      );
+    }
+    if (failure === "request") {
+      throw new HttpError(
+        502,
+        "upstream_request_rejected",
+        "the bounded model request was rejected",
+      );
+    }
     throw new HttpError(
       502,
-      "upstream_generation_failed",
-      "narrative generation failed",
+      "upstream_service_unavailable",
+      "the narrative service is unavailable",
     );
   }
   const upstream = await readBoundedResponse(response);
@@ -186,6 +203,24 @@ async function createOpenAINarrative(
     narrative,
     verification,
   };
+}
+
+function classifyUpstreamFailure(
+  status: number,
+): "capacity" | "configuration" | "model" | "request" | "service" {
+  if (status === 401 || status === 403) {
+    return "configuration";
+  }
+  if (status === 404) {
+    return "model";
+  }
+  if (status === 429) {
+    return "capacity";
+  }
+  if (status === 400 || status === 409 || status === 422) {
+    return "request";
+  }
+  return "service";
 }
 
 function openAIRequest(

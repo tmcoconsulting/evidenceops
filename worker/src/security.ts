@@ -55,6 +55,10 @@ const FIELD_ACTIONS = new Map<string, string>(
   Object.entries(publicationPolicy.fields),
 );
 
+export function hasUsableOpenAIKey(value: unknown): value is string {
+  return typeof value === "string" && /^sk-[A-Za-z0-9_-]{20,}$/.test(value);
+}
+
 export function assertPublicSafe(value: unknown, depth = 0): void {
   if (depth > 16) {
     throw new HttpError(

@@ -20,6 +20,7 @@ import type {
 
 const ORIGIN = "https://evidenceops.example";
 const FIXTURE_MODEL = "deterministic-offline-fixture-not-a-model-call";
+const TEST_API_KEY = `sk-test_${"A".repeat(32)}`;
 
 function packageDocument(): PublicEvidencePackage {
   return validatePublicPackage(structuredClone(fixturePackage));
@@ -322,7 +323,7 @@ describe("Worker routes", () => {
     );
     const response = await handleRequest(
       narrativeRequest(),
-      environment("openai", { apiKey: "test-only-key" }),
+      environment("openai", { apiKey: TEST_API_KEY }),
       { outboundFetch: outboundFetch as typeof fetch },
     );
     expect(outboundFetch).toHaveBeenCalledTimes(1);
@@ -340,7 +341,7 @@ describe("Worker routes", () => {
     await expect(
       handleRequest(
         narrativeRequest(),
-        environment("openai", { apiKey: "test-only-key" }),
+        environment("openai", { apiKey: TEST_API_KEY }),
         { outboundFetch: outboundFetch as typeof fetch },
       ),
     ).rejects.toMatchObject({
@@ -348,6 +349,45 @@ describe("Worker routes", () => {
       status: 503,
     });
   });
+
+  it("classifies transport failure without exposing exception text", async () => {
+    await expect(
+      handleRequest(
+        narrativeRequest(),
+        environment("openai", { apiKey: TEST_API_KEY }),
+        {
+          outboundFetch: async () => {
+            throw new Error(`ghp_${"A".repeat(40)}`);
+          },
+        },
+      ),
+    ).rejects.toMatchObject({
+      code: "upstream_connection_failed",
+      message: "the narrative service connection failed",
+      status: 502,
+    });
+  });
+
+  it.each([
+    [400, "upstream_request_rejected", 502],
+    [404, "narrative_model_unavailable", 503],
+    [500, "upstream_service_unavailable", 502],
+  ])(
+    "classifies upstream HTTP %i without exposing its body",
+    async (upstreamStatus, errorCode, status) => {
+      const sensitiveBody = `ghp_${"A".repeat(40)}`;
+      await expect(
+        handleRequest(
+          narrativeRequest(),
+          environment("openai", { apiKey: TEST_API_KEY }),
+          {
+            outboundFetch: async () =>
+              new Response(sensitiveBody, { status: upstreamStatus }),
+          },
+        ),
+      ).rejects.toMatchObject({ code: errorCode, status });
+    },
+  );
 });
 
 describe("narrative verification", () => {

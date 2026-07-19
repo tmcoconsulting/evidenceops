@@ -7,18 +7,17 @@ import { createNarrative, type NarrativeDependencies } from "./narrative";
 import {
   assertPublicSafe,
   assertSameOrigin,
+  hasUsableOpenAIKey,
   HttpError,
   jsonResponse,
   rateLimitKey,
   readBoundedJson,
 } from "./security";
 
-const DEFAULT_DEPENDENCIES: NarrativeDependencies = { outboundFetch: fetch };
-
 export async function handleRequest(
   request: Request,
   env: WorkerEnv,
-  dependencies: NarrativeDependencies = DEFAULT_DEPENDENCIES,
+  dependencies?: NarrativeDependencies,
 ): Promise<Response> {
   const url = new URL(request.url);
   if (url.pathname === "/api/status") {
@@ -27,8 +26,7 @@ export async function handleRequest(
     }
     const mode = modeLabel(env.EVIDENCEOPS_MODE);
     const modelConfigured =
-      mode === "fixture" ||
-      (typeof env.OPENAI_API_KEY === "string" && env.OPENAI_API_KEY.length > 0);
+      mode === "fixture" || hasUsableOpenAIKey(env.OPENAI_API_KEY);
     return jsonResponse({
       schema_version: "1.0.0",
       service: "EvidenceOps narrative boundary",
@@ -77,7 +75,9 @@ export async function handleRequest(
       request,
       env,
       packageDocument,
-      dependencies,
+      dependencies ?? {
+        outboundFetch: (input, init) => fetch(input, init),
+      },
     );
     return jsonResponse(result);
   }

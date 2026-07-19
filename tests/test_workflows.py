@@ -84,7 +84,7 @@ def test_worker_static_assets_and_modes_are_explicit() -> None:
     assert configuration["vars"]["EVIDENCEOPS_MODE"] == "fixture"
     production = configuration["env"]["production"]
     assert production["workers_dev"] is False
-    assert production["vars"]["EVIDENCEOPS_MODE"] == "openai"
+    assert production["vars"]["EVIDENCEOPS_MODE"] == "fixture"
     assert production["secrets"]["required"] == ["OPENAI_API_KEY"]
     assert production["routes"] == [
         {
