@@ -50,8 +50,7 @@ nav:
       - Videos: videos.md
       - Build Week:
           - Demo Package: build-week/demo-package.md
-          - Final Implementation Report: build-week/final-implementation-report.md
-          - Final Live Validation: build-week/final-live-mvp-validation.md
+          - Current Judge-Readiness Validation: build-week/judge-readiness-validation.md
           - FileVault & NOC Validation: build-week/filevault-noc-validation.md
           - Decision Log: build-week/decision-log.md
           - Contribution Log: build-week/contribution-log.md

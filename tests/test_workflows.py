@@ -403,6 +403,8 @@ def test_public_navigation_prioritizes_judge_path_and_current_evidence() -> None
     assert "- Mission Control: evidence-dashboard.md" in mkdocs
     assert "- Baseline Plan: settings-matrix.md" in mkdocs
     assert "- Judge Guide: judge-guide.md" in mkdocs
+    assert "Current Judge-Readiness Validation: build-week/judge-readiness-validation.md" in mkdocs
+    assert "Final Implementation Report: build-week/final-implementation-report.md" not in mkdocs
     assert "Phase 1 Validation: build-week/phase-1-validation.md" not in mkdocs
     assert "Worker Validation: build-week/cloudflare-worker-validation.md" not in mkdocs
     assert "a backlog state" in judge or "not mislabeled as a failed control" in judge
