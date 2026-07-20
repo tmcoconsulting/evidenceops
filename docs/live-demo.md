@@ -3,7 +3,8 @@
 <div class="synthetic-banner">
 DECLARED DATA MODE. Mission Control and <code>/api/status</code> are authoritative for the deployed
 package. Production currently serves a reviewed, fail-closed sanitized projection from read-only
-Microsoft Graph collection. The assistant remains in fixture mode and makes no OpenAI request.
+Microsoft Graph collection. Production Evidence Copilot uses fixed `gpt-5.6-terra`; local and
+preview builds remain fixture mode and make no OpenAI request.
 The repository checkout and reproduction path below remain entirely synthetic.
 </div>
 
@@ -16,27 +17,28 @@ platform posture, gaps, and assistant references have one deterministic source.
 
 | Stage | Demonstrated result | Authority boundary |
 | --- | --- | --- |
-| Approved baseline | Pinned 98-rule macOS CIS Level 1 inventory with TMCO demo approval | Internal technical intent, not external certification |
+| Approved baseline | Pinned 98-rule macOS CIS Level 1 inventory with TMCO Consulting demo approval | Internal technical intent, not external certification |
 | Read-only collection | Synthetic Mac, iPhone, iPad, policies, apps, assignments, and service health | Same normalized shape as the GET-only provider |
-| Deterministic evaluation | One aligned rule, two value drifts, one assignment drift, one conflict | Model-independent algorithm |
+| Deterministic evaluation | One aligned rule, one value drift, one assignment drift, one conflict | Model-independent algorithm |
 | Platform boundary | iOS/iPadOS posture visible but excluded from macOS CIS scoring | No false cross-platform baseline claim |
 | Publication | Allowlisted package with policy version, stable IDs, and SHA-256 fingerprint | Public/model-safe derivative |
 | History | Current and prior sanitized snapshots with changed/new/resolved findings | No raw tenant persistence |
 | Assistant | Supported answers cite the package; unsupported questions return the exact insufficient-evidence sentence | Fixture mode is not a model call |
 | Verification | Typed claims must exactly match evidence; prose remains generated and quarantined | Human review required |
 
-The tracked fixture alignment score is intentionally 20%: one aligned rule divided by five
+The tracked fixture alignment score is intentionally 25%: one aligned rule divided by four
 explicitly mapped and evaluable rules. Production derives its current score from the sanitized
-Mission package instead. In both modes, the other 93 baseline rules remain visible as unsupported
+Mission package instead. In both modes, the other 94 baseline rules remain visible as mapping not
+reviewed
 and do not inflate or deflate the denominator.
 
 ## Representative fixture states
 
-- FileVault value drift (high severity)
+- FileVault assignment drift (high severity)
 - Firewall value drift (high severity)
-- Missing assignment for screen-lock password enforcement
-- Conflicting screen-lock timeout values
-- Firewall stealth mode aligned
+- Conflicting screen-lock password values
+- Screen-lock timeout aligned
+- Firewall stealth-mode provider mapping explicitly not reviewed
 - One iOS/iPadOS policy observation
 - Application deployment health and one failure aggregate
 - One explicit synthetic collection gap

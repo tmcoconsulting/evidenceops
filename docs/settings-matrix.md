@@ -22,7 +22,7 @@
   from Level 1 or from another framework's cross-reference.
 </div>
 
-<div data-settings-matrix aria-busy="true">
+<div id="settings-matrix" data-settings-matrix aria-busy="true">
   <div class="matrix-banner" data-matrix-banner data-state="loading">
     Loading the fingerprint-verified Mission package…
   </div>
@@ -54,14 +54,14 @@
     </label>
     <label class="matrix-checkbox">
       <input type="checkbox" data-matrix-mapped-only checked>
-      <span>Show mapped settings only</span>
+      <span>Show reviewed provider mappings only</span>
     </label>
     <button type="button" class="md-button" data-matrix-reset>Reset filters</button>
   </form>
 
   <p class="matrix-result-count" data-matrix-count aria-live="polite"></p>
 
-  <div class="matrix-table-wrap" tabindex="0" aria-label="Scrollable Intune setting and baseline matrix">
+  <div class="matrix-table-wrap" tabindex="0" aria-label="Compact Intune setting and baseline matrix">
     <table class="settings-matrix" data-matrix-table>
       <thead></thead>
       <tbody></tbody>
@@ -69,6 +69,11 @@
   </div>
 
   <div class="matrix-empty" data-matrix-empty hidden></div>
+
+  <dialog class="matrix-dialog" data-matrix-dialog aria-labelledby="matrix-dialog-title">
+    <form method="dialog"><button class="matrix-dialog-close" aria-label="Close setting detail">Close</button></form>
+    <div data-matrix-detail></div>
+  </dialog>
 </div>
 
 <noscript>
@@ -78,11 +83,10 @@
 
 ## How to read the matrix
 
-The first column identifies the reviewed requirement, normalized setting key when the package
-publishes one, and public-safe evidence references. The next columns show the observed value,
-approved target, and deterministic state. Framework cells list only reviewed identifiers already
-present in the package. The final column turns the deterministic comparison into a precise,
-non-mutating operator instruction such as “set this value from `false` to `true`, then re-collect.”
+The default table stays compact: setting, observed-to-target value, state, assignment, framework
+summary, and action. Select **Review details** for the exact provider definition ID, public-safe
+parent policy reference, cross-reference identifiers, evidence IDs and fingerprints, deterministic
+operator guidance, and limitations.
 
 A green technical-evidence state means the collected setting matched the approved target and had
 normalized assignment evidence. It does **not** prove the organization satisfies the mapped control.
@@ -102,8 +106,9 @@ next data-model priority; the public matrix never guesses it from a display name
 
 ## Coverage limits
 
-- The complete 98-rule CIS Level 1 inventory remains visible when **Show mapped settings only** is
-  cleared, but only explicitly reviewed provider mappings enter the technical-alignment denominator.
+- The complete 98-rule CIS Level 1 inventory remains visible when **Show reviewed provider mappings
+  only** is cleared, but only explicitly reviewed provider mappings enter the technical-alignment
+  denominator.
 - CIS Level 2 is not loaded in the current repository and is never inferred.
 - STIG, NIST, and CMMC cells are cross-reference identifiers associated with the setting. They are
   supporting technical evidence, not independent baseline scores.

@@ -3,6 +3,9 @@ Copyright 2026 TMCO Consulting, LLC
 
 Licensed under the Apache License, Version 2.0.
 
+TMCO Consulting names and brand assets identify TMCO Consulting, LLC and are included in this
+project with the company owner's authorization. The Apache License does not grant trademark rights.
+
 EvidenceOps does not include or claim ownership of third-party security baselines, proprietary
 endpoint-management repositories, or vendor documentation. Any future third-party material must
 retain its own notices and license terms.
@@ -18,6 +21,6 @@ Commons Attribution 4.0 International (CC BY 4.0):
 
 Apple-authored vendor descriptions are not copied into this repository. CIS, NIST, DoD, CMMC, and
 Apple trademarks and referenced standards remain the property of their respective owners. The
-derived baseline is an internally approved TMCO demonstration baseline for technical drift
+derived baseline is an internally approved TMCO Consulting demonstration baseline for technical drift
 detection; it is not certification, assessor authorization, or a statement of organizational
 compliance.

@@ -1,5 +1,8 @@
 # Phase 1 Validation Record
 
+> **Historical checkpoint.** This record documents the earlier read-only proof and security
+> remediation. It does not describe the final live audit cockpit or current production runtime.
+
 **Date:** 2026-07-18
 
 **Branch:** `codex/phase-1-read-only-proof`
@@ -80,13 +83,13 @@ the decision log; it exits successfully under the exact-pinned MkDocs 1.6.1 tool
 
 ## External validation
 
-- **TMCO Intune:** not executed as of this record because no approved tenant/client configuration
+- **TMCO Consulting Intune:** not executed as of this record because no approved tenant/client configuration
   or short-lived Graph token was present. No live endpoint result is claimed.
 - **OpenAI:** the adapter and transport contract are mocked and the demo narrative is fixture-based.
   No paid model call is performed or claimed in this remediation.
 - **Intune mutations:** none. The provider transport exposes only GET, and no apply command exists.
 
-No real TMCO configuration, identity, device, group, tenant, or credential value is recorded here.
+No real TMCO Consulting configuration, identity, device, group, tenant, or credential value is recorded here.
 The later Cloudflare/OpenAI external results are recorded separately in
 [Cloudflare Worker Validation](cloudflare-worker-validation.md); they do not retroactively change
 the claims of this security-remediation checkpoint.

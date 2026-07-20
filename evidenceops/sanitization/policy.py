@@ -14,6 +14,10 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
+from evidenceops.baselines import (
+    normalize_provider_definition_id,
+    reviewed_provider_definition_ids,
+)
 from evidenceops.domain import JsonValue
 from evidenceops.sanitization.credentials import CREDENTIAL_PATTERNS
 
@@ -242,6 +246,14 @@ def assert_public_safe(value: JsonValue) -> None:
     if not isinstance(value, str):
         return
     if value in _PUBLIC_SAFE_TECHNICAL_VALUES:
+        return
+    try:
+        is_reviewed_provider_id = (
+            normalize_provider_definition_id(value) in reviewed_provider_definition_ids()
+        )
+    except ValueError:
+        is_reviewed_provider_id = False
+    if is_reviewed_provider_id:
         return
     for label, pattern in (*CREDENTIAL_PATTERNS, *_PROHIBITED_PUBLIC_VALUE_PATTERNS):
         if pattern.search(value):

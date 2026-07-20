@@ -8,9 +8,14 @@ on:
         required: true
         type: boolean
         default: false
+      prior_sanitized_audit_run_id:
+        description: Optional prior successful live audit run for current-versus-prior comparison
+        required: false
+        type: string
 
 permissions:
   contents: read
+  actions: read
   id-token: write
 
 concurrency:
@@ -28,12 +33,13 @@ jobs:
       AZURE_CORE_OUTPUT: none
       PYTHONDONTWRITEBYTECODE: "1"
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PRIOR_SANITIZED_AUDIT_RUN_ID: ${{ inputs.prior_sanitized_audit_run_id }}
     steps:
       - name: Check out trusted main
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-          ref: main
+          ref: ${{ github.sha }}
 
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
@@ -50,6 +56,53 @@ jobs:
         run: |
           python -m pytest -o addopts='' tests/test_permissions_manifest.py tests/test_intune_provider.py tests/test_apple_provider.py tests/test_mission.py tests/test_publication.py tests/test_sanitization.py
           python scripts/check_secrets.py
+
+      - name: Validate prior live publication selector
+        if: inputs.prior_sanitized_audit_run_id != ''
+        run: |
+          if [[ ! "$PRIOR_SANITIZED_AUDIT_RUN_ID" =~ ^[0-9]{1,20}$ ]]; then
+            echo "invalid prior sanitized audit run selector" >&2
+            exit 2
+          fi
+
+      - name: Verify prior audit run provenance
+        if: inputs.prior_sanitized_audit_run_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "/repos/tmcoconsulting/evidenceops/actions/runs/$PRIOR_SANITIZED_AUDIT_RUN_ID" \
+            > "$RUNNER_TEMP/evidenceops-prior-audit-run.json"
+          jq -e '
+            .name == "Read-only Intune audit" and
+            .path == ".github/workflows/intune-audit.yml" and
+            .event == "workflow_dispatch" and
+            .head_branch == "main" and
+            .status == "completed" and
+            .conclusion == "success"
+          ' "$RUNNER_TEMP/evidenceops-prior-audit-run.json" > /dev/null || {
+            echo "prior artifact is not from a successful trusted-main Intune audit" >&2
+            exit 2
+          }
+
+      - name: Download prior sanitized Mission package
+        if: inputs.prior_sanitized_audit_run_id != ''
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: evidenceops-sanitized-mission-${{ inputs.prior_sanitized_audit_run_id }}
+          path: build/previous-public
+          github-token: ${{ github.token }}
+          repository: tmcoconsulting/evidenceops
+          run-id: ${{ inputs.prior_sanitized_audit_run_id }}
+
+      - name: Revalidate prior live Mission package
+        if: inputs.prior_sanitized_audit_run_id != ''
+        run: |
+          test "$(find build/previous-public -mindepth 1 -print | wc -l | tr -d ' ')" = "1"
+          python scripts/check_public_artifacts.py build/previous-public
+          python scripts/promote_live_mission.py \
+            build/previous-public/mission-control.json \
+            --destination "$RUNNER_TEMP/evidenceops-previous-public.json"
+          echo "PREVIOUS_PUBLIC_PATH=$RUNNER_TEMP/evidenceops-previous-public.json" >> "$GITHUB_ENV"
 
       - name: Authenticate to Microsoft Entra through GitHub OIDC
         uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
@@ -71,7 +124,15 @@ jobs:
           private_package="$(find artifacts/private -maxdepth 1 -type f -name 'private-apple-*.json' -print -quit)"
           test -n "$private_package"
           export EVIDENCEOPS_PSEUDONYM_KEY="$(openssl rand -hex 32)"
-          python -m evidenceops publish-mission "$private_package" --output build/live-public/mission-control.json
+          publication_args=(
+            publish-mission
+            "$private_package"
+            --output build/live-public/mission-control.json
+          )
+          if [ -n "${PREVIOUS_PUBLIC_PATH:-}" ]; then
+            publication_args+=(--previous-public "$PREVIOUS_PUBLIC_PATH")
+          fi
+          python -m evidenceops "${publication_args[@]}"
           unset EVIDENCEOPS_PSEUDONYM_KEY EVIDENCEOPS_GRAPH_ACCESS_TOKEN token
           python scripts/check_public_artifacts.py build/live-public
           python scripts/report_public_counts.py build/live-public/mission-control.json >> "$GITHUB_STEP_SUMMARY"
@@ -93,3 +154,5 @@ jobs:
         run: |
           find artifacts/private -type f -delete 2>/dev/null || true
           find build/live-public -type f -delete 2>/dev/null || true
+          find build/previous-public -type f -delete 2>/dev/null || true
+          find "$RUNNER_TEMP" -maxdepth 1 -type f -name 'evidenceops-previous-public.json' -delete 2>/dev/null || true

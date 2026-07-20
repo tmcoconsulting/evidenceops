@@ -43,9 +43,11 @@ version, reviewer, rationale, and known ambiguity. Passing a technical check doe
 prove organizational compliance.
 
 The Build Week demo pins the complete 98-rule macOS CIS Level 1 inventory from one mSCP revision.
-Only five rules currently have explicit mappings from approved baseline metadata to safe Intune
-setting keys. Their CIS, STIG, NIST SP 800-171, NIST SP 800-53, and CMMC identifiers are copied from
-the pinned source and tested; GPT does not create crosswalks. Unsupported rules remain visible and
+Only four rules currently have reviewed exact mappings from approved baseline metadata to Intune
+provider definitions. A fifth desired rule is explicitly marked mapping-not-reviewed; all other
+rules have no provider mapping. Their CIS, STIG, NIST SP 800-171, NIST SP 800-53, and CMMC
+identifiers are copied from the pinned source and tested; GPT does not create crosswalks.
+Unsupported rules remain visible and
 outside the score denominator. iOS/iPadOS has no approved baseline in this repository and is not
 scored against the macOS inventory.
 

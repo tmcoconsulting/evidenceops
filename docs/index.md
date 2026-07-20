@@ -14,8 +14,8 @@
 
 <div class="synthetic-banner">
 Production serves a reviewed package labeled `LIVE SANITIZED TENANT DATA`. Tenant, device, user,
-group, assignment, and credential identities are not public. The assistant remains in fixture mode
-by default, so ordinary public use makes no OpenAI model request.
+group, assignment, and credential identities are not public. Production Evidence Copilot uses only
+fixed `gpt-5.6-terra` with bounded sanitized context; local and preview builds remain fixture mode.
 </div>
 
 ## Choose the view that answers your question
@@ -55,11 +55,11 @@ by default, so ordinary public use makes no OpenAI model request.
 
 | Capability | Current state | Important limit |
 | --- | --- | --- |
-| macOS baseline inventory | 98 pinned CIS Level 1 rules | Five settings have reviewed provider mappings |
+| macOS baseline inventory | 98 pinned CIS Level 1 rules | Four settings have reviewed exact provider mappings; one desired mapping remains explicitly unreviewed |
 | Intune collection | Comprehensive GET-only managed-Apple resource families | No create, update, assign, remediate, or rollback method exists |
 | Settings matrix | Observed value, target, state, framework IDs, and required change | CIS Level 2 is not loaded and is never inferred |
 | Public dashboard | Live sanitized aggregate package on Cloudflare | Tenant policy display names and object identities are intentionally excluded |
-| Assistant | Bounded `/api/ask`, exact typed-claim verification, prose quarantine | Fixture mode is the public default; it cannot decide compliance |
+| Assistant | Site-wide bounded `/api/ask`, exact typed-claim verification, prose quarantine | Production is fixed-model OpenAI mode; local/preview are fixture mode; neither can decide compliance |
 | History | Current/prior sanitized snapshot delta | No persistent D1/KV/R2 history store yet |
 
 ## What the framework columns mean
@@ -94,7 +94,7 @@ Read the [architecture](architecture.md), [audit methodology](audit-methodology.
 EvidenceOps is a technically complete Phase 1 vertical slice, not a finished enterprise compliance
 platform. The highest-value next work is to preserve an approved parent-policy reference in the
 private model, load and review additional baselines such as CIS Level 2, expand provider mappings
-beyond five settings, improve evidence-grounded assistant answers, and add authenticated sanitized
+beyond four reviewed settings, expand evaluated evidence safely, and add authenticated sanitized
 history only after retention and access-control design.
 
 The existing Cloudflare Worker plus Static Assets architecture is sufficient for the present

@@ -65,6 +65,13 @@ const SAFE_TECHNICAL_VALUES = new Set([
   "macos.security.filevault.enabled",
   "macos.security.firewall.enabled",
   "macos.security.firewall.stealth_mode",
+  // Exact reviewed Intune aliases mirrored from evidenceops.baselines.intune.
+  // Keep this closed list synchronized with the reviewed provider registry;
+  // domain-like values remain prohibited unless they appear here exactly.
+  "com.apple.mcx.filevault2_enable",
+  "com.apple.screensaver_askForPassword",
+  "com.apple.screensaver.user_idleTime",
+  "com.apple.security.firewall_EnableFirewall",
 ]);
 
 const PRIVATE_MISSION_FIELDS = new Set([

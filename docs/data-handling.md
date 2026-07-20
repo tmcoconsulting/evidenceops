@@ -48,10 +48,10 @@ Private packages are written without overwrite at mode `0600` where supported. E
 the deletion deadline but does not silently delete operator data; the operator must remove the
 package and backups securely at expiry.
 
-## TMCO identity
+## TMCO Consulting identity
 
 TMCO Consulting, LLC is the project sponsor and copyright holder for its original EvidenceOps work.
-Public company identity may appear in documentation. That authorization does not extend to TMCO
+Public company identity may appear in documentation. That authorization does not extend to TMCO Consulting
 tenant identifiers, directory/device data, credentials, or configuration exports. The tracked
-synthetic demo does not represent TMCO production state; the deployed live projection contains only
+synthetic demo does not represent TMCO Consulting production state; the deployed live projection contains only
 reviewed sanitized aggregates and does not establish compliance.

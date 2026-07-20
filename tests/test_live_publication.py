@@ -8,7 +8,7 @@ from typing import cast
 import pytest
 
 from evidenceops.domain import JsonValue
-from evidenceops.evidence import validate_public_mission_snapshot
+from evidenceops.evidence import load_public_mission_snapshot, validate_public_mission_snapshot
 from evidenceops.evidence.mission import build_public_mission_snapshot
 from evidenceops.mission_demo import MISSION_PSEUDONYM_KEY, _collection, build_mission_demo
 from scripts.promote_live_mission import promote_live_mission
@@ -88,6 +88,31 @@ def test_live_mission_promotion_rejects_symlinks_and_oversized_inputs(tmp_path: 
     oversized.write_bytes(b"{" + b" " * 2_000_000 + b"}")
     with pytest.raises(ValueError, match="package limit"):
         promote_live_mission(oversized, tmp_path / "out.json")
+
+
+def test_previous_public_loader_rejects_private_synthetic_and_linked_inputs(
+    tmp_path: Path,
+) -> None:
+    live = tmp_path / "live.json"
+    live.write_text(json.dumps(_live_mission()), encoding="utf-8")
+    assert load_public_mission_snapshot(live, require_live=True)["data_mode"] == (
+        "LIVE SANITIZED TENANT DATA"
+    )
+
+    synthetic = tmp_path / "synthetic.json"
+    synthetic.write_text(json.dumps(build_mission_demo()), encoding="utf-8")
+    with pytest.raises(ValueError, match="live sanitized"):
+        load_public_mission_snapshot(synthetic, require_live=True)
+
+    private = tmp_path / "private.json"
+    private.write_text(json.dumps({"document_type": "private"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="unexpected"):
+        load_public_mission_snapshot(private, require_live=True)
+
+    link = tmp_path / "link.json"
+    link.symlink_to(live)
+    with pytest.raises(ValueError, match="regular file"):
+        load_public_mission_snapshot(link, require_live=True)
 
 
 @pytest.mark.parametrize(

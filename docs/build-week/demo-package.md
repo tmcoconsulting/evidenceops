@@ -1,5 +1,8 @@
 # Build Week Demo Package
 
+Use the [final video runbook](video-runbook.md) for the production recording. This page retains the
+submission description, technical summary, and backup material.
+
 ## Less-than-three-minute script
 
 **0:00–0:20 — thesis.** Open EvidenceOps Mission Control. “Regulated endpoint teams should not
@@ -9,23 +12,22 @@ evidence chain.” Point out the `LIVE SANITIZED TENANT DATA` badge and explain 
 never crossed the publication boundary.
 
 **0:20–0:45 — approved baseline.** Show the 98-rule pinned macOS CIS Level 1 demo inventory, its
-mSCP revision and hashes, and the five-rule alignment denominator. Explain that the internal TMCO
+mSCP revision and hashes, and the four-rule alignment denominator. Explain that the internal TMCO Consulting
 approval is for technical drift detection—not CIS certification.
 
-**0:45–1:20 — deterministic drift.** Filter to high severity. Open FileVault, then Firewall.
-Show expected/observed values, assignment summary, source evidence IDs, fingerprints, deterministic
-framework crosswalks, Git commit, limitations, and remediation guidance. Clear the filter and open
-the assignment and conflict findings.
+**0:45–1:20 — deterministic drift.** Open the highest-priority genuine live finding; do not
+predetermine its setting or state. Show expected/observed values, assignment summary, exact provider
+definition, source evidence IDs, fingerprints, framework cross-references, limitations, and
+read-only guidance.
 
 **1:20–1:45 — complete evidence, honest gaps.** Show the Mac/iPhone/iPad aggregate, application
-health, unmapped objects, and collection gap. Explain that iOS/iPadOS is visible but not scored
+health, resources not currently evaluated, and collection gaps. Explain that iOS/iPadOS is visible but not scored
 against a macOS baseline and that unavailable evidence remains visible.
 
-**1:45–2:20 — constrained GPT-5.6.** Ask “What are the highest-severity findings?” Show cited
-evidence, typed-claim verification, prose quarantine, and human-review language. Ask an unsupported
-question and show the exact insufficient-evidence response. In fixture mode, say explicitly that
-no model call occurred during the demonstration; the separately recorded bounded Terra validation
-proved the operational model path.
+**1:45–2:20 — constrained GPT-5.6.** Open the site-wide Evidence Copilot and ask “What requires my
+attention?” Show cited evidence, typed-claim verification, prose quarantine, and human-review
+language. Production uses fixed `gpt-5.6-terra`; local/preview fixture mode must be labeled as no
+model call.
 
 **2:20–2:45 — security boundary.** Show `/api/status`, then summarize GET-only Graph, GitHub OIDC,
 private normalized evidence, allowlist publication, Cloudflare rate limits, server-side OpenAI
@@ -38,23 +40,23 @@ audit.”
 ## Click-by-click runbook
 
 1. Open `https://evidenceops.tmcoconsulting.com/evidence-dashboard/`.
-2. Confirm the data-mode badge says `LIVE SANITIZED TENANT DATA`, the assistant says fixture mode,
+2. Confirm the data-mode badge says `LIVE SANITIZED TENANT DATA`, the assistant says OpenAI mode,
    and the banner does not indicate stale or invalid evidence.
-3. In Executive overview, point to Technical alignment, Drifted requirements, Managed Apple
-   devices, Collection gaps, and AI service.
+3. Point to Findings requiring review, New drift, Resolved, Collection gaps, and Evaluated settings.
 4. Read the denominator explanation immediately below the cards.
-5. Under Deterministic drift, choose `high` in Severity.
-6. Open each remaining row with keyboard Enter or mouse click; close the dialog after showing its
-   traceability chain.
-7. Clear filters; select Assignment drift and then Conflicting policy.
-8. Scroll to Platform and resource coverage; show macOS, iOS/iPadOS, apps, compliance,
-   configuration, enrollment/service health, collection coverage, and unmapped objects.
-9. Show Supplemental technical evidence coverage and read its non-certification warning.
-10. Show Data quality, including endpoint API versions, the beta Settings Catalog label, and the
+5. Under Findings requiring review, choose `high` in Severity.
+6. Open one row with keyboard Enter or mouse click; close the dialog after showing its traceability
+   chain.
+7. Open Changes and show the truthful current/prior result.
+8. Scroll to Managed Apple posture and Coverage and blind spots; show aggregate posture,
+   collection coverage, and resources not currently evaluated.
+9. Show Framework cross-references and read its non-certification warning.
+10. Show Collection health, including endpoint API versions, the beta Settings Catalog label, and the
     collection gap.
-11. Under the assistant, click Highest-severity findings; inspect evidence references and verifier
-    state.
-12. Ask the unsupported question from the backup card below and show insufficient evidence.
+11. Open Evidence Copilot, choose What requires my attention?, and inspect the evidence links and
+    verifier state.
+12. Ask the unsupported question from the backup card below and show insufficient evidence only if
+    time permits.
 13. Open `/api/status` in a second tab only if time permits; do not open Cloudflare live-tail.
 
 ## Suggested DevPost project description
@@ -69,14 +71,15 @@ vendor-neutral.
 ## Suggested DevPost technical description
 
 EvidenceOps uses a GET-only Python Microsoft Graph provider with bounded concurrency, pagination,
-retry, and per-endpoint gaps. A pinned mSCP macOS CIS Level 1 inventory is hash-verified and five
+retry, and per-endpoint gaps. A pinned mSCP macOS CIS Level 1 inventory is hash-verified and four
 settings are mapped through reviewed, deterministic identifiers. The engine emits stable evidence
 IDs, canonical fingerprints, assignment/value/conflict findings, freshness, history deltas, and
 framework crosswalks. A fail-closed allowlist creates the only public/model-visible package.
 Cloudflare Workers Static Assets serves the dashboard; `/api/ask` prefilters the sanitized package,
 calls only fixed `gpt-5.6-terra` with structured output and `store: false`, and rejects any answer
-whose typed claims or citations disagree with deterministic evidence. Public fixture mode requires
-no model credential; production evidence is a separately reviewed live sanitized projection.
+whose typed claims or citations disagree with deterministic evidence. Local/preview fixture mode
+requires no model credential; production evidence is a separately reviewed live sanitized
+projection with fixed-model OpenAI mode.
 
 ## How Codex was used
 
@@ -101,7 +104,7 @@ quarantined.
 | Before | Build Week extension |
 | --- | --- |
 | Secure repository and schema-v1 synthetic proof | Comprehensive GET-only Apple resource-family collector |
-| Two normalized macOS fields | Pinned 98-rule baseline with five reviewed mappings and assignment/conflict drift |
+| Two normalized macOS fields | Pinned 98-rule baseline with four exact reviewed mappings, one explicit unreviewed mapping, and assignment/conflict drift |
 | Static walkthrough | Dynamic responsive Mission Control generated from a strict public package |
 | One full-package narrative contract | Prefiltered natural-language assistant with exact typed-claim verification |
 | Local/static hosting plan | Cloudflare Worker, custom domain, CSP, rate limits, and encrypted project key |
@@ -109,17 +112,17 @@ quarantined.
 
 ## Screenshot checklist
 
-- [ ] Mission Control header with live sanitized data badge and fixture narrative label
+- [ ] Mission Control header with live sanitized data badge and OpenAI narrative label
 - [ ] Executive overview and denominator explanation
 - [ ] FileVault traceability dialog
 - [ ] Assignment or conflict finding
 - [ ] Mac/iPhone/iPad aggregate posture
 - [ ] Unmapped objects and collection gap
 - [ ] Framework technical-evidence warning
-- [ ] Verified fixture assistant answer with citations
+- [ ] Verified live `gpt-5.6-terra` answer with citations
 - [ ] Insufficient-evidence answer
 - [ ] Mobile viewport showing responsive cards/table
-- [ ] `/api/status` live sanitized response with fixture narrative mode and no administrative
+- [ ] `/api/status` live sanitized response with OpenAI narrative mode and no administrative
       metadata
 
 ## Backup synthetic-demo procedure

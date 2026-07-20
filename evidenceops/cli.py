@@ -31,6 +31,7 @@ from evidenceops.evidence import (
 )
 from evidenceops.evidence.mission import (
     build_public_mission_snapshot,
+    load_public_mission_snapshot,
     validate_public_mission_snapshot,
 )
 from evidenceops.evidence.mission_storage import (
@@ -116,6 +117,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     publish_mission.add_argument("private_collection", type=Path)
     publish_mission.add_argument("--output", type=Path, required=True)
+    publish_mission.add_argument(
+        "--previous-public",
+        type=Path,
+        help="validated prior sanitized public Mission package; never a private package",
+    )
 
     generate = subparsers.add_parser(
         "generate-narrative", help="opt in to GPT-5.6 analysis of sanitized evidence"
@@ -162,7 +168,11 @@ def main(argv: list[str] | None = None) -> int:
                 auth=args.auth,
             )
         elif args.command == "publish-mission":
-            _publish_mission(args.private_collection, args.output)
+            _publish_mission(
+                args.private_collection,
+                args.output,
+                previous_public_path=args.previous_public,
+            )
         elif args.command == "generate-narrative":
             _generate_narrative(args.public_package, args.output, model=args.model)
         elif args.command == "verify-narrative":
@@ -283,7 +293,9 @@ def _live_collect_apple(private_directory: Path, *, retention_days: int, auth: s
     print(f"normalized private Apple collection written: {output}")
 
 
-def _publish_mission(private_path: Path, output: Path) -> None:
+def _publish_mission(
+    private_path: Path, output: Path, *, previous_public_path: Path | None = None
+) -> None:
     document = load_private_collection(private_path)
     collection = collection_from_private_document(document)
     key = _required_environment("EVIDENCEOPS_PSEUDONYM_KEY").encode("utf-8")
@@ -292,6 +304,11 @@ def _publish_mission(private_path: Path, output: Path) -> None:
         pseudonym_key=key,
         synthetic=False,
         source_git_commit=_git_commit_sha(),
+        previous=(
+            load_public_mission_snapshot(previous_public_path, require_live=True)
+            if previous_public_path is not None
+            else None
+        ),
     )
     validate_public_mission_snapshot(public)
     _write_new_json(output, public)

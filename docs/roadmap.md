@@ -14,16 +14,17 @@ Roadmap items describe intent, not operational capability or delivery commitment
 - [x] Preserve the schema-v1 proof and add a strict Mission Control public projection
 - [x] Implement the comprehensive GET-only Apple resource-family collector with partial gaps
 - [x] Pin and hash the 98-rule mSCP macOS CIS Level 1 demo inventory
-- [x] Approve the machine-readable TMCO technical demo baseline without claiming certification
-- [x] Add five explicit deterministic mappings, assignment/conflict drift, and evidence traceability
+- [x] Approve the machine-readable TMCO Consulting technical demo baseline without claiming certification
+- [x] Add four exact reviewed provider mappings, keep the fifth desired mapping explicitly
+      unreviewed, and implement assignment/conflict drift with evidence traceability
 - [x] Keep iOS/iPadOS posture visible but outside the macOS alignment denominator
 - [x] Add allowlist publication, private normalized storage, and shared public/model egress scans
 - [x] Build the dynamic synthetic Mission Control dashboard and bounded `/api/ask` assistant
-- [x] Preserve fixture mode, typed-claim verification, and prose quarantine
+- [x] Preserve local/preview fixture mode, typed-claim verification, and prose quarantine
 - [x] Configure the exact environment-scoped Entra federated identity
 - [x] Grant and independently verify the complete four-permission read-only application set
 - [x] Run the expanded manual protected post-merge audit and retain no private artifact
-- [x] Perform one bounded service-account GPT-5.6 request and return production to fixture mode
+- [x] Perform a bounded service-account GPT-5.6 request and configure fixed-model production mode
 - [x] Publish one separately reviewed sanitized live Mission package through the protected handoff
 
 Public CI never performs live collection.
@@ -39,11 +40,11 @@ Public CI never performs live collection.
       deployment can show the actual Intune policy that supplied each setting
 - [ ] Define the data-classification, authorization, and retention rules for friendly tenant policy names
 - [ ] Load and independently review a CIS Level 2 baseline before displaying Level 2 technical alignment
-- [ ] Expand explicit provider mappings beyond the current five macOS settings
-- [ ] Add matrix-focused tests for aligned, value-drift, assignment, conflict, missing, collection-gap,
+- [ ] Expand exact reviewed provider mappings beyond the current four macOS settings
+- [x] Add matrix/evidence tests for aligned, value-drift, assignment, conflict, missing, collection-gap,
       unsupported, and baseline-not-loaded states
-- [ ] Extend the assistant typed-claim schema before sending setting keys, mappings, or change guidance
-      to a model; deterministic UI context remains authoritative until that verifier work is complete
+- [x] Add a bounded site-wide assistant contract with exact typed claims, selected evidence, and
+      deterministic context selection; free prose remains quarantined
 
 ## Cloudflare runtime — live sanitized production deployed
 
@@ -63,7 +64,7 @@ Public CI never performs live collection.
 - [x] Merge the Bot-Fight-safe control-plane deployment proof and complete one green orchestration
       retry; the emergency enable flag remains `false`
 - [x] Configure the EvidenceOps OpenAI project budget alerts and model limits
-- [x] Validate one bounded live `gpt-5.6-terra` response; keep fixture mode as the public default
+- [x] Validate bounded live `gpt-5.6-terra`; keep fixture mode only for local and preview
 
 Phase 1 technical completion is recorded in the
 [final implementation report](build-week/final-implementation-report.md). External submission,

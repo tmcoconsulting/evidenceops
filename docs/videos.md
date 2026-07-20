@@ -1,7 +1,7 @@
 # Videos and Demonstration Media
 
-No public EvidenceOps video is linked from this repository at the current Phase 1 checkpoint. The
-live application and the reviewed demo runbook are available; media production remains an operator
+No public EvidenceOps video is linked from this repository yet. The live application and the
+[final video runbook](build-week/video-runbook.md) are ready; media production remains an operator
 submission task rather than a product capability.
 
 ## Recommended recording sequence

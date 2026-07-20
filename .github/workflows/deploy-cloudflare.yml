@@ -9,8 +9,12 @@ on:
         type: boolean
         default: false
       sanitized_audit_run_id:
-        description: Optional successful Intune audit run containing the reviewed public Mission
-        required: false
+        description: Successful reviewed Intune audit run containing the live public Mission
+        required: true
+        type: string
+      expected_source_snapshot_id:
+        description: Exact reviewed Mission snapshot ID from that sanitized audit artifact
+        required: true
         type: string
 
 permissions:
@@ -38,6 +42,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_DEPLOY_ENABLED: ${{ vars.CLOUDFLARE_DEPLOY_ENABLED }}
       SANITIZED_AUDIT_RUN_ID: ${{ inputs.sanitized_audit_run_id }}
+      EXPECTED_SOURCE_SNAPSHOT_ID: ${{ inputs.expected_source_snapshot_id }}
     steps:
       - name: Require reviewed deployment window
         run: |
@@ -45,12 +50,20 @@ jobs:
             echo "production deployment window is disabled" >&2
             exit 2
           fi
+          if [[ ! "$SANITIZED_AUDIT_RUN_ID" =~ ^[0-9]{1,20}$ ]]; then
+            echo "invalid sanitized audit run selector" >&2
+            exit 2
+          fi
+          if [[ ! "$EXPECTED_SOURCE_SNAPSHOT_ID" =~ ^mission-[0-9a-f]{24}$ ]]; then
+            echo "invalid expected Mission snapshot ID" >&2
+            exit 2
+          fi
 
       - name: Check out trusted main
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-          ref: main
+          ref: ${{ github.sha }}
 
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
@@ -77,25 +90,30 @@ jobs:
           python -m mypy
           python -m pytest
           python -m bandit -r evidenceops scripts -c pyproject.toml
+          python scripts/check_company_name.py
           python scripts/check_secrets.py
           python -m pip_audit -r requirements-dev.txt
           npm audit --audit-level=moderate
-          python -m evidenceops rebuild-static-demo
-          git diff --exit-code -- docs/assets/data
-          mkdocs build --strict
-          python scripts/check_public_artifacts.py site
-          npm run validate:worker
 
-      - name: Validate live publication selector
-        if: inputs.sanitized_audit_run_id != ''
+      - name: Verify reviewed audit run provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          if [[ ! "$SANITIZED_AUDIT_RUN_ID" =~ ^[0-9]{1,20}$ ]]; then
-            echo "invalid sanitized audit run selector" >&2
+          gh api "/repos/tmcoconsulting/evidenceops/actions/runs/$SANITIZED_AUDIT_RUN_ID" \
+            > "$RUNNER_TEMP/evidenceops-audit-run.json"
+          jq -e '
+            .name == "Read-only Intune audit" and
+            .path == ".github/workflows/intune-audit.yml" and
+            .event == "workflow_dispatch" and
+            .head_branch == "main" and
+            .status == "completed" and
+            .conclusion == "success"
+          ' "$RUNNER_TEMP/evidenceops-audit-run.json" > /dev/null || {
+            echo "selected artifact is not from a successful trusted-main Intune audit" >&2
             exit 2
-          fi
+          }
 
       - name: Download reviewed sanitized Mission package
-        if: inputs.sanitized_audit_run_id != ''
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: evidenceops-sanitized-mission-${{ inputs.sanitized_audit_run_id }}
@@ -105,23 +123,27 @@ jobs:
           run-id: ${{ inputs.sanitized_audit_run_id }}
 
       - name: Revalidate and stage live sanitized dashboard
-        if: inputs.sanitized_audit_run_id != ''
         run: |
-          test "$(find build/publication-handoff -maxdepth 1 -type f | wc -l | tr -d ' ')" = "1"
+          test "$(find build/publication-handoff -mindepth 1 -print | wc -l | tr -d ' ')" = "1"
           python scripts/promote_live_mission.py build/publication-handoff/mission-control.json
           python scripts/check_public_artifacts.py build/publication-handoff
           python scripts/check_secrets.py
-          mkdocs build --strict
-          python scripts/check_public_artifacts.py site
-
-      - name: Pin expected deployed snapshot
-        run: |
-          snapshot_id="$(jq -r '.snapshot_id' docs/assets/data/mission-control.json)"
-          if [[ ! "$snapshot_id" =~ ^mission-[0-9a-f]{24}$ ]]; then
-            echo "invalid expected Mission snapshot ID" >&2
+          actual_snapshot_id="$(jq -r '.snapshot_id' docs/assets/data/mission-control.json)"
+          if [ "$actual_snapshot_id" != "$EXPECTED_SOURCE_SNAPSHOT_ID" ]; then
+            echo "reviewed artifact does not match the expected Mission snapshot ID" >&2
             exit 2
           fi
-          echo "EXPECTED_SOURCE_SNAPSHOT_ID=$snapshot_id" >> "$GITHUB_ENV"
+          mkdocs build --strict
+          python scripts/check_public_artifacts.py site
+          npm run validate:worker
+
+      - name: Recheck exact snapshot immediately before deployment
+        run: |
+          snapshot_id="$(jq -r '.snapshot_id' docs/assets/data/mission-control.json)"
+          if [ "$snapshot_id" != "$EXPECTED_SOURCE_SNAPSHOT_ID" ]; then
+            echo "staged Mission snapshot changed after validation" >&2
+            exit 2
+          fi
 
       - name: Deploy production Worker
         env:

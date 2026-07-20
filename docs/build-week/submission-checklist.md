@@ -17,8 +17,8 @@ requirements from their authoritative source before submission.
 ## Product and security evidence
 
 - [x] Every demo surface clearly declares whether its evidence is synthetic or sanitized live data
-- [x] Production reports sanitized live evidence and fixture narrative mode without implying a live
-      model call
+- [ ] Production reports the exact reviewed live snapshot and fixed `gpt-5.6-terra` mode; one
+      bounded Copilot answer passes deterministic verification
 - [x] No live tenant, person, device, group, or credential data is committed
 - [x] Sanitizer fails closed on unknown fields
 - [x] Generated site passes prohibited-pattern scanning
@@ -39,3 +39,5 @@ requirements from their authoritative source before submission.
 - [ ] Review every frame for notifications, identities, secrets, and tenant/device data
 - [ ] Distinguish implemented behavior from roadmap behavior
 - [ ] Confirm asset and music usage rights
+- [ ] Follow the [final video runbook](video-runbook.md) and keep the public recording under three
+      minutes

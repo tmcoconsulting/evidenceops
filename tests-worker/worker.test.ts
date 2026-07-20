@@ -4,6 +4,7 @@ import fixtureNarrative from "../docs/assets/data/phase1-fixture-narrative.json"
 import fixturePackage from "../docs/assets/data/phase1-public-evidence.json";
 import missionFixture from "../docs/assets/data/mission-control.json";
 import worker from "../worker/src/index";
+import { canonicalJson, sha256 } from "../worker/src/evidence";
 import { validatePublicPackage } from "../worker/src/contracts";
 import type { StaticAssetBinding, WorkerEnv } from "../worker/src/env";
 import {
@@ -12,8 +13,13 @@ import {
   verifyNarrative,
 } from "../worker/src/verifier";
 import { handleRequest } from "../worker/src/router";
-import { assertPublicSafe, HttpError } from "../worker/src/security";
+import {
+  assertMissionEgressSafe,
+  assertPublicSafe,
+  HttpError,
+} from "../worker/src/security";
 import type {
+  JsonValue,
   NarrativeModelOutput,
   PublicEvidencePackage,
   RuntimeMode,
@@ -110,7 +116,9 @@ function assistantRequest(
       Origin: ORIGIN,
       "Sec-Fetch-Site": "same-origin",
     },
-    body: JSON.stringify(document ?? { question, snapshot_id: snapshotId }),
+    body: JSON.stringify(
+      document ?? { page: "findings", question, snapshot_id: snapshotId },
+    ),
   });
 }
 
@@ -123,6 +131,22 @@ function responseEnvelope(output: NarrativeModelOutput): object {
       },
     ],
   };
+}
+
+async function signMission(
+  value: typeof missionFixture,
+): Promise<typeof missionFixture> {
+  const document = structuredClone(value);
+  const unsigned: Record<string, JsonValue> = {};
+  for (const [key, item] of Object.entries(document)) {
+    if (key !== "snapshot_id" && key !== "content_fingerprint") {
+      unsigned[key] = item as JsonValue;
+    }
+  }
+  const digest = await sha256(canonicalJson(unsigned));
+  document.content_fingerprint = `sha256:${digest}`;
+  document.snapshot_id = `mission-${digest.slice(0, 24)}`;
+  return document;
 }
 
 describe("Worker routes", () => {
@@ -149,12 +173,16 @@ describe("Worker routes", () => {
     expect(status).toMatchObject({
       narrative_mode: "fixture",
       narrative_available: true,
-      model_configured: true,
+      model_call_available: false,
+      model_configured: false,
+      response_source: "deterministic_fixture",
       byok_supported: false,
       intune_write_capability: false,
       data_mode: "SYNTHETIC DEMO DATA",
       live_intune_collection_performed: false,
       source_snapshot_id: missionFixture.snapshot_id,
+      provider: missionFixture.collection.provider,
+      approved_baseline: missionFixture.baseline.name,
     });
     expect(status).not.toHaveProperty("ai_model_call_performed");
   });
@@ -222,6 +250,7 @@ describe("Worker routes", () => {
     await expect(response.json()).resolves.toMatchObject({
       narrative_mode: "openai",
       narrative_available: false,
+      model_call_available: false,
       model_configured: false,
     });
   });
@@ -279,6 +308,13 @@ describe("Worker routes", () => {
     ["Are any policies unassigned?", "assignment_drift"],
     ["Which policies conflict?", "conflicts"],
     ["What data could not be collected?", "collection_gaps"],
+    ["What requires my attention?", "attention"],
+    ["Which finding was resolved?", "resolved"],
+    ["What is not currently evaluated?", "unevaluated"],
+    ["What do the framework cross-references mean?", "framework_meaning"],
+    ["Is this live tenant data?", "provenance"],
+    ["What should I review in Intune?", "intune_review"],
+    ["What can EvidenceOps not conclude?", "limitations"],
   ])("answers bounded fixture question %s as %s", async (question, intent) => {
     const outboundFetch = vi.fn<typeof fetch>();
     const response = await handleRequest(
@@ -302,6 +338,87 @@ describe("Worker routes", () => {
         status: "typed_claims_verified",
         generated_prose_quarantined: true,
       },
+    });
+  });
+
+  it("accepts only strict page context and a current selected evidence reference", async () => {
+    const finding = missionFixture.findings[0]!;
+    const response = await handleRequest(
+      assistantRequest(
+        "Which evidence supports this finding?",
+        missionFixture.snapshot_id,
+        {
+          page: "findings",
+          question: "Which evidence supports this finding?",
+          selected_evidence_id: finding.finding_id,
+          snapshot_id: missionFixture.snapshot_id,
+        },
+      ),
+      environment(),
+    );
+    await expect(response.json()).resolves.toMatchObject({
+      question_intent: "evidence",
+      answer: {
+        evidence_references: expect.arrayContaining([
+          missionFixture.snapshot_id,
+          finding.finding_id,
+        ]),
+      },
+      verification: { status: "typed_claims_verified" },
+    });
+
+    await expect(
+      handleRequest(
+        assistantRequest("What requires review?", missionFixture.snapshot_id, {
+          page: "raw-dom-text",
+          question: "What requires review?",
+          snapshot_id: missionFixture.snapshot_id,
+        }),
+        environment(),
+      ),
+    ).rejects.toMatchObject({ code: "assistant_request_rejected" });
+
+    await expect(
+      handleRequest(
+        assistantRequest("Explain this evidence", missionFixture.snapshot_id, {
+          page: "evidence",
+          question: "Explain this evidence",
+          selected_evidence_id: `finding-${"f".repeat(24)}`,
+          snapshot_id: missionFixture.snapshot_id,
+        }),
+        environment(),
+      ),
+    ).rejects.toMatchObject({ code: "assistant_evidence_rejected" });
+  });
+
+  it("explains an aligned FileVault requirement when no drift finding exists", async () => {
+    const aligned = structuredClone(missionFixture);
+    const requirement = aligned.requirements.find((item) =>
+      item.rule_id.includes("filevault"),
+    )!;
+    requirement.outcome = "Aligned";
+    requirement.observed_value = requirement.expected_value;
+    aligned.findings = aligned.findings.filter(
+      (item) => !item.rule_id.includes("filevault"),
+    );
+    const signed = await signMission(aligned);
+    const response = await handleRequest(
+      assistantRequest(
+        "Why is FileVault aligned or drifting?",
+        signed.snapshot_id,
+      ),
+      environment("fixture", { mission: signed }),
+    );
+    await expect(response.json()).resolves.toMatchObject({
+      question_intent: "filevault",
+      answer: {
+        direct_answer: expect.stringContaining("Aligned"),
+        evidence_references: expect.arrayContaining([
+          signed.snapshot_id,
+          requirement.requirement_id,
+        ]),
+      },
+      verification: { status: "typed_claims_verified" },
     });
   });
 
@@ -333,6 +450,7 @@ describe("Worker routes", () => {
     await expect(
       handleRequest(
         assistantRequest("safe", missionFixture.snapshot_id, {
+          page: "findings",
           question: "safe question",
           snapshot_id: missionFixture.snapshot_id,
           unexpected: true,
@@ -811,6 +929,29 @@ describe("narrative verification", () => {
 });
 
 describe("shared credential catalog", () => {
+  it("allows only exact reviewed domain-shaped provider definition IDs", () => {
+    for (const definitionId of [
+      "com.apple.mcx.filevault2_enable",
+      "com.apple.screensaver_askForPassword",
+      "com.apple.screensaver.user_idleTime",
+      "com.apple.security.firewall_EnableFirewall",
+    ]) {
+      expect(() => assertMissionEgressSafe(definitionId)).not.toThrow();
+    }
+    expect(() =>
+      assertMissionEgressSafe("com.apple.security.unreviewedSetting"),
+    ).toThrow(HttpError);
+  });
+
+  it("rejects serial markers with digits without treating ordinary snapshot prose as a serial", () => {
+    for (const serial of ["SERIAL-ABC123", "SNABC123"]) {
+      expect(() => assertMissionEgressSafe(serial)).toThrow(HttpError);
+    }
+    expect(() =>
+      assertMissionEgressSafe("current and previous snapshot comparison"),
+    ).not.toThrow();
+  });
+
   it.each(["ghp_", "gho_", "ghu_", "ghs_", "ghr_"])(
     "rejects the %s underscore-form GitHub token",
     (prefix) => {

@@ -6,69 +6,91 @@
 
   const select = (selector) => root.querySelector(selector);
   const all = (selector) => Array.from(root.querySelectorAll(selector));
+  const create = (name, className = "", value = "") => {
+    const node = document.createElement(name);
+    if (className) node.className = className;
+    if (value !== "") node.textContent = String(value);
+    return node;
+  };
+  const isRecord = (value) =>
+    value !== null && typeof value === "object" && !Array.isArray(value);
+  const formatValue = (value) => {
+    if (Array.isArray(value)) return value.map(formatValue).join(", ");
+    if (value === null || value === undefined) return "Not available";
+    if (isRecord(value)) return JSON.stringify(value);
+    if (typeof value === "boolean") return value ? "Enabled" : "Disabled";
+    return String(value);
+  };
+  const shortHash = (value) =>
+    typeof value === "string" && value.length > 22
+      ? `${value.slice(0, 20)}…`
+      : formatValue(value);
+  const titleCase = (value) =>
+    String(value)
+      .replaceAll("_", " ")
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
   const text = (selector, value) => {
     const node = select(selector);
     if (node instanceof HTMLElement) node.textContent = String(value);
   };
-  const element = (name, className, value) => {
-    const node = document.createElement(name);
-    if (className) node.className = className;
-    if (value !== undefined) node.textContent = String(value);
-    return node;
+  const missionUrl = () => {
+    const url = new URL(
+      "/assets/data/mission-control.json",
+      window.location.origin,
+    );
+    const snapshot = new URL(window.location.href).searchParams.get("snapshot");
+    if (snapshot && /^mission-[0-9a-f]{24}$/.test(snapshot))
+      url.searchParams.set("snapshot", snapshot);
+    return url;
   };
-  const formatValue = (value) => {
-    if (Array.isArray(value)) return value.join(", ");
-    if (value === null || value === undefined) return "Not available";
-    if (typeof value === "object") return JSON.stringify(value);
-    return String(value);
-  };
-  const shortHash = (value) =>
-    typeof value === "string" && value.length > 20
-      ? `${value.slice(0, 18)}…`
-      : formatValue(value);
 
   let mission = null;
 
   const validateMission = (value) => {
-    if (!value || typeof value !== "object" || Array.isArray(value)) {
-      throw new Error("Mission package is not an object");
-    }
     const modes = [
       "SYNTHETIC DEMO DATA",
       "LIVE SANITIZED TENANT DATA",
       "DEGRADED OR STALE DATA",
     ];
     if (
-      value.schema_version !== "2.0.0" ||
+      !isRecord(value) ||
+      value.schema_version !== "2.1.0" ||
       !modes.includes(value.data_mode) ||
       !/^mission-[0-9a-f]{24}$/.test(value.snapshot_id) ||
       !/^sha256:[0-9a-f]{64}$/.test(value.content_fingerprint) ||
+      !isRecord(value.collection) ||
+      !isRecord(value.baseline) ||
+      !isRecord(value.metrics) ||
+      !isRecord(value.devices) ||
+      !isRecord(value.changes) ||
+      !isRecord(value.framework_coverage) ||
+      !isRecord(value.privacy) ||
       !Array.isArray(value.requirements) ||
       !Array.isArray(value.findings) ||
       !Array.isArray(value.resources) ||
+      !Array.isArray(value.unmapped_objects) ||
       !Array.isArray(value.collection_gaps)
     ) {
-      throw new Error("Mission package failed its browser contract");
+      throw new Error("Mission package failed the dashboard contract");
     }
     const prohibited = new Set([
-      "device_name",
-      "hostname",
-      "user_principal_name",
-      "serial_number",
-      "managed_device_id",
-      "source_object_id",
-      "private_display_name",
-      "authorization",
       "access_token",
       "api_key",
+      "authorization",
+      "device_name",
+      "hostname",
+      "managed_device_id",
+      "private_display_name",
+      "serial_number",
+      "source_object_id",
+      "user_principal_name",
     ]);
     const walk = (item) => {
       if (Array.isArray(item)) return item.forEach(walk);
-      if (!item || typeof item !== "object") return;
+      if (!isRecord(item)) return;
       for (const [key, nested] of Object.entries(item)) {
-        if (prohibited.has(key.toLowerCase())) {
+        if (prohibited.has(key.toLowerCase()))
           throw new Error("Mission package contains a prohibited field");
-        }
         walk(nested);
       }
     };
@@ -76,61 +98,201 @@
     return value;
   };
 
+  const addDetail = (list, label, value, code = false) => {
+    const term = create("dt", "", label);
+    const detail = create("dd");
+    detail.append(create(code ? "code" : "span", "", formatValue(value)));
+    list.append(term, detail);
+  };
+
   const renderDefinitionList = (container, entries) => {
     if (!(container instanceof HTMLElement)) return;
     container.replaceChildren();
-    for (const [label, value] of entries) {
-      const term = element("dt", "", label);
-      const detail = element("dd", "", formatValue(value));
-      container.append(term, detail);
-    }
+    for (const [label, value, code = false] of entries)
+      addDetail(container, label, value, code);
   };
 
   const metricCard = (label, value, detail, tone = "neutral") => {
-    const card = element("article", `mission-metric mission-tone-${tone}`);
+    const card = create("article", `mission-metric mission-tone-${tone}`);
     card.append(
-      element("span", "mission-metric-label", label),
-      element("strong", "mission-metric-value", value),
-      element("span", "mission-metric-detail", detail),
+      create("span", "mission-metric-label", label),
+      create("strong", "mission-metric-value", value),
+      create("span", "mission-metric-detail", detail),
     );
     return card;
   };
 
+  const findingForRule = (identifier) =>
+    mission.findings.find(
+      (finding) =>
+        finding.rule_id === identifier || finding.finding_id === identifier,
+    );
+  const requirementForRule = (identifier) =>
+    mission.requirements.find(
+      (requirement) =>
+        requirement.rule_id === identifier ||
+        requirement.requirement_id === identifier,
+    );
+
+  const deterministicGuidance = (finding) => {
+    const key = finding.setting_key || finding.rule_id;
+    const target = formatValue(finding.expected_value);
+    const observed = formatValue(finding.observed_value);
+    switch (finding.drift_type) {
+      case "Value drift":
+        return `Review ${key} in the approved Intune policy: observed ${observed}, approved target ${target}. If a human changes it, re-collect before calling it resolved.`;
+      case "Assignment drift":
+        return `Review intended scope and exclusions for ${key}; retain ${target}, then re-collect assignment evidence after any human change.`;
+      case "Conflicting policy":
+        return `Review overlapping policy sources for ${key}. Resolve precedence manually, then re-collect the effective value.`;
+      case "Missing from tenant":
+        return `Confirm every reviewed exact provider alias is absent before a human creates or assigns an approved policy for ${key}.`;
+      default:
+        return (
+          finding.remediation_guidance ||
+          "Human review is required; EvidenceOps cannot change Intune."
+        );
+    }
+  };
+
+  const openFinding = (finding) => {
+    const dialog = select("[data-finding-dialog]");
+    const detail = select("[data-finding-detail]");
+    if (
+      !(dialog instanceof HTMLDialogElement) ||
+      !(detail instanceof HTMLElement)
+    )
+      return;
+    detail.replaceChildren();
+    const heading = create("h2", "", finding.title);
+    heading.id = "finding-dialog-title";
+    const status = create(
+      "p",
+      "mission-dialog-status",
+      `${finding.drift_type} · ${finding.severity} severity`,
+    );
+    const list = create("dl", "mission-detail-list");
+    const requirement = requirementForRule(
+      finding.requirement_id || finding.rule_id,
+    );
+    addDetail(list, "Requirement", `${finding.rule_id} — ${finding.title}`);
+    addDetail(list, "Canonical setting", finding.setting_key, true);
+    addDetail(
+      list,
+      "Exact provider definitions",
+      finding.provider_definition_ids || [],
+      true,
+    );
+    addDetail(
+      list,
+      "Matched provider definitions",
+      finding.matched_provider_definition_ids || [],
+      true,
+    );
+    addDetail(
+      list,
+      "Mapping review",
+      finding.mapping_review_status || "Not published",
+    );
+    addDetail(
+      list,
+      "Mapping registry",
+      finding.provider_mapping_registry_version || "Not published",
+      true,
+    );
+    addDetail(
+      list,
+      "Public-safe parent policy",
+      (finding.parent_resource_refs || []).join(", ") ||
+        "No linked parent reference",
+      true,
+    );
+    addDetail(list, "Observed", finding.observed_value, true);
+    addDetail(list, "Approved target", finding.expected_value, true);
+    addDetail(list, "Assignment", finding.assignment_summary);
+    addDetail(
+      list,
+      "Framework cross-references",
+      finding.mapped_controls || {},
+    );
+    addDetail(
+      list,
+      "Evidence IDs",
+      finding.source_evidence_ids || requirement?.source_evidence_ids || [],
+      true,
+    );
+    addDetail(list, "Finding fingerprint", finding.fingerprint, true);
+    addDetail(
+      list,
+      "Baseline fingerprint",
+      finding.baseline_rule_fingerprint,
+      true,
+    );
+
+    const guidance = create("section", "mission-dialog-guidance");
+    guidance.append(
+      create("h3", "", "Read-only operator guidance"),
+      create("p", "", deterministicGuidance(finding)),
+    );
+    const limitations = create("ul");
+    for (const limitation of finding.limitations || [])
+      limitations.append(create("li", "", limitation));
+    guidance.append(create("h3", "", "Limitations"), limitations);
+    const ask = create(
+      "button",
+      "md-button md-button--primary",
+      "Ask Evidence Copilot about this finding",
+    );
+    ask.type = "button";
+    ask.addEventListener("click", () => {
+      dialog.close();
+      window.dispatchEvent(
+        new CustomEvent("evidenceops:select-evidence", {
+          detail: {
+            evidenceId: finding.finding_id,
+            question:
+              "Which evidence supports this finding and what should I review in Intune?",
+          },
+        }),
+      );
+    });
+    detail.append(heading, status, list, guidance, ask);
+    dialog.showModal();
+  };
+
   const renderOverview = () => {
     const metrics = mission.metrics;
-    const collection = mission.collection;
     const container = select("[data-mission-metrics]");
     if (container instanceof HTMLElement) {
       container.replaceChildren(
         metricCard(
-          "Technical alignment",
-          `${metrics.alignment_percent}%`,
-          `${metrics.aligned_requirements} of ${metrics.alignment_denominator} evaluated`,
-          metrics.alignment_percent >= 80 ? "good" : "warning",
-        ),
-        metricCard(
-          "Drifted requirements",
+          "Findings requiring review",
           metrics.drifted_requirements,
           `${metrics.high_severity_drift} high severity`,
-          "danger",
+          metrics.drifted_requirements ? "danger" : "good",
         ),
         metricCard(
-          "Managed Apple devices",
-          mission.devices.total,
-          Object.entries(mission.devices.by_platform)
-            .map(([key, value]) => `${key} ${value}`)
-            .join(" · "),
+          "New drift",
+          mission.changes.new_drift.length,
+          "Since the previous sanitized collection",
+          mission.changes.new_drift.length ? "warning" : "good",
+        ),
+        metricCard(
+          "Resolved",
+          mission.changes.resolved_drift.length,
+          "Requires later collected evidence",
+          "good",
         ),
         metricCard(
           "Collection gaps",
           metrics.collection_gaps,
-          `${metrics.unmapped_objects} unmapped normalized objects`,
+          "Additional evidence required",
           metrics.collection_gaps ? "warning" : "good",
         ),
         metricCard(
-          "AI service",
-          mission.ai.mode,
-          `${mission.ai.model} · ${mission.ai.authoritative ? "authoritative" : "explanatory only"}`,
+          "Evaluated settings",
+          metrics.alignment_denominator,
+          `${metrics.aligned_requirements} currently aligned`,
         ),
       );
     }
@@ -141,9 +303,54 @@
     text("[data-mission-title]", mission.baseline.name);
     text(
       "[data-mission-subtitle]",
-      `Collected ${collection.collected_at_utc} · ${collection.provider} ${collection.provider_version}`,
+      `Collected ${mission.collection.collected_at_utc} · ${mission.collection.provider} ${mission.collection.provider_version}`,
     );
     text("[data-mission-mode]", mission.data_mode);
+
+    const list = select("[data-attention-list]");
+    if (list instanceof HTMLElement) {
+      list.replaceChildren();
+      const ordered = [...mission.findings].sort(
+        (left, right) =>
+          (({ high: 3, medium: 2, low: 1 })[right.severity] || 0) -
+            ({ high: 3, medium: 2, low: 1 }[left.severity] || 0) ||
+          left.title.localeCompare(right.title),
+      );
+      if (!ordered.length)
+        list.append(
+          create(
+            "p",
+            "mission-empty",
+            "No current deterministic drift finding is published.",
+          ),
+        );
+      for (const finding of ordered.slice(0, 5)) {
+        const card = create("article", "mission-attention-card");
+        const button = create(
+          "button",
+          "mission-attention-button",
+          finding.title,
+        );
+        button.type = "button";
+        button.addEventListener("click", () => openFinding(finding));
+        card.append(
+          create(
+            "span",
+            `mission-severity mission-severity-${finding.severity}`,
+            finding.severity,
+          ),
+          button,
+          create(
+            "span",
+            "",
+            `${finding.drift_type} · ${formatValue(finding.observed_value)} → ${formatValue(finding.expected_value)}`,
+          ),
+          create("small", "", finding.assignment_summary),
+        );
+        list.append(card);
+      }
+    }
+
     renderDefinitionList(select("[data-baseline-summary]"), [
       ["Benchmark", mission.baseline.benchmark],
       ["Pinned version", mission.baseline.benchmark_version],
@@ -152,132 +359,101 @@
         `${mission.baseline.approval_date} · ${mission.baseline.approver}`,
       ],
       ["Inventory", `${mission.baseline.rule_count} rules`],
-      ["Extracted hash", shortHash(mission.baseline.extracted_baseline_sha256)],
+      ["Extracted hash", mission.baseline.extracted_baseline_sha256, true],
     ]);
-    const devices = select("[data-device-summary]");
-    if (devices instanceof HTMLElement) {
-      devices.replaceChildren();
-      for (const [label, values] of [
-        ["Platform", mission.devices.by_platform],
-        ["Compliance", mission.devices.by_compliance_state],
-        ["Encryption", mission.devices.by_encryption_state],
-        ["Supervision", mission.devices.by_supervision_state],
-      ]) {
-        const row = element("div", "mission-stat-row");
-        row.append(element("strong", "", label));
-        row.append(
-          element(
-            "span",
-            "",
-            Object.entries(values)
-              .map(([key, value]) => `${key}: ${value}`)
-              .join(" · "),
-          ),
-        );
-        devices.append(row);
-      }
-    }
-    const changes = select("[data-change-summary]");
-    if (changes instanceof HTMLElement) {
-      changes.replaceChildren(
-        element(
-          "p",
-          "mission-change-value",
-          mission.changes.alignment_change_points === null
-            ? "No prior score"
-            : `${mission.changes.alignment_change_points > 0 ? "+" : ""}${mission.changes.alignment_change_points} points`,
-        ),
-        element(
-          "p",
-          "",
-          `${mission.changes.changed_requirements.length} requirements changed · ${mission.changes.new_drift.length} began drifting · ${mission.changes.resolved_drift.length} resolved`,
-        ),
-      );
-    }
   };
 
-  const options = (selector, values) => {
+  const renderChanges = () => {
+    const renderItems = (container, identifiers, emptyMessage) => {
+      if (!(container instanceof HTMLElement)) return;
+      container.replaceChildren();
+      if (!identifiers.length) container.append(create("p", "", emptyMessage));
+      for (const identifier of identifiers) {
+        const finding = findingForRule(identifier);
+        const requirement = requirementForRule(identifier);
+        const item = create(
+          "a",
+          "mission-change-link",
+          finding?.title || requirement?.title || identifier,
+        );
+        item.href = finding
+          ? `#${finding.finding_id}`
+          : requirement
+            ? `../settings-matrix/?selected=${encodeURIComponent(requirement.requirement_id)}#settings-matrix`
+            : "#evidence";
+        if (finding)
+          item.addEventListener("click", (event) => {
+            event.preventDefault();
+            openFinding(finding);
+          });
+        container.append(item);
+      }
+    };
+    renderItems(
+      select("[data-resolved-changes]"),
+      mission.changes.resolved_drift,
+      "No finding is recorded as resolved in this comparison.",
+    );
+    renderItems(
+      select("[data-new-changes]"),
+      mission.changes.new_drift,
+      "No new drift is recorded in this comparison.",
+    );
+    text(
+      "[data-change-count]",
+      `${mission.changes.changed_requirements.length} changed`,
+    );
+    renderDefinitionList(select("[data-change-summary]"), [
+      [
+        "Previous snapshot",
+        mission.changes.previous_snapshot_id || "No prior snapshot",
+      ],
+      [
+        "Previous collection",
+        mission.changes.previous_collection_timestamp_utc || "Not available",
+      ],
+      [
+        "Current collection",
+        mission.changes.current_collection_timestamp_utc ||
+          mission.collection.collected_at_utc,
+      ],
+      [
+        "Alignment change",
+        mission.changes.alignment_change_points === null
+          ? "Not calculated"
+          : `${mission.changes.alignment_change_points} points`,
+      ],
+      [
+        "Unchanged",
+        `${(mission.changes.unchanged_requirements || []).length} evaluated requirements`,
+      ],
+    ]);
+  };
+
+  const addOptions = (selector, values) => {
     const node = select(selector);
     if (!(node instanceof HTMLSelectElement)) return;
     for (const value of [...new Set(values)].sort()) {
-      const option = document.createElement("option");
+      const option = create("option", "", value);
       option.value = value;
-      option.textContent = value;
       node.append(option);
     }
   };
 
-  const renderFindingDetail = (finding) => {
-    const dialog = select("[data-finding-dialog]");
-    const detail = select("[data-finding-detail]");
-    if (
-      !(dialog instanceof HTMLDialogElement) ||
-      !(detail instanceof HTMLElement)
-    )
-      return;
-    detail.replaceChildren();
-    const heading = element("h2", "", finding.title);
-    heading.id = "finding-dialog-title";
-    detail.append(
-      heading,
-      element(
-        "p",
-        "mission-dialog-status",
-        `${finding.drift_type} · ${finding.severity}`,
-      ),
-    );
-    const chain = element("ol", "mission-trace-chain");
-    const steps = [
-      [
-        "Pinned baseline",
-        `${finding.rule_id} · ${mission.baseline.benchmark_version}`,
-      ],
-      ["Deterministic mappings", formatValue(finding.mapped_controls)],
-      [
-        "Desired state",
-        `${finding.setting_key} = ${formatValue(finding.expected_value)}`,
-      ],
-      ["Tenant observation", formatValue(finding.observed_value)],
-      ["Assignment scope", finding.assignment_summary],
-      [
-        "Evidence provenance",
-        finding.source_evidence_ids.map(shortHash).join(", ") ||
-          "No source observation",
-      ],
-      ["Finding fingerprint", finding.fingerprint],
-      ["Repository provenance", mission.collection.source_git_commit],
-    ];
-    for (const [label, value] of steps) {
-      const item = element("li", "");
-      item.append(element("strong", "", label), element("span", "", value));
-      chain.append(item);
-    }
-    detail.append(
-      chain,
-      element("h3", "", "Human-reviewed next step"),
-      element("p", "", finding.remediation_guidance),
-    );
-    const limits = element("ul", "");
-    for (const limitation of finding.limitations)
-      limits.append(element("li", "", limitation));
-    detail.append(element("h3", "", "Limitations"), limits);
-    dialog.showModal();
-  };
-
   const renderFindings = () => {
-    options(
+    addOptions(
       "[data-filter-platform]",
       mission.findings.map((item) => item.platform),
     );
-    options(
+    addOptions(
       "[data-filter-drift]",
       mission.findings.map((item) => item.drift_type),
     );
-    options(
+    addOptions(
       "[data-filter-severity]",
       mission.findings.map((item) => item.severity),
     );
-    options(
+    addOptions(
       "[data-filter-category]",
       mission.findings.map((item) =>
         item.setting_key.split(".").slice(0, -1).join("."),
@@ -302,32 +478,36 @@
       body.replaceChildren();
       for (const finding of filtered) {
         const row = document.createElement("tr");
-        const titleCell = document.createElement("td");
-        const button = element(
+        row.id = finding.finding_id;
+        const setting = create("td");
+        const button = create(
           "button",
           "mission-finding-button",
           finding.title,
         );
         button.type = "button";
-        button.addEventListener("click", () => renderFindingDetail(finding));
-        titleCell.append(button, element("small", "", finding.rule_id));
+        button.addEventListener("click", () => openFinding(finding));
+        setting.append(button, create("small", "", finding.rule_id));
         row.append(
-          titleCell,
-          element("td", "", finding.drift_type),
-          element(
+          setting,
+          create("td", "", finding.drift_type),
+          create(
             "td",
             `mission-severity mission-severity-${finding.severity}`,
             finding.severity,
           ),
-          element("td", "", formatValue(finding.expected_value)),
-          element("td", "", formatValue(finding.observed_value)),
-          element("td", "mission-hash", shortHash(finding.fingerprint)),
+          create(
+            "td",
+            "mission-observed-target",
+            `${formatValue(finding.observed_value)} → ${formatValue(finding.expected_value)}`,
+          ),
+          create("td", "", finding.assignment_summary),
         );
         body.append(row);
       }
       text(
         "[data-finding-count]",
-        `${filtered.length} of ${mission.findings.length} findings`,
+        `${filtered.length} of ${mission.findings.length}`,
       );
       const empty = select("[data-finding-empty]");
       if (empty instanceof HTMLElement) empty.hidden = filtered.length !== 0;
@@ -344,80 +524,177 @@
     render();
   };
 
-  const renderCoverage = () => {
-    const platformContainer = select("[data-platform-summary]");
-    const grouped = new Map();
-    for (const resource of mission.resources) {
-      for (const platform of resource.platforms) {
-        const entry = grouped.get(platform) || { resources: 0, assigned: 0 };
-        entry.resources += 1;
-        if (resource.assignment_count > 0) entry.assigned += 1;
-        grouped.set(platform, entry);
-      }
-    }
-    if (platformContainer instanceof HTMLElement) {
-      platformContainer.replaceChildren();
-      for (const [platform, values] of [...grouped.entries()].sort()) {
-        const panel = element("article", "mission-panel");
-        panel.append(
-          element("h3", "", platform),
-          element(
-            "p",
-            "mission-platform-value",
-            `${values.resources} normalized objects`,
-          ),
-          element("p", "", `${values.assigned} with normalized assignments`),
-        );
-        platformContainer.append(panel);
-      }
-    }
-    const unmapped = select("[data-unmapped-resources]");
-    if (unmapped instanceof HTMLElement) {
-      unmapped.replaceChildren();
-      for (const resource of mission.unmapped_objects.slice(0, 12)) {
-        const item = element("div", "mission-resource");
-        item.append(
-          element("strong", "", resource.title),
-          element(
+  const renderPosture = () => {
+    const devices = select("[data-device-summary]");
+    if (devices instanceof HTMLElement) {
+      devices.replaceChildren();
+      for (const [label, values] of [
+        ["Platform", mission.devices.by_platform],
+        ["Compliance", mission.devices.by_compliance_state],
+        ["Encryption", mission.devices.by_encryption_state],
+        ["Supervision", mission.devices.by_supervision_state],
+      ]) {
+        const row = create("div", "mission-stat-row");
+        row.append(
+          create("strong", "", label),
+          create(
             "span",
             "",
-            `${resource.resource_family} · ${resource.platforms.join(", ")} · ${resource.source_api_version}`,
+            Object.entries(values)
+              .map(([key, value]) => `${key}: ${value}`)
+              .join(" · "),
           ),
         );
-        unmapped.append(item);
+        devices.append(row);
       }
     }
-    const frameworks = select("[data-framework-summary]");
-    if (frameworks instanceof HTMLElement) {
-      frameworks.replaceChildren();
+    const platform = select("[data-platform-summary]");
+    if (platform instanceof HTMLElement) {
+      platform.className = "mission-panel";
+      platform.replaceChildren(
+        create("h3", "", "Identity boundary"),
+        create(
+          "p",
+          "",
+          `${mission.devices.total} managed Apple device(s) are represented only as aggregates.`,
+        ),
+        create(
+          "p",
+          "",
+          "Device names, serials, users, object IDs, and assignment identities are not public.",
+        ),
+      );
+    }
+  };
+
+  const renderCoverage = () => {
+    const resourcesByRef = new Map(
+      mission.resources
+        .filter(
+          (item) => isRecord(item) && typeof item.resource_ref === "string",
+        )
+        .map((item) => [item.resource_ref, item]),
+    );
+    const groups = new Map();
+    for (const resource of mission.unmapped_objects) {
+      const reason = resource.evaluation_reason || "Collection or parser gap";
+      const items = groups.get(reason) || [];
+      items.push(resource);
+      groups.set(reason, items);
+    }
+    const container = select("[data-unevaluated-groups]");
+    if (container instanceof HTMLElement) {
+      container.replaceChildren();
+      for (const [reason, items] of [...groups.entries()].sort(
+        ([left], [right]) => String(left).localeCompare(String(right)),
+      )) {
+        const detail = create("details", "mission-resource-group");
+        const actionCount = items.filter(
+          (item) =>
+            item.action_expected &&
+            item.action_expected !== "No action expected",
+        ).length;
+        detail.append(
+          create(
+            "summary",
+            "",
+            `${titleCase(reason)} · ${items.length} resource(s) · ${actionCount ? "review expected" : "no action expected"}`,
+          ),
+        );
+        for (const item of items.slice(0, 20)) {
+          const parent = item.parent_resource_ref
+            ? resourcesByRef.get(item.parent_resource_ref)
+            : null;
+          const row = create("div", "mission-resource");
+          row.append(
+            create("strong", "", parent?.title || item.title),
+            create(
+              "span",
+              "",
+              `${item.resource_family} · ${item.action_expected || "Human review required"}`,
+            ),
+          );
+          if (parent)
+            row.append(
+              create(
+                "small",
+                "",
+                `Nested evidence: ${item.title} · parent ${item.parent_resource_ref}`,
+              ),
+            );
+          detail.append(row);
+        }
+        container.append(detail);
+      }
+    }
+
+    const frameworkKeys = {
+      "CIS benchmark": "cis_benchmark",
+      CMMC: "cmmc",
+      "NIST SP 800-171": "nist_800_171r3",
+      "NIST SP 800-53": "nist_800_53r5",
+      STIG: "stig",
+    };
+    const body = select("[data-framework-summary]");
+    if (body instanceof HTMLElement) {
+      body.replaceChildren();
       for (const [name, coverage] of Object.entries(
         mission.framework_coverage,
       )) {
-        const panel = element("article", "mission-panel");
-        panel.append(
-          element("h3", "", name),
-          element(
-            "p",
-            "mission-platform-value",
-            `${coverage.technical_evidence_identifier_count} identifiers`,
-          ),
-          element("p", "", "Assessment conclusion: not evaluated"),
+        const key = frameworkKeys[name];
+        const evaluated = mission.requirements.filter(
+          (requirement) =>
+            requirement.evaluation_included === true &&
+            key &&
+            Array.isArray(requirement.mappings?.[key]) &&
+            requirement.mappings[key].length,
         );
-        frameworks.append(panel);
+        const aligned = evaluated.filter(
+          (item) => item.outcome === "Aligned",
+        ).length;
+        const identifiers = Array.isArray(coverage.identifiers)
+          ? coverage.identifiers
+          : [];
+        const meaning = create("td");
+        const detail = create("details");
+        detail.append(
+          create("summary", "", "Technical references only"),
+          create(
+            "p",
+            "",
+            "Not a compliance, certification, or assessor conclusion.",
+          ),
+          create(
+            "code",
+            "mission-framework-identifiers",
+            identifiers.join(", ") || "No identifiers",
+          ),
+        );
+        meaning.append(detail);
+        const row = document.createElement("tr");
+        row.append(
+          create("td", "", name),
+          create("td", "", evaluated.length),
+          create("td", "", coverage.technical_evidence_identifier_count),
+          create("td", "", aligned),
+          create("td", "", evaluated.length - aligned),
+          meaning,
+        );
+        body.append(row);
       }
     }
   };
 
-  const renderQuality = () => {
+  const renderEvidence = () => {
     const endpoint = select("[data-endpoint-coverage]");
     if (endpoint instanceof HTMLElement) {
       endpoint.replaceChildren();
       for (const item of mission.collection.endpoint_statuses) {
-        const row = element("div", "mission-quality-row");
+        const row = create("div", "mission-quality-row");
         row.append(
-          element("span", `mission-dot mission-dot-${item.status}`, ""),
-          element("strong", "", item.key),
-          element(
+          create("span", `mission-dot mission-dot-${item.status}`),
+          create("strong", "", item.key),
+          create(
             "span",
             "",
             `${item.status} · ${item.source_api_version} · ${item.record_count} records`,
@@ -430,16 +707,13 @@
     if (gaps instanceof HTMLElement) {
       gaps.replaceChildren();
       if (!mission.collection_gaps.length)
-        gaps.append(element("p", "", "No collection gaps recorded."));
+        gaps.append(create("p", "", "No collection gaps are recorded."));
       for (const gap of mission.collection_gaps) {
-        const row = element("div", "mission-gap");
+        const row = create("div", "mission-gap");
+        row.id = gap.gap_id;
         row.append(
-          element("strong", "", gap.resource_family.replaceAll("_", " ")),
-          element(
-            "span",
-            "",
-            `${gap.reason} · ${gap.required_permission} · additional evidence required`,
-          ),
+          create("strong", "", titleCase(gap.resource_family)),
+          create("span", "", `${gap.reason} · additional evidence required`),
         );
         gaps.append(row);
       }
@@ -450,149 +724,35 @@
       ["Identifiers public", mission.privacy.identifiers_public],
       ["Publication policy", mission.privacy.publication_policy_version],
       ["AI egress", mission.privacy.openai_egress_class],
+      ["Intune write capability", "None"],
     ]);
-  };
-
-  const renderAssistant = () => {
-    const assistant = select("[data-mission-assistant]");
-    const statusNode = select("[data-runtime-status]");
-    const detailNode = select("[data-runtime-detail]");
-    const action = select("[data-generate-narrative]");
-    const output = select("[data-narrative-output]");
-    if (
-      !(assistant instanceof HTMLElement) ||
-      !(statusNode instanceof HTMLElement) ||
-      !(detailNode instanceof HTMLElement) ||
-      !(action instanceof HTMLButtonElement) ||
-      !(output instanceof HTMLElement)
-    )
-      return;
-    let selectedQuestion = "What are the highest-severity findings?";
-    for (const button of all("[data-question]")) {
-      if (!(button instanceof HTMLButtonElement)) continue;
-      button.addEventListener("click", () => {
-        selectedQuestion = button.dataset.question || selectedQuestion;
-        all("[data-question]").forEach((item) =>
-          item.removeAttribute("aria-pressed"),
-        );
-        button.setAttribute("aria-pressed", "true");
-        action.textContent = "Ask the bounded assistant";
-      });
-    }
-    const appendLine = (label, value) => {
-      const row = element("p", "");
-      row.append(
-        element("strong", "", `${label}: `),
-        document.createTextNode(formatValue(value)),
-      );
-      output.append(row);
-    };
-    const checkStatus = async () => {
-      try {
-        const response = await fetch("/api/status", {
-          credentials: "same-origin",
-        });
-        const status = await response.json();
-        if (!response.ok || status.status !== "ok") throw new Error();
-        statusNode.textContent =
-          status.narrative_mode === "fixture"
-            ? "Fixture assistant ready"
-            : "GPT-5.6 assistant ready";
-        detailNode.textContent =
-          status.narrative_mode === "fixture"
-            ? "Answers are generated deterministically from the tracked sanitized package; no API charge occurs."
-            : "A bounded sanitized evidence subset may be sent to the fixed project model.";
-        action.disabled = status.narrative_available !== true;
-        action.textContent = "Ask the bounded assistant";
-        assistant.dataset.runtimeState = status.narrative_mode;
-      } catch {
-        statusNode.textContent = "Assistant unavailable";
-        detailNode.textContent =
-          "The deterministic dashboard remains operational without AI.";
-        action.disabled = true;
-        assistant.dataset.runtimeState = "unavailable";
-      }
-    };
-    action.addEventListener("click", async () => {
-      action.disabled = true;
-      output.hidden = true;
-      output.replaceChildren();
-      statusNode.textContent = "Verifying bounded evidence";
-      try {
-        const response = await fetch("/api/ask", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            question: selectedQuestion,
-            snapshot_id: mission.snapshot_id,
-          }),
-        });
-        const payload = await response.json();
-        if (!response.ok)
-          throw new Error(payload.message || "Assistant request was rejected");
-        if (
-          !["insufficient_evidence", "typed_claims_verified"].includes(
-            payload.verification?.status,
-          )
-        ) {
-          throw new Error(
-            "Assistant response failed deterministic verification",
-          );
-        }
-        appendLine("Question", selectedQuestion);
-        appendLine("Answer", payload.answer.direct_answer);
-        appendLine("Evidence sufficiency", payload.answer.evidence_sufficiency);
-        appendLine(
-          "Evidence references",
-          payload.answer.evidence_references.join(", "),
-        );
-        appendLine("Verifier", payload.verification.status);
-        appendLine("Generated prose", "quarantined for human review");
-        output.hidden = false;
-        statusNode.textContent =
-          "Answer verified against deterministic evidence";
-        detailNode.textContent = `${payload.mode} mode · human review remains required`;
-      } catch (error) {
-        appendLine(
-          "Request stopped safely",
-          error instanceof Error ? error.message : "Unknown error",
-        );
-        output.hidden = false;
-        statusNode.textContent = "Assistant request rejected";
-        detailNode.textContent =
-          "No fallback, publication, or tenant change occurred.";
-      } finally {
-        action.disabled = false;
-      }
-    });
-    void checkStatus();
   };
 
   const initialize = async () => {
     try {
-      const response = await fetch("/assets/data/mission-control.json", {
+      const response = await fetch(missionUrl(), {
         credentials: "same-origin",
+        cache: "no-store",
         headers: { Accept: "application/json" },
       });
       if (
         !response.ok ||
         !response.headers.get("Content-Type")?.includes("application/json")
-      ) {
+      )
         throw new Error("Mission evidence artifact could not be loaded");
-      }
       mission = validateMission(await response.json());
       const collected = Date.parse(mission.collection.collected_at_utc);
+      const maximum =
+        Number(mission.collection.freshness?.maximum_age_seconds || 0) * 1000;
       const stale =
-        !Number.isFinite(collected) || Date.now() - collected > 86_400_000;
+        !Number.isFinite(collected) ||
+        maximum <= 0 ||
+        Date.now() - collected > maximum;
       const banner = select("[data-mission-banner]");
       if (banner instanceof HTMLElement) {
         banner.textContent = stale
-          ? `${mission.data_mode} · evidence is stale or collection time is unavailable`
-          : `${mission.data_mode} · allowlist and prohibited-pattern scans passed`;
+          ? `DEGRADED / STALE · ${mission.data_mode} package exceeds its declared freshness window`
+          : `${mission.data_mode} · fingerprint and publication gates passed · ${mission.snapshot_id}`;
         banner.dataset.state = stale
           ? "stale"
           : mission.data_mode.startsWith("LIVE")
@@ -600,16 +760,20 @@
             : "fixture";
       }
       renderOverview();
+      renderChanges();
       renderFindings();
+      renderPosture();
       renderCoverage();
-      renderQuality();
-      renderAssistant();
+      renderEvidence();
       root.setAttribute("aria-busy", "false");
-    } catch {
+      const linked = mission.findings.find(
+        (finding) => `#${finding.finding_id}` === window.location.hash,
+      );
+      if (linked) openFinding(linked);
+    } catch (error) {
       const banner = select("[data-mission-banner]");
       if (banner instanceof HTMLElement) {
-        banner.textContent =
-          "DEGRADED OR STALE DATA · the public evidence package failed to load or validate";
+        banner.textContent = `DEGRADED / STALE · ${error instanceof Error ? error.message : "the current evidence package could not be validated"}`;
         banner.dataset.state = "error";
       }
       root.setAttribute("aria-busy", "false");

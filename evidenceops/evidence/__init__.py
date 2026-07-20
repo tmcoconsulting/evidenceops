@@ -6,6 +6,7 @@ from evidenceops.evidence.mission import (
     MISSION_SCHEMA_VERSION,
     DriftOutcome,
     build_public_mission_snapshot,
+    load_public_mission_snapshot,
     validate_public_mission_snapshot,
 )
 from evidenceops.evidence.mission_storage import (
@@ -43,6 +44,7 @@ __all__ = [
     "evaluate_drift",
     "load_evidence_package",
     "load_private_collection",
+    "load_public_mission_snapshot",
     "private_collection_document",
     "publish_private_package",
     "write_private_package",

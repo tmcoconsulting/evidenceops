@@ -91,7 +91,10 @@
 
 .matrix-controls {
   display: grid;
-  grid-template-columns: minmax(12rem, 2fr) repeat(2, minmax(10rem, 1fr)) auto auto;
+  grid-template-columns: minmax(12rem, 2fr) repeat(
+      2,
+      minmax(10rem, 1fr)
+    ) auto auto;
   gap: 0.75rem;
   align-items: end;
   margin: 1rem 0 0.6rem;
@@ -143,7 +146,8 @@
 
 .settings-matrix {
   width: 100%;
-  min-width: 116rem;
+  min-width: 0;
+  table-layout: fixed;
   margin: 0 !important;
   border-collapse: separate;
   border-spacing: 0;
@@ -152,7 +156,6 @@
 
 .settings-matrix th,
 .settings-matrix td {
-  min-width: 9.5rem;
   padding: 0.7rem;
   vertical-align: top;
   border-bottom: 1px solid var(--md-default-fg-color--lightest);
@@ -168,25 +171,28 @@
   white-space: nowrap;
 }
 
-.settings-matrix th:first-child,
-.settings-matrix td:first-child {
-  position: sticky;
-  left: 0;
-  z-index: 1;
-  min-width: 18rem;
-  max-width: 18rem;
-  background: var(--md-default-bg-color);
+.settings-matrix th:nth-child(1) {
+  width: 23%;
 }
 
-.settings-matrix th:first-child {
-  z-index: 3;
-  background: var(--md-code-bg-color);
+.settings-matrix th:nth-child(2) {
+  width: 14%;
 }
 
-.settings-matrix th:last-child,
-.settings-matrix td:last-child {
-  min-width: 22rem;
-  border-right: 0;
+.settings-matrix th:nth-child(3) {
+  width: 12%;
+}
+
+.settings-matrix th:nth-child(4) {
+  width: 17%;
+}
+
+.settings-matrix th:nth-child(5) {
+  width: 22%;
+}
+
+.settings-matrix th:nth-child(6) {
+  width: 12%;
 }
 
 .settings-matrix tr:last-child td {
@@ -199,6 +205,26 @@
   font-size: 0.78rem;
 }
 
+.matrix-setting-button,
+.matrix-action-button {
+  padding: 0;
+  border: 0;
+  color: var(--md-typeset-a-color);
+  background: transparent;
+  font: inherit;
+  font-weight: 750;
+  text-align: left;
+  cursor: pointer;
+}
+
+.matrix-action-button {
+  padding: 0.38rem 0.5rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.4rem;
+  background: var(--md-code-bg-color);
+  font-size: 0.66rem;
+}
+
 .matrix-setting-meta,
 .matrix-cell-note,
 .matrix-evidence-list {
@@ -209,9 +235,19 @@
 }
 
 .matrix-setting-meta code,
-.matrix-value code {
+.matrix-value code,
+.matrix-observed-target code {
   white-space: normal;
   overflow-wrap: anywhere;
+}
+
+.matrix-observed-target {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.matrix-observed-target span {
+  color: var(--md-default-fg-color--light);
 }
 
 .matrix-state {
@@ -256,6 +292,86 @@
   line-height: 1.45;
 }
 
+.matrix-framework-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.matrix-framework-chips span {
+  padding: 0.16rem 0.3rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 999px;
+  font-size: 0.58rem;
+}
+
+.matrix-framework-chips .matrix-muted {
+  border: 0;
+  color: var(--md-default-fg-color--light);
+}
+
+.matrix-dialog {
+  width: min(48rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 1.2rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.8rem;
+  color: var(--md-default-fg-color);
+  background: var(--md-default-bg-color);
+}
+
+.matrix-dialog::backdrop {
+  background: rgb(7 20 40 / 62%);
+  backdrop-filter: blur(0.12rem);
+}
+
+.matrix-dialog form {
+  float: right;
+}
+
+.matrix-dialog-close {
+  padding: 0.38rem 0.55rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.4rem;
+  color: inherit;
+  background: var(--md-code-bg-color);
+  font: inherit;
+  cursor: pointer;
+}
+
+.matrix-dialog-status {
+  color: var(--md-default-fg-color--light);
+  font-weight: 700;
+}
+
+.matrix-detail-list {
+  display: grid;
+  grid-template-columns: minmax(9rem, 0.7fr) minmax(0, 1.3fr);
+  gap: 0.35rem 0.8rem;
+}
+
+.matrix-detail-list dt {
+  font-weight: 750;
+}
+
+.matrix-detail-list dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.matrix-detail-list code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.matrix-detail-action {
+  margin: 1rem 0;
+  padding: 0.8rem;
+  border-left: 0.25rem solid var(--md-accent-fg-color);
+  background: var(--md-code-bg-color);
+}
+
 .matrix-empty {
   margin-top: 1rem;
 }
@@ -283,5 +399,13 @@
 
   .matrix-checkbox {
     white-space: normal;
+  }
+
+  .settings-matrix {
+    min-width: 48rem;
+  }
+
+  .matrix-detail-list {
+    grid-template-columns: 1fr;
   }
 }

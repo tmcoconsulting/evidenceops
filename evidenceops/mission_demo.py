@@ -15,6 +15,7 @@ from evidenceops.providers.apple import (
 
 MISSION_FIXTURE_NOTICE: Final = "SYNTHETIC_TEST_DATA_ONLY"
 MISSION_COLLECTION_TIME: Final = "2026-07-19T15:00:00Z"
+MISSION_PREVIOUS_COLLECTION_TIME: Final = "2026-07-18T15:00:00Z"
 MISSION_SYNTHETIC_COMMIT: Final = "synthetic-mission-reviewed-commit"
 MISSION_PSEUDONYM_KEY: Final = bytes(range(32))
 
@@ -97,27 +98,36 @@ def _collection(*, previous: bool) -> AppleIntuneCollection:
         ),
     }
     records.extend(policies.values())
-    filevault_value = bool(previous)
     firewall_value = bool(previous)
     records.extend(
         [
-            _setting(policies["filevault"], "macos.security.filevault.enabled", filevault_value),
-            _setting(policies["firewall"], "macos.security.firewall.enabled", firewall_value),
-            _setting(policies["stealth"], "macos.security.firewall.stealth_mode", True),
-            _setting(policies["screen-primary"], "macos.screen_lock.require_password", True),
-            _setting(policies["screen-primary"], "macos.screen_lock.max_idle_seconds", 600),
+            _setting(policies["filevault"], "com.apple.mcx.filevault2_enable", 0),
+            _setting(
+                policies["firewall"],
+                "com.apple.security.firewall_EnableFirewall",
+                firewall_value,
+            ),
+            _setting(
+                policies["firewall"],
+                "com.apple.preference.security_dontAllowFireWallUI",
+                True,
+            ),
+            _setting(policies["screen-primary"], "com.apple.screensaver_askForPassword", True),
+            _setting(policies["screen-primary"], "com.apple.screensaver.user_idleTime", 600),
         ]
     )
     if not previous:
         records.append(
             _setting(
                 policies["screen-conflict"],
-                "macos.screen_lock.require_password",
+                "com.apple.screensaver_askForPassword",
                 False,
             )
         )
     for key in ("filevault", "firewall", "screen-primary", "screen-conflict"):
         if key == "screen-conflict" and previous:
+            continue
+        if key == "filevault" and not previous:
             continue
         records.append(_assignment(policies[key]))
     records.extend(
@@ -191,6 +201,17 @@ def _collection(*, previous: bool) -> AppleIntuneCollection:
             },
         )
         for spec in ENDPOINTS
+    ) + tuple(
+        {
+            "key": "settings_catalog:settings",
+            "resource_family": "settings_catalog",
+            "source_api_version": "beta",
+            "required_permission": "DeviceManagementConfiguration.Read.All",
+            "status": "collected",
+            "record_count": 1,
+            "beta_reason": "Fixture relationship mirrors the beta Settings Catalog resource.",
+        }
+        for _ in policies
     )
     gap_unsigned: dict[str, JsonValue] = {
         "resource_family": "app_protection_policies",
@@ -207,7 +228,9 @@ def _collection(*, previous: bool) -> AppleIntuneCollection:
         schema_version=APPLE_COLLECTION_SCHEMA_VERSION,
         provider="synthetic-microsoft-intune-apple",
         provider_version=APPLE_PROVIDER_VERSION,
-        collected_at_utc=MISSION_COLLECTION_TIME,
+        collected_at_utc=(
+            MISSION_PREVIOUS_COLLECTION_TIME if previous else MISSION_COLLECTION_TIME
+        ),
         records=tuple(records),
         endpoint_statuses=statuses,
         collection_gaps=(gap,),
@@ -258,6 +281,7 @@ def _setting(
             "platforms": ["macOS"],
             "setting_definition_id": definition,
             "normalized_value": value,
+            "normalization_state": "normalized",
         },
         api_version="beta",
     )

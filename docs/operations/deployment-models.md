@@ -3,7 +3,7 @@
 EvidenceOps currently combines a Python evidence engine, a credential-free synthetic build, a
 protected read-only collection workflow, and a deployed Cloudflare Worker plus Static Assets
 runtime. The deployed evidence package is a reviewed sanitized live projection; the public
-assistant remains in fixture narrative mode by default.
+assistant uses fixed-model OpenAI mode while local and preview builds remain fixture mode.
 
 ## 1. Local synthetic application
 
@@ -57,7 +57,14 @@ The collection/publication boundary:
 5. reconstructs a public package through an explicit allowlist;
 6. verifies fingerprints and scans credentials, identities, and prohibited content;
 7. optionally retains exactly one reviewed public Mission package for one day; and
-8. requires a separate protected deployment action before public presentation changes.
+8. requires a separate protected deployment action, exact audit run ID, and exact snapshot ID
+   before public presentation changes.
+
+Production never invokes the synthetic demo builder. The deployment validates that the selected
+artifact came from a successful trusted-main Intune audit, requires `LIVE SANITIZED TENANT DATA`,
+checks the expected snapshot before upload, and verifies that the snapshot-bound Worker version is
+the sole active deployment afterward. Synthetic generation remains limited to local development,
+preview, and credential-free CI.
 
 The current public package intentionally excludes tenant policy display names, object IDs, group
 names, and assignment identities. A private enterprise deployment can retain approved friendly

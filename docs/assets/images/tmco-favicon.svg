@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="TMCO Consulting">
+  <rect width="64" height="64" rx="12" fill="#0F172A"/>
+  <path d="M14 18h36v8H36v20h-8V26H14z" fill="#F8FAFC"/>
+  <path d="M44 38h6v8h-6z" fill="#3B82F6"/>
+</svg>

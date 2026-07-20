@@ -1,5 +1,9 @@
 # Build Week Vertical-Slice Validation
 
+> **Historical checkpoint.** This record preserves the 2026-07-19 slice. Final provider mappings,
+> runtime mode, current snapshot, and deployment state are reported by current product documentation
+> and the deployed API.
+
 **Date:** 2026-07-19
 
 **Branches:** `codex/build-week-demo-slice`, `codex/live-publication-handoff`, and
@@ -43,7 +47,7 @@ publication fix described below is a separate human-review gate.
   `af9ef14ca568f17d3663e6e508c1f75971596fe43c6f185af27ca43451c240d2`.
 - Extracted 98-rule inventory SHA-256
   `5cced0709c90885ede600f00a640a35b0679aed933cda456db80ee629ee54d41`.
-- Machine-readable TMCO demo approval anchored to baseline milestone commit
+- Machine-readable TMCO Consulting demo approval anchored to baseline milestone commit
   `3dd8902a609c6be177cdc913c731fbd378f075a4`.
 - Strict private normalized package, allowlisted public Mission package, and public/model scans.
 - Deterministic value, maximum, assignment, conflict, missing, gap, unsupported, and human-review

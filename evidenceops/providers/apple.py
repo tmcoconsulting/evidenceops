@@ -463,9 +463,10 @@ def _normalize_expansion(
         if group_id is not None:
             properties["private_target_id"] = group_id
     elif relationship == "settings":
-        setting_definition, setting_value = _extract_setting(item)
+        setting_definition, setting_value, normalization_state = _extract_setting(item)
         properties["setting_definition_id"] = setting_definition
         properties["normalized_value"] = setting_value
+        properties["normalization_state"] = normalization_state
     elif relationship == "scheduled_actions":
         properties["action_type"] = _safe_enum(
             _optional_string(item, "ruleName") or "scheduled_action"
@@ -488,11 +489,11 @@ def _normalize_expansion(
     )
 
 
-def _extract_setting(item: dict[str, JsonValue]) -> tuple[str, JsonValue]:
+def _extract_setting(item: dict[str, JsonValue]) -> tuple[str, JsonValue, str]:
     instance = item.get("settingInstance")
     if not isinstance(instance, dict):
         raise TypeError("Settings Catalog entry lacks a settingInstance object")
-    definition = _required_string(instance, "settingDefinitionId")
+    definition = _safe_setting_definition_id(_required_string(instance, "settingDefinitionId"))
     value: JsonValue = None
     for key in (
         "simpleSettingValue",
@@ -503,13 +504,15 @@ def _extract_setting(item: dict[str, JsonValue]) -> tuple[str, JsonValue]:
             value = candidate["value"]
             break
     if value is None:
-        children = instance.get("children")
-        value = len(children) if isinstance(children, list) else "structured-value-present"
+        # Retain the known provider taxonomy ID while refusing to invent meaning
+        # for an unsupported structured setting. The evaluator can now distinguish
+        # this from a setting that was genuinely absent from a complete response.
+        return definition, None, "unsupported_value_shape"
     if isinstance(value, str):
         value = _safe_setting_value(value)
     elif not isinstance(value, (bool, int, float)) and value is not None:
-        raise TypeError("unsupported Settings Catalog value shape")
-    return definition, value
+        return definition, None, "unsupported_value_shape"
+    return definition, value, "normalized"
 
 
 def summarize_devices(records: Sequence[dict[str, JsonValue]]) -> dict[str, JsonValue]:
@@ -633,6 +636,18 @@ def _safe_setting_value(value: str) -> str:
         or not all(char.isalnum() or char in " ._:/-" for char in value)
     ):
         raise ValueError("unsafe setting value")
+    return value
+
+
+def _safe_setting_definition_id(value: str) -> str:
+    if (
+        not value
+        or value != value.strip()
+        or len(value) > 240
+        or not value.isascii()
+        or not all(character.isalnum() or character in "._:-/" for character in value)
+    ):
+        raise ValueError("unsafe Settings Catalog definition ID")
     return value
 
 
