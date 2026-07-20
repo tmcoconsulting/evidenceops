@@ -1,0 +1,107 @@
+{
+  "fixture_notice": "SYNTHETIC_TEST_DATA_ONLY",
+  "policies": [
+    {
+      "assignments": [
+        {
+          "id": "synthetic-filevault-assignment",
+          "intent": "required",
+          "target": {
+            "@odata.type": "#microsoft.graph.allDevicesAssignmentTarget"
+          }
+        }
+      ],
+      "policy": {
+        "@odata.type": "#microsoft.graph.deviceManagementConfigurationPolicy",
+        "displayName": "Synthetic FileVault Policy",
+        "id": "synthetic-filevault-policy",
+        "platforms": "macOS"
+      },
+      "settings": [
+        {
+          "id": "synthetic-filevault-enable-setting",
+          "settingInstance": {
+            "choiceSettingValue": {
+              "value": 0
+            },
+            "settingDefinitionId": "com.apple.mcx.filevault2_enable"
+          }
+        }
+      ]
+    },
+    {
+      "assignments": [
+        {
+          "id": "synthetic-firewall-assignment",
+          "intent": "required",
+          "target": {
+            "@odata.type": "#microsoft.graph.allDevicesAssignmentTarget"
+          }
+        }
+      ],
+      "policy": {
+        "@odata.type": "#microsoft.graph.deviceManagementConfigurationPolicy",
+        "displayName": "Synthetic Firewall Policy",
+        "id": "synthetic-firewall-policy",
+        "platforms": "macOS"
+      },
+      "settings": [
+        {
+          "id": "synthetic-firewall-enable-setting",
+          "settingInstance": {
+            "settingDefinitionId": "com.apple.security.firewall_EnableFirewall",
+            "simpleSettingValue": {
+              "value": true
+            }
+          }
+        },
+        {
+          "id": "synthetic-unreviewed-firewall-ui-setting",
+          "settingInstance": {
+            "settingDefinitionId": "com.apple.preference.security_dontAllowFireWallUI",
+            "simpleSettingValue": {
+              "value": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "assignments": [
+        {
+          "id": "synthetic-screen-lock-assignment",
+          "intent": "required",
+          "target": {
+            "@odata.type": "#microsoft.graph.allDevicesAssignmentTarget"
+          }
+        }
+      ],
+      "policy": {
+        "@odata.type": "#microsoft.graph.deviceManagementConfigurationPolicy",
+        "displayName": "Synthetic Screen Lock Policy",
+        "id": "synthetic-screen-lock-policy",
+        "platforms": "macOS"
+      },
+      "settings": [
+        {
+          "id": "synthetic-screen-password-setting",
+          "settingInstance": {
+            "settingDefinitionId": "com.apple.screensaver_askForPassword",
+            "simpleSettingValue": {
+              "value": true
+            }
+          }
+        },
+        {
+          "id": "synthetic-screen-timeout-setting",
+          "settingInstance": {
+            "settingDefinitionId": "com.apple.screensaver.user_idleTime",
+            "simpleSettingValue": {
+              "value": 600
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

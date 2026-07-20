@@ -151,8 +151,8 @@ def _catalog() -> tuple[FakeReader, dict[str, str]]:
             {
                 "id": "setting",
                 "settingInstance": {
-                    "settingDefinitionId": "macos.security.filevault.enabled",
-                    "simpleSettingValue": {"value": True},
+                    "settingDefinitionId": "com.apple.mcx.filevault2_enable",
+                    "choiceSettingValue": {"value": 0},
                 },
             }
         ],
@@ -210,7 +210,10 @@ def test_comprehensive_provider_collects_every_family_and_normalizes_joins() -> 
     settings = next(
         item for item in result.records if item["resource_family"] == "settings_catalog_settings"
     )
-    assert cast(dict[str, JsonValue], settings["properties"])["normalized_value"] is True
+    setting_properties = cast(dict[str, JsonValue], settings["properties"])
+    assert setting_properties["setting_definition_id"] == "com.apple.mcx.filevault2_enable"
+    assert setting_properties["normalized_value"] == 0
+    assert setting_properties["normalization_state"] == "normalized"
     assignment = next(
         item for item in result.records if item["resource_family"] == "settings_catalog_assignments"
     )
@@ -330,18 +333,26 @@ def test_setting_shapes_and_platform_helpers_are_explicit() -> None:
                 "choiceSettingValue": {"value": "enabled"},
             }
         }
-    ) == ("setting-id", "enabled")
+    ) == ("setting-id", "enabled", "normalized")
     assert apple_module._extract_setting(
         {"settingInstance": {"settingDefinitionId": "setting-id", "children": [1, 2]}}
-    ) == ("setting-id", 2)
+    ) == ("setting-id", None, "unsupported_value_shape")
     with pytest.raises(TypeError, match="settingInstance"):
         apple_module._extract_setting({})
-    with pytest.raises(TypeError, match="value shape"):
+    assert apple_module._extract_setting(
+        {
+            "settingInstance": {
+                "settingDefinitionId": "setting-id",
+                "simpleSettingValue": {"value": {"unexpected": True}},
+            }
+        }
+    ) == ("setting-id", None, "unsupported_value_shape")
+    with pytest.raises(ValueError, match="definition ID"):
         apple_module._extract_setting(
             {
                 "settingInstance": {
-                    "settingDefinitionId": "setting-id",
-                    "simpleSettingValue": {"value": {"unexpected": True}},
+                    "settingDefinitionId": "unsafe@example.invalid",
+                    "simpleSettingValue": {"value": True},
                 }
             }
         )

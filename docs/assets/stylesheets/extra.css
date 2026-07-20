@@ -333,6 +333,39 @@
   margin-top: 1rem;
 }
 
+.mission-attention-list {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.mission-attention-card {
+  display: grid;
+  grid-template-columns: 5rem minmax(12rem, 1fr) minmax(12rem, 1.3fr);
+  gap: 0.45rem 0.75rem;
+  align-items: center;
+  padding: 0.72rem 0.8rem;
+  border: 1px solid var(--mission-border);
+  border-radius: 0.65rem;
+  background: var(--mission-surface);
+}
+
+.mission-attention-card small {
+  grid-column: 2 / -1;
+  color: #5b6c82;
+}
+
+.mission-attention-button {
+  padding: 0;
+  border: 0;
+  color: var(--evidenceops-blue);
+  background: transparent;
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
 .mission-panel h3 {
   margin-top: 0;
 }
@@ -366,6 +399,14 @@
   padding: 0.58rem 0;
   border-bottom: 1px solid var(--mission-border);
   font-size: 0.78rem;
+}
+
+.mission-change-link {
+  display: block;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--mission-border);
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .mission-stat-row:last-child,
@@ -498,6 +539,50 @@
   gap: 0 1rem;
 }
 
+.mission-resource-group {
+  min-width: 0;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--mission-border);
+  border-radius: 0.65rem;
+  background: var(--mission-surface);
+}
+
+.mission-resource-group summary {
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.mission-resource small {
+  color: #5b6c82;
+}
+
+.mission-framework-table {
+  min-width: 46rem;
+}
+
+.mission-framework-identifiers {
+  display: block;
+  margin-top: 0.35rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.mission-observed-target {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.mission-methodology {
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--mission-border);
+  border-radius: 0.65rem;
+}
+
+.mission-methodology summary {
+  font-weight: 800;
+  cursor: pointer;
+}
+
 .mission-quality-row {
   grid-template-columns: 0.55rem 1fr;
 }
@@ -572,6 +657,34 @@
   font-weight: 750;
 }
 
+.mission-detail-list {
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.65fr) minmax(0, 1.35fr);
+  gap: 0.35rem 0.75rem;
+}
+
+.mission-detail-list dt {
+  font-weight: 750;
+}
+
+.mission-detail-list dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.mission-detail-list code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.mission-dialog-guidance {
+  margin: 1rem 0;
+  padding: 0.8rem;
+  border-left: 0.25rem solid var(--evidenceops-cyan);
+  background: var(--evidenceops-mist);
+}
+
 .mission-trace-chain {
   display: grid;
   gap: 0.6rem;
@@ -609,6 +722,15 @@
   background: rgba(34, 53, 82, 0.96);
 }
 
+[data-md-color-scheme="slate"] .mission-dialog {
+  color: #edf5ff;
+  background: #172640;
+}
+
+[data-md-color-scheme="slate"] .mission-dialog-guidance {
+  background: rgba(34, 53, 82, 0.96);
+}
+
 @media (max-width: 44rem) {
   .mission-header,
   .mission-section-heading {
@@ -625,5 +747,14 @@
   .mission-filters select,
   .mission-filters button {
     width: 100%;
+  }
+
+  .mission-attention-card,
+  .mission-detail-list {
+    grid-template-columns: 1fr;
+  }
+
+  .mission-attention-card small {
+    grid-column: 1;
   }
 }

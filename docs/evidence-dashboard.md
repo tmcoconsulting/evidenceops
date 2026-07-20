@@ -1,60 +1,76 @@
-# EvidenceOps Mission Control
+# Mission Control
 
 <div class="mission-shell" data-mission-control aria-busy="true">
   <div class="mission-banner" data-mission-banner role="status" aria-live="polite">
-    Loading the signed, sanitized evidence package…
+    Loading the fingerprint-verified sanitized evidence package…
   </div>
 
   <header class="mission-header">
     <div>
-      <span class="mission-eyebrow">Auditor-oriented technical evidence</span>
+      <span class="mission-eyebrow">TMCO Consulting endpoint evidence</span>
       <h2 data-mission-title>Mission Control</h2>
       <p data-mission-subtitle>Validating evidence identity and freshness…</p>
     </div>
     <div class="mission-mode" data-mission-mode>VALIDATING</div>
   </header>
 
-  <nav class="mission-nav" aria-label="Mission Control views">
+  <nav class="mission-nav" aria-label="Primary product navigation">
     <a href="#overview">Overview</a>
-    <a href="#drift">Drift</a>
-    <a href="#platforms">Platforms</a>
-    <a href="#frameworks">Framework evidence</a>
-    <a href="../settings-matrix/">Settings matrix</a>
-    <a href="#quality">Data quality</a>
-    <a href="#assistant">AI assistant</a>
+    <a href="#findings">Findings</a>
+    <a href="../settings-matrix/">Settings</a>
+    <a href="#changes">Changes</a>
+    <a href="#evidence">Evidence</a>
   </nav>
 
   <section id="overview" aria-labelledby="overview-title">
-    <h2 id="overview-title">Executive overview</h2>
+    <div class="mission-section-heading">
+      <div>
+        <span class="mission-eyebrow">Decision view</span>
+        <h2 id="overview-title">What requires attention now</h2>
+        <p>Technical findings are deterministic. Select an item for its complete public-safe evidence chain.</p>
+      </div>
+    </div>
     <div class="mission-metrics" data-mission-metrics></div>
     <p class="mission-denominator" data-mission-denominator></p>
+    <div class="mission-attention-list" data-attention-list></div>
+  </section>
+
+  <section id="changes" aria-labelledby="changes-title">
+    <div class="mission-section-heading">
+      <div>
+        <span class="mission-eyebrow">Current versus prior sanitized snapshot</span>
+        <h2 id="changes-title">What changed</h2>
+      </div>
+      <span class="mission-count" data-change-count></span>
+    </div>
     <div class="mission-summary-grid">
       <article class="mission-panel">
-        <h3>Approved baseline</h3>
-        <dl data-baseline-summary></dl>
+        <h3>Resolved findings</h3>
+        <div data-resolved-changes></div>
       </article>
       <article class="mission-panel">
-        <h3>Managed Apple posture</h3>
-        <div data-device-summary></div>
+        <h3>New drift</h3>
+        <div data-new-changes></div>
       </article>
       <article class="mission-panel">
-        <h3>Changes since prior collection</h3>
-        <div data-change-summary></div>
+        <h3>Comparison provenance</h3>
+        <dl data-change-summary></dl>
       </article>
     </div>
   </section>
 
-  <section id="drift" aria-labelledby="drift-title">
+  <section id="findings" aria-labelledby="findings-title">
     <div class="mission-section-heading">
       <div>
-        <h2 id="drift-title">Deterministic drift</h2>
-        <p>Filters operate only on the validated public package. Select a row for its evidence chain.</p>
+        <span class="mission-eyebrow">Deterministic comparison</span>
+        <h2 id="findings-title">Current findings requiring review</h2>
+        <p>Filters use only the validated package. Opening a row exposes the source evidence and fingerprint.</p>
       </div>
       <span class="mission-count" data-finding-count></span>
     </div>
-    <div class="mission-filters" aria-label="Drift filters">
+    <div class="mission-filters" aria-label="Finding filters">
       <label>Platform <select data-filter-platform><option value="">All</option></select></label>
-      <label>Drift type <select data-filter-drift><option value="">All</option></select></label>
+      <label>State <select data-filter-drift><option value="">All</option></select></label>
       <label>Severity <select data-filter-severity><option value="">All</option></select></label>
       <label>Setting category <select data-filter-category><option value="">All</option></select></label>
       <button type="button" data-clear-filters>Clear filters</button>
@@ -62,7 +78,7 @@
     <div class="mission-table-wrap">
       <table class="mission-table">
         <thead>
-          <tr><th>Finding</th><th>Drift</th><th>Severity</th><th>Expected</th><th>Observed</th><th>Evidence</th></tr>
+          <tr><th>Setting</th><th>State</th><th>Severity</th><th>Observed → target</th><th>Assignment</th></tr>
         </thead>
         <tbody data-finding-rows></tbody>
       </table>
@@ -70,67 +86,80 @@
     <div class="mission-empty" data-finding-empty hidden>No findings match these filters.</div>
   </section>
 
-  <section id="platforms" aria-labelledby="platforms-title">
-    <h2 id="platforms-title">Platform and resource coverage</h2>
-    <div class="mission-summary-grid" data-platform-summary></div>
-    <h3>Unmapped tenant objects</h3>
-    <p>Unmapped objects remain visible; EvidenceOps does not hide policy inventory it cannot evaluate.</p>
-    <div class="mission-resource-list" data-unmapped-resources></div>
-  </section>
-
-  <section id="frameworks" aria-labelledby="frameworks-title">
-    <h2 id="frameworks-title">Supplemental technical evidence coverage</h2>
-    <div class="mission-callout">
-      Crosswalk identifiers come from the pinned mSCP source. They indicate relevant technical
-      evidence—not certification, control satisfaction, or an assessor conclusion. Open the
-      <a href="../settings-matrix/">settings and baseline matrix</a> to see each mapped Intune
-      setting, its observed and approved values, framework identifiers, and required technical change.
+  <section id="settings" aria-labelledby="settings-title">
+    <div class="mission-section-heading">
+      <div>
+        <span class="mission-eyebrow">Approved desired state</span>
+        <h2 id="settings-title">Review every evaluated setting</h2>
+        <p>The compact matrix joins exact provider definitions to observed values, targets, assignments, framework references, and read-only operator guidance.</p>
+      </div>
+      <a class="md-button md-button--primary" href="../settings-matrix/">Open Settings</a>
     </div>
-    <div class="mission-summary-grid" data-framework-summary></div>
   </section>
 
-  <section id="quality" aria-labelledby="quality-title">
-    <h2 id="quality-title">Data quality and collection coverage</h2>
+  <section id="posture" aria-labelledby="posture-title">
+    <h2 id="posture-title">Managed Apple posture</h2>
     <div class="mission-summary-grid">
       <article class="mission-panel">
-        <h3>Endpoint collection</h3>
-        <div data-endpoint-coverage></div>
+        <h3>Aggregate device posture</h3>
+        <div data-device-summary></div>
       </article>
+      <div data-platform-summary></div>
+    </div>
+  </section>
+
+  <section id="coverage" aria-labelledby="coverage-title">
+    <h2 id="coverage-title">Coverage and blind spots</h2>
+    <h3>Collected resources not currently evaluated</h3>
+    <p>
+      Resources are grouped by the explicit reason in the evidence package. Inventory-only records
+      do not require a baseline action; mapping and parser gaps do. Assignment expansion records are
+      grouped under their public-safe parent resource where the package provides that link.
+    </p>
+    <div class="mission-resource-list" data-unevaluated-groups></div>
+
+    <h3>Framework cross-references</h3>
+    <div class="mission-callout">
+      Counts are distinct identifiers referenced by evaluated settings. They are not passed controls,
+      framework coverage scores, certifications, or completed assessments.
+    </div>
+    <div class="mission-table-wrap">
+      <table class="mission-table mission-framework-table">
+        <thead><tr><th>Framework</th><th>Evaluated settings</th><th>Referenced identifiers</th><th>Aligned</th><th>Drifting</th><th>Meaning</th></tr></thead>
+        <tbody data-framework-summary></tbody>
+      </table>
+    </div>
+
+  </section>
+
+  <section id="evidence" aria-labelledby="evidence-title">
+    <h2 id="evidence-title">Evidence, collection health, and privacy</h2>
+    <div class="mission-summary-grid">
       <article class="mission-panel">
-        <h3>Collection gaps</h3>
+        <h3>Approved baseline</h3>
+        <dl data-baseline-summary></dl>
+      </article>
+      <article class="mission-panel" id="collection-health">
+        <h3>Collection health</h3>
+        <div data-endpoint-coverage></div>
         <div data-collection-gaps></div>
       </article>
       <article class="mission-panel">
-        <h3>Privacy gate</h3>
+        <h3>Privacy and publication gate</h3>
         <dl data-privacy-summary></dl>
       </article>
     </div>
   </section>
 
-  <section id="assistant" aria-labelledby="assistant-title">
-    <h2 id="assistant-title">Evidence-grounded AI assistant</h2>
+  <details class="mission-methodology">
+    <summary>Methodology and authority boundary</summary>
     <p>
-      The assistant receives only a bounded sanitized evidence subset. It may explain observed and
-      approved settings, reviewed framework identifiers, and deterministic change guidance already
-      present in the package. It cannot invent a mapping, change Intune, or decide compliance; all
-      prose remains subject to human review.
+      Git revert changes reviewed desired-state history; it does not revert Intune. EvidenceOps has
+      no Intune write capability. Technical configuration may support an assessment objective but
+      cannot establish organizational compliance. Human assessors retain final judgment.
     </p>
-    <div class="mission-assistant" data-mission-assistant data-runtime-state="loading">
-      <div>
-        <span class="mission-eyebrow">Runtime boundary</span>
-        <h3 data-runtime-status>Checking Worker status</h3>
-        <p data-runtime-detail>The dashboard remains useful if the model is unavailable.</p>
-      </div>
-      <div class="mission-questions" aria-label="Supported question examples">
-        <button type="button" data-question="What are the highest-severity findings?">Highest-severity findings</button>
-        <button type="button" data-question="For FileVault, what is observed, what is required, which framework identifiers map to it, and what needs to change?">FileVault setting and mappings</button>
-        <button type="button" data-question="What changed since the previous collection?">Changes since prior collection</button>
-        <button type="button" data-question="Which devices are noncompliant?">Privacy-safe device posture</button>
-      </div>
-      <button type="button" data-generate-narrative disabled>Check runtime</button>
-      <div class="runtime-output" data-narrative-output hidden aria-live="polite"></div>
-    </div>
-  </section>
+    <p><a href="../audit-methodology/">Read the deterministic audit methodology</a> · <a href="../data-handling/">Review data handling</a></p>
+  </details>
 
   <dialog class="mission-dialog" data-finding-dialog aria-labelledby="finding-dialog-title">
     <form method="dialog"><button class="mission-dialog-close" aria-label="Close finding detail">Close</button></form>
@@ -139,12 +168,6 @@
 </div>
 
 <noscript>
-  Mission Control requires JavaScript to render the deterministic JSON artifact. The raw public
-  package remains available at `assets/data/mission-control.json`.
+  Mission Control requires JavaScript to render the deterministic JSON artifact. The raw public-safe
+  package remains available at <code>/assets/data/mission-control.json</code>.
 </noscript>
-
-!!! warning "Authority boundary"
-
-    Git revert does not revert Intune. EvidenceOps has no Intune write capability. Technical
-    configuration may support an assessment objective but cannot prove organizational compliance;
-    human assessors retain final judgment.

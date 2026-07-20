@@ -69,8 +69,9 @@ restricted to trusted `main`. The expanded four-permission application grant is 
 independently re-read. Protected-main OIDC collection and one separately reviewed sanitized
 publication completed successfully. No client secret exists.
 
-The public Worker runtime serves a reviewed live sanitized Mission package with fixture narrative
-mode by default. It uses Worker-first routing only for `/api/*`, exact methods, same-origin checks,
+The public Worker runtime serves a reviewed live sanitized Mission package and fixed-model OpenAI
+Evidence Copilot; local and preview runtimes remain explicit fixture mode. It uses Worker-first
+routing only for `/api/*`, exact methods, same-origin checks,
 a 64 KiB request bound, compressed-body rejection, native client and global rate limiting, a
 20-second OpenAI timeout, bounded model context/output, a 256 KiB upstream-response bound, one
 non-retrying model request, and generic error responses. Logs contain request IDs, method, route,

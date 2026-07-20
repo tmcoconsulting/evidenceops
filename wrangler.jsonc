@@ -80,7 +80,7 @@
       "name": "evidenceops",
       "workers_dev": false,
       "vars": {
-        "EVIDENCEOPS_MODE": "fixture",
+        "EVIDENCEOPS_MODE": "openai",
         "OPENAI_MODEL": "gpt-5.6-terra",
       },
       "secrets": {

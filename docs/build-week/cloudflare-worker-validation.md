@@ -1,5 +1,8 @@
 # Cloudflare Worker Validation Record
 
+> **Historical checkpoint.** This record preserves the original Worker rollout. Fixture-mode and
+> deployment statements below are not the authority for the final live audit cockpit.
+
 **Date:** 2026-07-18
 
 **Branch:** `codex/cloudflare-worker-runtime`
@@ -19,7 +22,7 @@
 ## Scope
 
 This milestone added and deployed the Worker/static-assets runtime selected after Phase 1 security
-remediation. At this checkpoint, live TMCO Intune validation and a successful generated OpenAI
+remediation. At this checkpoint, live TMCO Consulting Intune validation and a successful generated OpenAI
 narrative remained outstanding, and production intentionally served the synthetic fixture after
 the first bounded OpenAI validation returned capacity unavailable. Later dated sections record the
 successful model validation, protected GET-only audit, and reviewed sanitized publication.

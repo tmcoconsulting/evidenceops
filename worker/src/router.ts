@@ -62,7 +62,8 @@ export async function handleRequest(
     }
     const mode = modeLabel(env.EVIDENCEOPS_MODE);
     const modelConfigured =
-      mode === "fixture" || hasUsableOpenAIKey(env.OPENAI_API_KEY);
+      mode === "openai" && hasUsableOpenAIKey(env.OPENAI_API_KEY);
+    const narrativeAvailable = mode === "fixture" || modelConfigured;
     const mission = await readMissionStatus(request, env);
     return jsonResponse({
       schema_version: "1.0.0",
@@ -71,11 +72,19 @@ export async function handleRequest(
       narrative_mode: mode,
       model: env.OPENAI_MODEL,
       model_configured: modelConfigured,
-      narrative_available: modelConfigured,
+      model_call_available: modelConfigured,
+      narrative_available: narrativeAvailable,
+      response_source:
+        mode === "openai" ? "openai_responses_api" : "deterministic_fixture",
       public_data_boundary: "synthetic-or-fail-closed-sanitized-only",
       human_review_required: true,
       data_mode: mission.data_mode,
       evidence_timestamp: mission.evidence_timestamp,
+      evidence_freshness_state: mission.freshness_state,
+      evidence_maximum_age_seconds: mission.freshness_maximum_age_seconds,
+      provider: mission.provider,
+      approved_baseline: mission.baseline_name,
+      approved_baseline_version: mission.baseline_version,
       source_snapshot_id: mission.snapshot_id,
       live_intune_collection_performed:
         mission.data_mode === "LIVE SANITIZED TENANT DATA",

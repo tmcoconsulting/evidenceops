@@ -9,8 +9,8 @@ or Apple GitOps repository.
 
 ## 2026-07-18 — Use Apache License 2.0
 
-**Decision:** License original EvidenceOps work under Apache License 2.0 and identify TMCO
-Consulting, LLC in `NOTICE`.
+**Decision:** License original EvidenceOps work under Apache License 2.0 and identify TMCO Consulting, LLC
+in `NOTICE`.
 
 **Why:** The license is OSI-approved, contribution-friendly, and includes an express patent grant.
 The [Apache Software Foundation license text](https://www.apache.org/licenses/LICENSE-2.0) is the
@@ -270,7 +270,7 @@ and [APNs API](https://learn.microsoft.com/en-us/graph/api/intune-devices-applep
 
 **Decision:** Pin mSCP revision `11b5896e4f12f43410686024f543792742562c91` and its macOS 26 CIS
 Level 1 profile. Verify the source artifact and derived 98-rule inventory hashes. Approve it only as
-the “TMCO macOS CIS Level 1 Build Week Demo Baseline.” Map five settings using identifiers from the
+the “TMCO Consulting macOS CIS Level 1 Demo Baseline.” Map five settings using identifiers from the
 pinned source; keep all other rules visible but unsupported. Do not score iOS/iPadOS.
 
 **Why:** Complete inventory visibility plus explicit mapping support avoids cherry-picking and
@@ -359,3 +359,57 @@ weakening an unrelated edge defense or granting the deployment token zone-securi
 
 **Source:** Cloudflare [Versions and deployments](https://developers.cloudflare.com/workers/versions-and-deployments/)
 and [Wrangler Worker commands](https://developers.cloudflare.com/workers/wrangler/commands/workers/).
+
+## 2026-07-20 — Make live evidence mandatory for production and bound one prior snapshot
+
+**Decision:** Remove synthetic generation and optional artifact selection from the production
+workflow. Require the exact reviewed trusted-main audit run ID and Mission snapshot ID, validate
+both before upload, and bind the same snapshot to the sole active Worker version. Permit the
+protected Intune audit to download only one named sanitized public artifact from a successful prior
+trusted-main audit and pass it through `--previous-public`; never download a prior private package.
+Serve both `/api/*` and the public Mission JSON with `Cache-Control: no-store`.
+
+**Why:** Production cannot fail closed if a missing selector silently rebuilds fixtures. Exact
+run/snapshot binding preserves the human publication boundary and makes a stale or mismatched
+artifact non-deployable. A single prior public package is sufficient to demonstrate resolved and
+new drift without adding a database, retaining raw tenant evidence, or widening the Entra trust.
+
+## 2026-07-20 — Use owner-approved TMCO Consulting brand assets locally
+
+**Decision:** Check the public TMCO Consulting favicon and social image into EvidenceOps rather than
+hotlinking them. Record source URLs and SHA-256 hashes beside the assets, use the full company name
+in user-facing copy, and retain `TMCO Consulting, LLC` for legal and approval contexts. Run a
+content check in CI that rejects standalone abbreviated company-name copy.
+
+**Why:** Local assets avoid a runtime dependency on the company site and preserve an auditable
+brand source. TJ owns and explicitly authorized the marks for EvidenceOps. The repository notice
+clarifies that Apache-2.0 does not grant trademark rights.
+
+## 2026-07-20 — Require exact reviewed provider IDs and keep unknown mappings honest
+
+**Decision:** Replace semantic-key substring matching with a versioned Microsoft Intune provider
+mapping registry. Allow only exact case-normalized aliases supported by a reviewed public Microsoft
+reference. Four macOS settings are reviewed; firewall stealth mode remains explicitly unreviewed
+until its Graph definition ID is independently established. A mapping-not-reviewed, unsupported
+value, or collection-gap state cannot be converted into `Missing from tenant`.
+
+**Why:** Synthetic semantic keys can conceal a failed join to real Settings Catalog identifiers.
+Exact aliases and closed value transforms make false absence claims testable and keep the live
+sanitized collection—not tenant display names or AI inference—the authority.
+
+**Source:** Microsoft’s public
+[`intune-my-macs` documentation](https://github.com/microsoft/intune-my-macs/blob/main/INTUNE-MY-MACS-DOCUMENTATION.md)
+for the reviewed macOS provider definition IDs. The pinned mSCP revision remains the desired-state
+and framework cross-reference source.
+
+## 2026-07-20 — Run live Copilot only in production and never fall back to fixtures
+
+**Decision:** Keep local and preview deployments in deterministic fixture mode. Configure production
+for exactly `gpt-5.6-terra` and require its encrypted Worker secret. Accept only a question, closed
+page enum, current snapshot ID, and optional selected evidence reference; the Worker selects the
+bounded sanitized context. Preserve `store: false`, no tools, rate/size/time/output limits, exact
+typed claims, reference verification, prose quarantine, and BYOK rejection.
+
+**Why:** A site-wide assistant is useful only when it can explain the current published evidence
+without becoming an evidence source or credential processor. A failed production model request must
+remain a visible failure rather than silently returning a fixture that appears live.

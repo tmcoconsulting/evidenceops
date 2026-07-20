@@ -2,12 +2,18 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import cast
 
 import pytest
 
 from evidenceops import cli
-from evidenceops.domain import validate_evidence_object
-from evidenceops.evidence import validate_public_mission_snapshot
+from evidenceops.domain import JsonValue, validate_evidence_object
+from evidenceops.evidence import (
+    build_public_mission_snapshot,
+    private_collection_document,
+    validate_public_mission_snapshot,
+)
+from evidenceops.mission_demo import MISSION_PSEUDONYM_KEY, _collection, build_mission_demo
 from scripts.check_public_artifacts import scan as scan_public
 
 
@@ -62,3 +68,62 @@ def test_retired_pages_command_remains_a_compatible_local_alias(
     monkeypatch.setattr(cli, "STATIC_DEMO_DATA_DIRECTORY", tmp_path)
     assert cli.main(["rebuild-pages-demo"]) == 0
     assert {path.name for path in tmp_path.iterdir()} == cli.STATIC_DEMO_FILENAMES
+
+
+def test_publish_mission_accepts_only_a_validated_prior_live_public_package(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    private_path = tmp_path / "private-apple.json"
+    private_path.write_text(
+        json.dumps(
+            private_collection_document(
+                _collection(previous=False), delete_after_utc="2026-07-21T00:00:00Z"
+            )
+        ),
+        encoding="utf-8",
+    )
+    previous = build_public_mission_snapshot(
+        _collection(previous=True),
+        pseudonym_key=MISSION_PSEUDONYM_KEY,
+        synthetic=False,
+        source_git_commit="a" * 40,
+    )
+    previous_path = tmp_path / "previous-live.json"
+    previous_path.write_text(json.dumps(previous), encoding="utf-8")
+    output = tmp_path / "current-live.json"
+    monkeypatch.setenv("EVIDENCEOPS_PSEUDONYM_KEY", "fixture-pseudonym-key-at-least-32-bytes")
+    monkeypatch.setattr(cli, "_git_commit_sha", lambda: "b" * 40)
+
+    assert (
+        cli.main(
+            [
+                "publish-mission",
+                str(private_path),
+                "--output",
+                str(output),
+                "--previous-public",
+                str(previous_path),
+            ]
+        )
+        == 0
+    )
+    published = validate_public_mission_snapshot(json.loads(output.read_text(encoding="utf-8")))
+    changes = cast(dict[str, JsonValue], published["changes"])
+    assert changes["previous_snapshot_id"] == previous["snapshot_id"]
+    assert changes["history_state"] == "compared"
+
+    synthetic_path = tmp_path / "previous-synthetic.json"
+    synthetic_path.write_text(json.dumps(build_mission_demo()), encoding="utf-8")
+    assert (
+        cli.main(
+            [
+                "publish-mission",
+                str(private_path),
+                "--output",
+                str(tmp_path / "rejected.json"),
+                "--previous-public",
+                str(synthetic_path),
+            ]
+        )
+        == 2
+    )

@@ -101,6 +101,14 @@ or proprietary material from `intune-apple-gitops` or any other repository.
 Exact Phase 1 commands, results, limitations, and commit hashes are maintained in the
 [Phase 1 validation record](phase-1-validation.md).
 
+The July 20 finalization remained owned by the primary Codex task and used three bounded supporting
+agents in the same shared checkout: one implemented exact provider mappings and sanitized snapshot
+history; one hardened protected audit/deployment workflows; and one implemented Mission Control and
+Evidence Copilot. The primary agent read the governing instructions, integrated and reviewed every
+shared change, added TMCO Consulting branding and documentation, ran the complete validation gate,
+and retained sole responsibility for Git, PR, merge, live audit, deployment, and production checks.
+Implementation commit: `143f694f7183f1a2ce117a3a0867aad316f7a1ae`.
+
 The follow-on Cloudflare runtime and deployment were completed in this same primary thread on
 `codex/cloudflare-worker-runtime` with no supporting-agent contribution. No Graph access or real
 tenant data occurred. Cloudflare resources, the custom domain, a project-scoped OpenAI key/Worker

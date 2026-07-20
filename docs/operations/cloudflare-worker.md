@@ -2,11 +2,10 @@
 
 ## Current state
 
-The Worker runtime is deployed at `https://evidenceops.tmcoconsulting.com/` with a live sanitized
-Mission package and explicit fixture narrative mode. The credential-free preview is available at
-`https://evidenceops-preview.tmco-consulting.workers.dev/`. The custom domain/TLS, Static Assets,
-dual native rate limiters, and encrypted `OPENAI_API_KEY` binding are active. The default fixture
-narrative mode does not call OpenAI.
+The production configuration at `https://evidenceops.tmcoconsulting.com/` requires a reviewed live
+sanitized Mission package and fixed `gpt-5.6-terra` Evidence Copilot. The credential-free preview
+configuration remains explicit fixture mode. The custom domain/TLS, Static Assets, dual native rate
+limiters, and encrypted `OPENAI_API_KEY` binding are active.
 
 Cloudflare Workers Static Assets serves the scanned MkDocs `site/` directory. The
 [`run_worker_first`](https://developers.cloudflare.com/workers/static-assets/binding/#run_worker_first)
@@ -52,17 +51,16 @@ The narrative route enforces, in order:
 9. a human-review-required response with generated prose quarantined.
 
 OpenAI mode pins `gpt-5.6-terra`, uses `store: false`, exposes no tools, makes no retry, times out
-after 20 seconds, caps output at 1,600 tokens, and reads at most 256 KiB of response JSON. It never
-falls back to fixture output.
+after 20 seconds, caps `/api/ask` at 700 output tokens and the full-package narrative route at 1,600,
+and reads at most 256 KiB of response JSON. It never falls back to fixture output.
 Upstream error inspection reads at most 16 KiB and retains only a strictly formatted `error.code`
 or `error.type` long enough to distinguish quota exhaustion from request-rate limiting. Upstream
 messages and bodies are never returned or logged; an unknown or oversized 429 remains a generic
 capacity failure.
-One bounded production request through the dedicated service-account key returned structured
-`gpt-5.6-terra` output. The deterministic verifier accepted the complete typed-claim set, rejected
-none, quarantined every prose field, and retained the human-review boundary. Production was then
-returned to explicit fixture mode. Fixture mode makes no OpenAI request and does not silently fall
-back from a failed live call.
+Historical operational validation proved one bounded structured response through the dedicated
+service-account key. The final production configuration keeps OpenAI mode active only with the
+fixed model and required secret; fixture mode remains limited to local/preview and does not silently
+substitute for a failed live call.
 
 ## Secret and logging boundary
 
@@ -88,15 +86,39 @@ requires its own browser storage, transit, redaction, support, exfiltration, and
 
 Completed: account/zone verification, preview and production deployment, custom-domain/TLS checks,
 static/API/header tests, fixture verification, rate-limit proof, secure Worker-secret transfer,
-exact Entra environment federation, required Graph application consent, one bounded verified Terra
-response, one successful expanded protected-main GET-only Intune audit, the separate scanned-public
-artifact review, and live sanitized publication. The public assistant remains in fixture narrative
-mode.
+exact Entra environment federation, required Graph application consent, a bounded verified Terra
+response, a successful expanded protected-main GET-only Intune audit, separate scanned-public
+artifact review, and live sanitized publication. Each final deployment must independently prove its
+exact source snapshot and current `/api/status`; older run IDs below are historical evidence.
 
 Repository-controlled static and JSON responses declare CSP, HSTS, MIME, referrer, permissions,
 cross-origin, and frame protections. `/api/ready` validates the Mission schema, fingerprint, data
 mode metadata, and runtime configuration; `/api/health` remains a deliberately narrower liveness
-signal.
+signal. Worker API responses set `Cache-Control: no-store`; the current
+`/assets/data/mission-control.json` Static Assets rule detaches the broader asset cache directive
+and applies `no-store`. A browser refresh or explicit snapshot check therefore does not reuse the
+prior deployment's status or Mission payload.
+
+The protected production workflow has no synthetic-build branch. A reviewer must supply a
+successful trusted-main Intune audit run ID and the exact reviewed `mission-…` snapshot ID. The
+workflow rejects an absent, malformed, unsuccessful, non-main, or wrong-workflow selector; requires
+one fingerprint-valid `LIVE SANITIZED TENANT DATA` artifact; checks its snapshot before the upload;
+and proves that the snapshot-bound Worker version is the only active version at 100% traffic after
+the upload. Local and preview workflows remain the only synthetic paths.
+
+Review the one-file sanitized artifact before dispatch and record its validated `snapshot_id`.
+Then supply both values explicitly:
+
+```bash
+gh workflow run deploy-cloudflare.yml --ref main \
+  -f confirm_production_deploy=true \
+  -f sanitized_audit_run_id='<successful-reviewed-audit-run-id>' \
+  -f expected_source_snapshot_id='mission-<24-lowercase-hex>'
+```
+
+An omitted or mismatched value stops before deployment. Enabling the separate
+`CLOUDFLARE_DEPLOY_ENABLED` environment gate remains an operator-controlled reviewed-window action;
+restore it to `false` immediately after the run.
 
 Remaining operations:
 
@@ -104,10 +126,10 @@ Remaining operations:
 2. review Cloudflare observability/alert retention in the dashboard;
 3. use `wrangler deployments list --env production` and
    `wrangler rollback <known-good-version> --env production` for rollback; and
-4. leave OpenAI mode off by default unless a separately reviewed operational policy authorizes it.
+4. confirm `/api/status` reports the fixed model and live package after each deployment.
 
-The active account token `evidenceops-github-deploy` has only `Workers Scripts Write` on the TMCO
-Consulting account, and the protected workflow proved that GitHub holds that working token without
+The active account token `evidenceops-github-deploy` has only `Workers Scripts Write` on the TMCO Consulting
+account, and the protected workflow proved that GitHub holds that working token without
 revealing its value. The first upload activated the reviewed Worker and assets, then Wrangler tried
 to inspect the existing zone route because the custom domain was still declarative and correctly
 received an authorization error. Production status nevertheless confirmed the exact live sanitized
@@ -133,4 +155,5 @@ deployment flag was restored and re-read as `false`.
 Cloudflare documents [Worker secrets](https://developers.cloudflare.com/workers/configuration/secrets/),
 [custom domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/),
 [versions and deployments](https://developers.cloudflare.com/workers/versions-and-deployments/),
+[Static Assets response headers](https://developers.cloudflare.com/workers/static-assets/headers/),
 and [rollbacks](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/rollbacks/).

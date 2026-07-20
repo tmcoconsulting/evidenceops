@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import json
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 from typing import cast
 
@@ -35,6 +36,27 @@ from evidenceops.mission_demo import (
     build_mission_demo,
     fixture_finding_outcomes,
 )
+from evidenceops.providers.apple import AppleIntuneCollection
+
+
+def _requirement_for(snapshot: dict[str, JsonValue], rule_id: str) -> dict[str, JsonValue]:
+    return next(
+        item
+        for item in cast(list[dict[str, JsonValue]], snapshot["requirements"])
+        if item["rule_id"] == rule_id
+    )
+
+
+def _without_setting(
+    collection: AppleIntuneCollection, definition_id: str
+) -> AppleIntuneCollection:
+    records = tuple(
+        record
+        for record in collection.records
+        if cast(dict[str, JsonValue], record["properties"]).get("setting_definition_id")
+        != definition_id
+    )
+    return replace(collection, records=records)
 
 
 def test_pinned_mscp_inventory_and_approval_are_complete() -> None:
@@ -102,8 +124,8 @@ def test_mission_fixture_is_deterministic_private_safe_and_complete() -> None:
     validate_public_mission_snapshot(first)
     requirements = cast(list[dict[str, JsonValue]], first["requirements"])
     assert len(requirements) == 98
-    assert sum(item["evaluation_included"] is True for item in requirements) == 5
-    assert cast(dict[str, JsonValue], first["metrics"])["alignment_denominator"] == 5
+    assert sum(item["evaluation_included"] is True for item in requirements) == 4
+    assert cast(dict[str, JsonValue], first["metrics"])["alignment_denominator"] == 4
     assert cast(dict[str, JsonValue], first["devices"])["by_platform"] == {
         "iOS": 1,
         "iPadOS": 1,
@@ -124,6 +146,175 @@ def test_mission_fixture_is_deterministic_private_safe_and_complete() -> None:
         assert private_marker not in serialized
     assert first["data_mode"] == "SYNTHETIC DEMO DATA"
     assert first["human_approval_status"] == "Human review required"
+
+
+def test_exact_provider_mappings_recognize_filevault_and_link_public_parent() -> None:
+    aligned = build_public_mission_snapshot(
+        _collection(previous=True),
+        pseudonym_key=MISSION_PSEUDONYM_KEY,
+        synthetic=True,
+        source_git_commit="synthetic-reviewed",
+    )
+    filevault = _requirement_for(aligned, "system_settings_filevault_enforce")
+    assert filevault["outcome"] == DriftOutcome.ALIGNED.value
+    assert filevault["matched_provider_definition_ids"] == ["com.apple.mcx.filevault2_enable"]
+    assert filevault["mapping_review_status"] == "reviewed"
+    parent_refs = cast(list[str], filevault["parent_resource_refs"])
+    assert len(parent_refs) == 1
+    resources = cast(list[dict[str, JsonValue]], aligned["resources"])
+    assert any(resource["resource_ref"] == parent_refs[0] for resource in resources)
+    assert any(
+        resource["parent_resource_ref"] == parent_refs[0]
+        and resource["provider_definition_id"] == "com.apple.mcx.filevault2_enable"
+        for resource in resources
+    )
+
+
+def test_unknown_provider_setting_is_public_safe_and_not_evaluated_by_guessing() -> None:
+    snapshot = build_mission_demo()
+    resources = cast(list[dict[str, JsonValue]], snapshot["resources"])
+    unknown = next(
+        resource
+        for resource in resources
+        if resource["resource_family"] == "settings_catalog_settings"
+        and resource["provider_definition_id"] is None
+    )
+    assert unknown["evaluation_reason"] == "provider setting not recognized"
+    assert unknown["parent_resource_ref"] is not None
+    serialized = json.dumps(snapshot)
+    assert "com.apple.preference.security_dontAllowFireWallUI" not in serialized
+
+
+def test_missing_requires_complete_settings_collection() -> None:
+    collection = _without_setting(_collection(previous=False), "com.apple.mcx.filevault2_enable")
+    snapshot = build_public_mission_snapshot(
+        collection,
+        pseudonym_key=MISSION_PSEUDONYM_KEY,
+        synthetic=True,
+        source_git_commit="synthetic-reviewed",
+    )
+    assert (
+        _requirement_for(snapshot, "system_settings_filevault_enforce")["outcome"]
+        == DriftOutcome.MISSING.value
+    )
+
+    statuses = list(collection.endpoint_statuses)
+    relationship_index = next(
+        index
+        for index, status in enumerate(statuses)
+        if status["key"] == "settings_catalog:settings"
+    )
+    statuses[relationship_index] = {**statuses[relationship_index], "status": "unavailable"}
+    incomplete = replace(collection, endpoint_statuses=tuple(statuses))
+    gap_snapshot = build_public_mission_snapshot(
+        incomplete,
+        pseudonym_key=MISSION_PSEUDONYM_KEY,
+        synthetic=True,
+        source_git_commit="synthetic-reviewed",
+    )
+    assert (
+        _requirement_for(gap_snapshot, "system_settings_filevault_enforce")["outcome"]
+        == DriftOutcome.COLLECTION_GAP.value
+    )
+
+
+def test_unsupported_value_shape_is_not_reported_as_missing_or_drift() -> None:
+    collection = _collection(previous=True)
+    records: list[dict[str, JsonValue]] = []
+    for original in collection.records:
+        record = copy.deepcopy(original)
+        properties = cast(dict[str, JsonValue], record["properties"])
+        if properties.get("setting_definition_id") == "com.apple.mcx.filevault2_enable":
+            properties["normalization_state"] = "unsupported_value_shape"
+            properties["normalized_value"] = None
+        records.append(record)
+    snapshot = build_public_mission_snapshot(
+        replace(collection, records=tuple(records)),
+        pseudonym_key=MISSION_PSEUDONYM_KEY,
+        synthetic=True,
+        source_git_commit="synthetic-reviewed",
+    )
+    assert (
+        _requirement_for(snapshot, "system_settings_filevault_enforce")["outcome"]
+        == DriftOutcome.UNSUPPORTED_VALUE_SHAPE.value
+    )
+
+
+def test_current_and_previous_snapshots_classify_new_resolved_and_unchanged() -> None:
+    new_drift = build_mission_demo()
+    new_changes = cast(dict[str, JsonValue], new_drift["changes"])
+    assert new_changes["new_drift"] == [
+        "system_settings_filevault_enforce",
+        "system_settings_firewall_enable",
+        "system_settings_screensaver_password_enforce",
+    ]
+    assert new_changes["resolved_drift"] == []
+    assert len(cast(list[str], new_changes["unchanged_requirements"])) == 95
+    assert new_changes["previous_collection_timestamp_utc"] == "2026-07-18T15:00:00Z"
+    assert new_changes["current_collection_timestamp_utc"] == "2026-07-19T15:00:00Z"
+
+    prior = build_public_mission_snapshot(
+        _collection(previous=False),
+        pseudonym_key=MISSION_PSEUDONYM_KEY,
+        synthetic=True,
+        source_git_commit="synthetic-reviewed",
+    )
+    current_collection = replace(
+        _collection(previous=True), collected_at_utc="2026-07-20T15:00:00Z"
+    )
+    resolved = build_public_mission_snapshot(
+        current_collection,
+        pseudonym_key=MISSION_PSEUDONYM_KEY,
+        synthetic=True,
+        source_git_commit="synthetic-reviewed",
+        previous=prior,
+    )
+    resolved_changes = cast(dict[str, JsonValue], resolved["changes"])
+    assert resolved_changes["resolved_drift"] == [
+        "system_settings_filevault_enforce",
+        "system_settings_firewall_enable",
+        "system_settings_screensaver_password_enforce",
+    ]
+    assert resolved_changes["new_drift"] == []
+    assert len(cast(list[str], resolved_changes["unchanged_requirements"])) == 95
+
+
+def test_previous_snapshot_validation_rejects_tampering_private_fields_and_wrong_mode() -> None:
+    previous = build_public_mission_snapshot(
+        _collection(previous=True),
+        pseudonym_key=MISSION_PSEUDONYM_KEY,
+        synthetic=True,
+        source_git_commit="synthetic-reviewed",
+    )
+    current = _collection(previous=False)
+    tampered = copy.deepcopy(previous)
+    tampered["human_approval_status"] = "Approved"
+    with pytest.raises(ValueError, match="identity mismatch"):
+        build_public_mission_snapshot(
+            current,
+            pseudonym_key=MISSION_PSEUDONYM_KEY,
+            synthetic=True,
+            source_git_commit="synthetic-reviewed",
+            previous=tampered,
+        )
+    private = copy.deepcopy(previous)
+    private["private_trace"] = {"source_object_id": "private"}
+    with pytest.raises(ValueError, match="unexpected"):
+        build_public_mission_snapshot(
+            current,
+            pseudonym_key=MISSION_PSEUDONYM_KEY,
+            synthetic=True,
+            source_git_commit="synthetic-reviewed",
+            previous=private,
+        )
+    with pytest.raises(ValueError, match="data mode"):
+        build_public_mission_snapshot(
+            current,
+            pseudonym_key=MISSION_PSEUDONYM_KEY,
+            synthetic=False,
+            source_git_commit="a" * 40,
+            previous=previous,
+        )
 
 
 def test_ios_is_visible_but_never_scored_against_macos_baseline() -> None:

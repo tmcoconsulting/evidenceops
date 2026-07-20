@@ -27,9 +27,10 @@ python scripts/check_public_artifacts.py site
 ```
 
 Open `site/evidence-dashboard/index.html`. Mission Control shows the approved 98-rule inventory,
-five mapped macOS settings, 20% technical alignment over the explicit five-rule denominator,
-FileVault/firewall/assignment/conflict drift, a Mac/iPhone/iPad posture, unmapped resources, one
-collection gap, previous-versus-current changes, framework crosswalks, and the bounded assistant.
+four reviewed macOS provider mappings, 25% technical alignment over the explicit four-rule
+denominator, FileVault/firewall/assignment/conflict drift, a Mac/iPhone/iPad posture, unevaluated
+resources, one collection gap, previous-versus-current changes, framework cross-references, and the
+site-wide Evidence Copilot.
 Every value comes from the tracked synthetic package; fixture assistant answers make no model
 request.
 
@@ -45,8 +46,8 @@ npm run dev
 ```
 
 `npm run dev` starts fixture mode and explicitly disables Wrangler `.env`/`.dev.vars` loading. The
-Live Demo panel enables `/api/narrative` only after `/api/status` confirms a supported Worker mode.
-Fixture mode makes no OpenAI request. Stop the local process when the review is complete.
+Copilot enables `/api/ask` only after `/api/status` confirms a supported Worker mode. Fixture mode
+makes no OpenAI request. Stop the local process when the review is complete.
 
 ## Command boundary
 
@@ -74,9 +75,9 @@ Live collection requires a separately approved Entra app and explicit authentica
 
 No successful paid model call is required or claimed by the static demo. Production has a dedicated
 EvidenceOps Project service-account key stored only as the encrypted Cloudflare Worker secret
-`OPENAI_API_KEY`; the value is absent from the repository and GitHub. One bounded live response
-passed the same deterministic verifier. Production intentionally remains in fixture narrative mode
-by default, so normal public use makes no model call.
+`OPENAI_API_KEY`; the value is absent from the repository and GitHub. Production uses fixed
+`gpt-5.6-terra` only after the same-origin request and sanitized evidence gates pass. It never
+silently falls back to a fixture response when an OpenAI request fails.
 Browser BYOK is rejected because it would create browser-storage, exfiltration, logging, and abuse
 risks without improving the server-side least-privilege boundary.
 
@@ -92,6 +93,7 @@ python -m ruff check .
 python -m mypy
 python -m pytest
 python -m bandit -r evidenceops scripts -c pyproject.toml
+python scripts/check_company_name.py
 python scripts/check_secrets.py
 python -m pip_audit -r requirements-dev.txt
 mkdocs build --strict
@@ -108,4 +110,4 @@ The test command enforces 90% branch-aware coverage. All public artifacts must p
 The exact-pinned Wrangler configuration serves `site/` through Workers Static Assets and routes
 only `/api/*` through Worker code first. Production is available at
 `https://evidenceops.tmcoconsulting.com/`; it serves a separately reviewed live sanitized Mission
-package and uses fixture narrative mode, which makes no model request.
+package and reports the actual fixed-model availability through `/api/status`.

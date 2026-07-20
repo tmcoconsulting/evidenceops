@@ -1,5 +1,9 @@
 # Phase 1 Final Implementation Report
 
+> **Historical checkpoint (2026-07-19).** Runtime mode, mapping count, metrics, and run identifiers
+> below describe that checkpoint. Use the current Mission package, `/api/status`, roadmap, and final
+> video runbook for the Build Week final deployment.
+
 This record describes the technically complete EvidenceOps Build Week Phase 1 vertical slice as
 verified on 2026-07-19. It does not claim regulatory compliance, assessor approval, or completion
 of the external DevPost submission.
@@ -83,13 +87,13 @@ collection status, and a visible gap on partial failure.
 ## 7. Approved baseline identity and hashes
 
 - Organization: TMCO Consulting
-- Baseline: TMCO macOS CIS Level 1 Build Week Demo Baseline
+- Baseline: TMCO Consulting macOS CIS Level 1 Demo Baseline
 - Benchmark: CIS Apple macOS 26 Tahoe Benchmark Level 1
 - mSCP revision: `11b5896e4f12f43410686024f543792742562c91`
 - Source artifact SHA-256: `af9ef14ca568f17d3663e6e508c1f75971596fe43c6f185af27ca43451c240d2`
 - Extracted baseline SHA-256: `5cced0709c90885ede600f00a640a35b0679aed933cda456db80ee629ee54d41`
 - Internal approval record commit: `3dd8902a609c6be177cdc913c731fbd378f075a4`
-- Approval authority label: TMCO Build Week Demo Authority
+- Approval authority label: TMCO Consulting, LLC — Build Week Demo Authority
 
 This is an internal technical-drift demo approval, not CIS, NIST, DoD, C3PAO, or assessor
 certification.

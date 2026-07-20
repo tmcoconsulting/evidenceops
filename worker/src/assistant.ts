@@ -29,13 +29,39 @@ const REFERENCE = /\b(?:finding|req|gap|mission)-[0-9a-f]{24}\b/g;
 type Intent =
   | "alignment"
   | "assignment_drift"
+  | "attention"
   | "changes"
   | "collection_gaps"
   | "conflicts"
   | "device_posture"
+  | "evidence"
   | "filevault"
+  | "framework_meaning"
   | "high_severity"
-  | "insufficient";
+  | "intune_review"
+  | "insufficient"
+  | "limitations"
+  | "provenance"
+  | "resolved"
+  | "unevaluated";
+
+const ASSISTANT_PAGES = [
+  "overview",
+  "findings",
+  "settings",
+  "changes",
+  "evidence",
+  "documentation",
+] as const;
+
+type AssistantPage = (typeof ASSISTANT_PAGES)[number];
+
+interface AssistantInput {
+  page: AssistantPage;
+  question: string;
+  selected_evidence_id?: string;
+  snapshot_id: string;
+}
 
 interface MissionFinding {
   finding_id: string;
@@ -55,10 +81,16 @@ interface MissionRequirement {
   rule_id: string;
   outcome: string;
   severity: string;
+  title: string;
+  expected_value?: JsonValue;
+  observed_value?: JsonValue;
+  assignment_summary?: string;
+  source_evidence_ids?: string[];
+  mappings?: Record<string, JsonValue>;
 }
 
 interface MissionDocument {
-  schema_version: "2.0.0";
+  schema_version: "2.1.0";
   snapshot_id: string;
   content_fingerprint: string;
   data_mode: string;
@@ -66,17 +98,26 @@ interface MissionDocument {
   baseline: Record<string, JsonValue> & { benchmark_version: string };
   metrics: Record<string, JsonValue>;
   devices: Record<string, JsonValue>;
+  ai: Record<string, JsonValue>;
   requirements: MissionRequirement[];
   findings: MissionFinding[];
   collection_gaps: Array<{ [key: string]: JsonValue; gap_id: string }>;
   changes: Record<string, JsonValue>;
+  framework_coverage: Record<string, JsonValue>;
+  resources: Array<{ [key: string]: JsonValue }>;
+  unmapped_objects: Array<{ [key: string]: JsonValue }>;
 }
 
 export interface MissionStatus {
+  assistant_mode_declared: string;
+  baseline_name: string;
   baseline_version: string;
   content_fingerprint: string;
   data_mode: string;
   evidence_timestamp: string;
+  freshness_maximum_age_seconds: number;
+  freshness_state: string;
+  provider: string;
   snapshot_id: string;
 }
 
@@ -98,6 +139,7 @@ interface AssistantOutput {
 
 interface AssistantContext {
   intent: Intent;
+  page: AssistantPage;
   evidence_timestamp: string;
   baseline_version: string;
   facts: JsonValue;
@@ -148,8 +190,13 @@ export async function createAssistantAnswer(
       "the selected evidence package is no longer current",
     );
   }
-  const intent = classifyQuestion(input.question);
-  const context = selectContext(mission, intent);
+  const intent = classifyQuestion(input.question, input.selected_evidence_id);
+  const context = selectContext(
+    mission,
+    intent,
+    input.page,
+    input.selected_evidence_id,
+  );
   assertMissionEgressSafe(context);
   const mode = runtimeMode(env.EVIDENCEOPS_MODE);
   const output =
@@ -175,13 +222,18 @@ export async function createAssistantAnswer(
   };
 }
 
-function parseAssistantInput(value: unknown): {
-  question: string;
-  snapshot_id: string;
-} {
+function parseAssistantInput(value: unknown): AssistantInput {
+  if (!isRecord(value)) {
+    throw new HttpError(
+      422,
+      "assistant_request_rejected",
+      "assistant request has unexpected or missing fields",
+    );
+  }
+  const fields = Object.keys(value).sort().join(",");
   if (
-    !isRecord(value) ||
-    Object.keys(value).sort().join(",") !== "question,snapshot_id"
+    fields !== "page,question,snapshot_id" &&
+    fields !== "page,question,selected_evidence_id,snapshot_id"
   ) {
     throw new HttpError(
       422,
@@ -214,7 +266,37 @@ function parseAssistantInput(value: unknown): {
       "mission package ID is invalid",
     );
   }
-  return { question: value.question.trim(), snapshot_id: value.snapshot_id };
+  if (
+    typeof value.page !== "string" ||
+    !ASSISTANT_PAGES.includes(value.page as AssistantPage)
+  ) {
+    throw new HttpError(
+      422,
+      "assistant_request_rejected",
+      "assistant page context is invalid",
+    );
+  }
+  if (
+    value.selected_evidence_id !== undefined &&
+    (typeof value.selected_evidence_id !== "string" ||
+      !/^(?:finding|req|gap|mission)-[0-9a-f]{24}$/.test(
+        value.selected_evidence_id,
+      ))
+  ) {
+    throw new HttpError(
+      422,
+      "assistant_request_rejected",
+      "selected evidence reference is invalid",
+    );
+  }
+  return {
+    page: value.page as AssistantPage,
+    question: value.question.trim(),
+    snapshot_id: value.snapshot_id,
+    ...(value.selected_evidence_id === undefined
+      ? {}
+      : { selected_evidence_id: value.selected_evidence_id }),
+  };
 }
 
 async function loadMission(
@@ -243,10 +325,32 @@ export async function readMissionStatus(
 ): Promise<MissionStatus> {
   const mission = await loadMission(request, env);
   return {
+    assistant_mode_declared:
+      isRecord(mission.ai) && typeof mission.ai.mode === "string"
+        ? mission.ai.mode
+        : "unavailable",
+    baseline_name:
+      typeof mission.baseline.name === "string"
+        ? mission.baseline.name
+        : "approved baseline unavailable",
     baseline_version: mission.baseline.benchmark_version,
     content_fingerprint: mission.content_fingerprint,
     data_mode: mission.data_mode,
     evidence_timestamp: mission.collection.collected_at_utc,
+    freshness_maximum_age_seconds:
+      isRecord(mission.collection.freshness) &&
+      typeof mission.collection.freshness.maximum_age_seconds === "number"
+        ? mission.collection.freshness.maximum_age_seconds
+        : 0,
+    freshness_state:
+      isRecord(mission.collection.freshness) &&
+      typeof mission.collection.freshness.state === "string"
+        ? mission.collection.freshness.state
+        : "unknown",
+    provider:
+      typeof mission.collection.provider === "string"
+        ? mission.collection.provider
+        : "provider unavailable",
     snapshot_id: mission.snapshot_id,
   };
 }
@@ -277,15 +381,22 @@ function validateMission(value: unknown): MissionDocument {
   if (
     Object.keys(value).length !== required.size ||
     Object.keys(value).some((key) => !required.has(key)) ||
-    value.schema_version !== "2.0.0" ||
+    value.schema_version !== "2.1.0" ||
     typeof value.snapshot_id !== "string" ||
     !/^mission-[0-9a-f]{24}$/.test(value.snapshot_id) ||
     typeof value.content_fingerprint !== "string" ||
     !/^sha256:[0-9a-f]{64}$/.test(value.content_fingerprint) ||
     !isRecord(value.collection) ||
     typeof value.collection.collected_at_utc !== "string" ||
+    typeof value.collection.provider !== "string" ||
+    !isRecord(value.collection.freshness) ||
+    typeof value.collection.freshness.state !== "string" ||
+    typeof value.collection.freshness.maximum_age_seconds !== "number" ||
     !isRecord(value.baseline) ||
     typeof value.baseline.benchmark_version !== "string" ||
+    typeof value.baseline.name !== "string" ||
+    !isRecord(value.ai) ||
+    typeof value.ai.mode !== "string" ||
     !isRecord(value.metrics) ||
     !isRecord(value.devices) ||
     !isRecord(value.changes) ||
@@ -293,7 +404,10 @@ function validateMission(value: unknown): MissionDocument {
     value.requirements.length > MAX_REQUIREMENTS ||
     !Array.isArray(value.findings) ||
     value.findings.length > MAX_FINDINGS ||
-    !Array.isArray(value.collection_gaps)
+    !Array.isArray(value.collection_gaps) ||
+    !isRecord(value.framework_coverage) ||
+    !Array.isArray(value.resources) ||
+    !Array.isArray(value.unmapped_objects)
   ) {
     invalidMission();
   }
@@ -304,7 +418,8 @@ function validateMission(value: unknown): MissionDocument {
       !/^req-[0-9a-f]{24}$/.test(requirement.requirement_id) ||
       typeof requirement.rule_id !== "string" ||
       typeof requirement.outcome !== "string" ||
-      typeof requirement.severity !== "string"
+      typeof requirement.severity !== "string" ||
+      typeof requirement.title !== "string"
     )
       invalidMission();
   }
@@ -349,11 +464,45 @@ async function verifyMissionIdentity(mission: MissionDocument): Promise<void> {
     invalidMission();
 }
 
-function classifyQuestion(question: string): Intent {
+function classifyQuestion(
+  question: string,
+  selectedEvidenceId?: string,
+): Intent {
   const normalized = question.toLowerCase();
+  if (
+    selectedEvidenceId !== undefined &&
+    /evidence|support|this (?:finding|setting|requirement)|explain/.test(
+      normalized,
+    )
+  )
+    return "evidence";
   if (/filevault|encryption/.test(normalized)) return "filevault";
+  if (/resolved|closed since|no longer drift/.test(normalized))
+    return "resolved";
   if (/what changed|since (?:the )?(?:last|previous)|trend/.test(normalized))
     return "changes";
+  if (/review in intune|what.*intune|next step/.test(normalized))
+    return "intune_review";
+  if (
+    /requires? (?:my )?attention|what should i review|needs? review|priority/.test(
+      normalized,
+    )
+  )
+    return "attention";
+  if (/not (?:currently )?evaluated|unevaluated|unmapped/.test(normalized))
+    return "unevaluated";
+  if (/framework|cross[- ]reference|nist|cmmc|stig/.test(normalized))
+    return "framework_meaning";
+  if (
+    /live tenant|live data|data provenance|when was.*collected/.test(normalized)
+  )
+    return "provenance";
+  if (
+    /cannot conclude|not conclude|can(?:not|'t) prove|limitations?/.test(
+      normalized,
+    )
+  )
+    return "limitations";
   if (/highest|high(?:est)?[- ]severity|critical/.test(normalized))
     return "high_severity";
   if (/unassign|assignment gap/.test(normalized)) return "assignment_drift";
@@ -371,12 +520,16 @@ function classifyQuestion(question: string): Intent {
 function selectContext(
   mission: MissionDocument,
   intent: Intent,
+  page: AssistantPage,
+  selectedEvidenceId?: string,
 ): AssistantContext {
   const base = {
     intent,
+    page,
     evidence_timestamp: mission.collection.collected_at_utc,
     baseline_version: mission.baseline.benchmark_version,
   };
+  const selectedEvidence = resolveSelectedEvidence(mission, selectedEvidenceId);
   let facts: JsonValue;
   let references: string[] = [mission.snapshot_id];
   let claims: AssistantClaim[] = [];
@@ -402,11 +555,144 @@ function selectContext(
         : 0;
     claims = [claim("device_aggregate", "noncompliant", noncompliant)];
   } else if (intent === "changes") {
-    facts = mission.changes;
-    const changed = Array.isArray(mission.changes.changed_requirements)
-      ? mission.changes.changed_requirements.length
-      : 0;
+    const changedIds = stringArray(mission.changes.changed_requirements);
+    const newIds = stringArray(mission.changes.new_drift);
+    const resolvedIds = stringArray(mission.changes.resolved_drift);
+    const changed = changedIds.length;
+    facts = {
+      previous_snapshot_id: stringOrNull(mission.changes.previous_snapshot_id),
+      previous_collection_timestamp_utc: stringOrNull(
+        mission.changes.previous_collection_timestamp_utc,
+      ),
+      current_collection_timestamp_utc:
+        stringOrNull(mission.changes.current_collection_timestamp_utc) ??
+        mission.collection.collected_at_utc,
+      alignment_change_points: mission.changes.alignment_change_points ?? null,
+      changed_requirements: changedIds.map((identifier) =>
+        requirementOrFindingSummary(mission, identifier),
+      ),
+      new_drift: newIds.map((identifier) =>
+        requirementOrFindingSummary(mission, identifier),
+      ),
+      resolved_drift: resolvedIds.map((identifier) =>
+        requirementOrFindingSummary(mission, identifier),
+      ),
+      unchanged_requirement_count: stringArray(
+        mission.changes.unchanged_requirements,
+      ).length,
+    };
+    references = [
+      mission.snapshot_id,
+      ...changedIds.flatMap((identifier) =>
+        evidenceReferencesForIdentifier(mission, identifier),
+      ),
+    ];
     claims = [claim("change_count", mission.snapshot_id, changed)];
+  } else if (intent === "resolved") {
+    const resolved = stringArray(mission.changes.resolved_drift);
+    facts = {
+      previous_snapshot_id: stringOrNull(mission.changes.previous_snapshot_id),
+      previous_collection_timestamp_utc: stringOrNull(
+        mission.changes.previous_collection_timestamp_utc,
+      ),
+      current_collection_timestamp_utc:
+        stringOrNull(mission.changes.current_collection_timestamp_utc) ??
+        mission.collection.collected_at_utc,
+      resolved_findings: resolved.map((identifier) =>
+        requirementOrFindingSummary(mission, identifier),
+      ),
+    };
+    references = [
+      mission.snapshot_id,
+      ...resolved.flatMap((identifier) =>
+        evidenceReferencesForIdentifier(mission, identifier),
+      ),
+    ];
+    claims = [
+      claim("resolved_drift_count", mission.snapshot_id, resolved.length),
+    ];
+  } else if (intent === "attention" || intent === "intune_review") {
+    const ordered = [...mission.findings].sort(
+      (left, right) =>
+        severityRank(right.severity) - severityRank(left.severity) ||
+        left.title.localeCompare(right.title),
+    );
+    const selectedFindings =
+      selectedEvidence?.kind === "finding" ? [selectedEvidence.value] : ordered;
+    facts = selectedFindings.map(findingFact);
+    references = [
+      mission.snapshot_id,
+      ...selectedFindings.flatMap((finding) => [
+        finding.finding_id,
+        ...requirementReferenceForFinding(mission, finding),
+      ]),
+    ];
+    claims = selectedFindings.map((finding) =>
+      claim("finding_outcome", finding.finding_id, finding.drift_type),
+    );
+  } else if (intent === "unevaluated") {
+    facts = {
+      total: mission.unmapped_objects.length,
+      groups: groupUnevaluatedResources(mission.unmapped_objects),
+      meaning:
+        "These collected resources are visible but do not enter the approved macOS alignment denominator.",
+    };
+    claims = [
+      claim(
+        "unevaluated_resource_count",
+        mission.snapshot_id,
+        mission.unmapped_objects.length,
+      ),
+    ];
+  } else if (intent === "framework_meaning") {
+    facts = {
+      framework_cross_references: frameworkFacts(mission.framework_coverage),
+      meaning:
+        "Distinct identifiers referenced by evaluated settings; not passed controls, coverage scores, certifications, or completed assessments.",
+    };
+    claims = [
+      claim(
+        "framework_reference_set_count",
+        mission.snapshot_id,
+        Object.keys(mission.framework_coverage).length,
+      ),
+    ];
+  } else if (intent === "provenance") {
+    facts = {
+      data_mode: mission.data_mode,
+      collected_at_utc: mission.collection.collected_at_utc,
+      provider: mission.collection.provider ?? null,
+      snapshot_id: mission.snapshot_id,
+      baseline_name: mission.baseline.name ?? null,
+      baseline_version: mission.baseline.benchmark_version,
+    };
+    claims = [claim("data_mode", mission.snapshot_id, mission.data_mode)];
+  } else if (intent === "limitations") {
+    facts = {
+      cannot_conclude: [
+        "organizational compliance",
+        "certification",
+        "control satisfaction",
+        "assessment completion",
+        "risk acceptance",
+        "approved exception",
+        "successful Intune remediation without a later collection",
+      ],
+      intune_write_capability: false,
+      human_assessor_judgment_required: true,
+    };
+    claims = [claim("intune_write_capability", mission.snapshot_id, false)];
+  } else if (intent === "evidence") {
+    if (selectedEvidence === undefined) {
+      facts = {
+        evidence_missing:
+          "Select a finding or requirement before asking for its evidence chain.",
+      };
+    } else {
+      facts = selectedEvidence.fact;
+      references = [mission.snapshot_id, ...selectedEvidence.references];
+      claims = selectedEvidence.claims;
+    }
   } else if (intent === "collection_gaps") {
     facts = mission.collection_gaps;
     references = [
@@ -421,7 +707,7 @@ function selectContext(
       ),
     ];
   } else {
-    const selected = mission.findings.filter((finding) => {
+    const selectedFindings = mission.findings.filter((finding) => {
       if (intent === "filevault") return finding.rule_id.includes("filevault");
       if (intent === "high_severity") return finding.severity === "high";
       if (intent === "assignment_drift")
@@ -430,24 +716,34 @@ function selectContext(
         return finding.drift_type === "Conflicting policy";
       return false;
     });
-    facts = selected.map((finding) => ({
-      finding_id: finding.finding_id,
-      rule_id: finding.rule_id,
-      title: finding.title,
-      platform: finding.platform,
-      drift_type: finding.drift_type,
-      severity: finding.severity,
-      expected_value: finding.expected_value,
-      observed_value: finding.observed_value,
-      assignment_summary: finding.assignment_summary,
-    }));
-    references = [
-      mission.snapshot_id,
-      ...selected.map((finding) => finding.finding_id),
-    ];
-    claims = selected.map((finding) =>
-      claim("finding_outcome", finding.finding_id, finding.drift_type),
-    );
+    const fileVaultRequirements =
+      intent === "filevault" && selectedFindings.length === 0
+        ? mission.requirements.filter((requirement) =>
+            requirement.rule_id.includes("filevault"),
+          )
+        : [];
+    if (fileVaultRequirements.length > 0) {
+      facts = fileVaultRequirements.map(requirementFact);
+      references = [
+        mission.snapshot_id,
+        ...fileVaultRequirements.map((item) => item.requirement_id),
+      ];
+      claims = fileVaultRequirements.map((item) =>
+        claim("requirement_outcome", item.requirement_id, item.outcome),
+      );
+    } else {
+      facts = selectedFindings.map(findingFact);
+      references = [
+        mission.snapshot_id,
+        ...selectedFindings.flatMap((finding) => [
+          finding.finding_id,
+          ...requirementReferenceForFinding(mission, finding),
+        ]),
+      ];
+      claims = selectedFindings.map((finding) =>
+        claim("finding_outcome", finding.finding_id, finding.drift_type),
+      );
+    }
   }
   if (intent === "insufficient") {
     facts = { supported_intent: false };
@@ -459,6 +755,225 @@ function selectContext(
     expected_claims: claims,
     allowed_references: references,
   };
+}
+
+type SelectedEvidence =
+  | {
+      claims: AssistantClaim[];
+      fact: JsonValue;
+      kind: "finding";
+      references: string[];
+      value: MissionFinding;
+    }
+  | {
+      claims: AssistantClaim[];
+      fact: JsonValue;
+      kind: "gap" | "requirement" | "snapshot";
+      references: string[];
+    };
+
+function resolveSelectedEvidence(
+  mission: MissionDocument,
+  selectedEvidenceId?: string,
+): SelectedEvidence | undefined {
+  if (selectedEvidenceId === undefined) return undefined;
+  if (selectedEvidenceId === mission.snapshot_id) {
+    return {
+      kind: "snapshot",
+      fact: {
+        data_mode: mission.data_mode,
+        collected_at_utc: mission.collection.collected_at_utc,
+        snapshot_id: mission.snapshot_id,
+      },
+      references: [mission.snapshot_id],
+      claims: [claim("data_mode", mission.snapshot_id, mission.data_mode)],
+    };
+  }
+  const finding = mission.findings.find(
+    (item) => item.finding_id === selectedEvidenceId,
+  );
+  if (finding !== undefined) {
+    const requirementReferences = requirementReferenceForFinding(
+      mission,
+      finding,
+    );
+    return {
+      kind: "finding",
+      value: finding,
+      fact: findingFact(finding),
+      references: [finding.finding_id, ...requirementReferences],
+      claims: [
+        claim("finding_outcome", finding.finding_id, finding.drift_type),
+      ],
+    };
+  }
+  const requirement = mission.requirements.find(
+    (item) => item.requirement_id === selectedEvidenceId,
+  );
+  if (requirement !== undefined) {
+    return {
+      kind: "requirement",
+      fact: requirementFact(requirement),
+      references: [requirement.requirement_id],
+      claims: [
+        claim(
+          "requirement_outcome",
+          requirement.requirement_id,
+          requirement.outcome,
+        ),
+      ],
+    };
+  }
+  const gap = mission.collection_gaps.find(
+    (item) => item.gap_id === selectedEvidenceId,
+  );
+  if (gap !== undefined) {
+    return {
+      kind: "gap",
+      fact: gap,
+      references: [gap.gap_id],
+      claims: [claim("collection_gap_present", gap.gap_id, true)],
+    };
+  }
+  throw new HttpError(
+    422,
+    "assistant_evidence_rejected",
+    "selected evidence reference is outside the current package",
+  );
+}
+
+function findingFact(finding: MissionFinding): JsonValue {
+  return {
+    finding_id: finding.finding_id,
+    rule_id: finding.rule_id,
+    title: finding.title,
+    platform: finding.platform,
+    drift_type: finding.drift_type,
+    severity: finding.severity,
+    expected_value: finding.expected_value,
+    observed_value: finding.observed_value,
+    assignment_summary: finding.assignment_summary,
+    read_only_review:
+      "Review the published setting and assignment evidence in Intune; EvidenceOps cannot make the change.",
+  };
+}
+
+function requirementFact(requirement: MissionRequirement): JsonValue {
+  return {
+    requirement_id: requirement.requirement_id,
+    rule_id: requirement.rule_id,
+    title: requirement.title,
+    outcome: requirement.outcome,
+    expected_value: requirement.expected_value ?? null,
+    observed_value: requirement.observed_value ?? null,
+    assignment_summary: requirement.assignment_summary ?? "not available",
+    mappings: requirement.mappings ?? {},
+  };
+}
+
+function requirementReferenceForFinding(
+  mission: MissionDocument,
+  finding: MissionFinding,
+): string[] {
+  const requirement = mission.requirements.find(
+    (item) => item.rule_id === finding.rule_id,
+  );
+  return requirement === undefined ? [] : [requirement.requirement_id];
+}
+
+function evidenceReferencesForIdentifier(
+  mission: MissionDocument,
+  identifier: string,
+): string[] {
+  const finding = mission.findings.find(
+    (item) =>
+      item.finding_id === identifier ||
+      item.rule_id === identifier ||
+      requirementReferenceForFinding(mission, item).includes(identifier),
+  );
+  if (finding !== undefined) {
+    return [
+      finding.finding_id,
+      ...requirementReferenceForFinding(mission, finding),
+    ];
+  }
+  const requirement = mission.requirements.find(
+    (item) => item.requirement_id === identifier || item.rule_id === identifier,
+  );
+  return requirement === undefined ? [] : [requirement.requirement_id];
+}
+
+function requirementOrFindingSummary(
+  mission: MissionDocument,
+  identifier: string,
+): JsonValue {
+  const finding = mission.findings.find(
+    (item) => item.finding_id === identifier || item.rule_id === identifier,
+  );
+  if (finding !== undefined) return findingFact(finding);
+  const requirement = mission.requirements.find(
+    (item) => item.requirement_id === identifier || item.rule_id === identifier,
+  );
+  return requirement === undefined
+    ? { identifier, evidence_state: "referenced by the change set" }
+    : requirementFact(requirement);
+}
+
+function severityRank(value: string): number {
+  return value === "high"
+    ? 3
+    : value === "medium"
+      ? 2
+      : value === "low"
+        ? 1
+        : 0;
+}
+
+function stringArray(value: JsonValue | undefined): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+}
+
+function stringOrNull(value: JsonValue | undefined): string | null {
+  return typeof value === "string" ? value : null;
+}
+
+function groupUnevaluatedResources(
+  resources: Array<{ [key: string]: JsonValue }>,
+): JsonValue {
+  const groups = new Map<string, Array<{ [key: string]: JsonValue }>>();
+  for (const resource of resources) {
+    const reason =
+      typeof resource.evaluation_reason === "string"
+        ? resource.evaluation_reason
+        : "Reason not classified in the package";
+    const items = groups.get(reason) ?? [];
+    items.push({
+      resource_ref: resource.resource_ref ?? null,
+      resource_family: resource.resource_family ?? null,
+      title: resource.title ?? null,
+      action_expected: resource.action_expected ?? "Human review required",
+    });
+    groups.set(reason, items);
+  }
+  return [...groups.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([reason, items]) => ({ reason, count: items.length, items }));
+}
+
+function frameworkFacts(coverage: Record<string, JsonValue>): JsonValue {
+  return Object.entries(coverage)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([framework, value]) => ({
+      framework,
+      referenced_identifier_count:
+        isRecord(value) &&
+        typeof value.technical_evidence_identifier_count === "number"
+          ? value.technical_evidence_identifier_count
+          : 0,
+      assessment_conclusion: "not evaluated",
+    }));
 }
 
 function claim(
@@ -481,13 +996,14 @@ function fixtureOutput(
       evidence_references: [],
       evidence_sufficiency: "insufficient",
       limitations: [
-        "The question is outside the bounded collected-evidence intents.",
+        `The question is outside the bounded collected-evidence intents for the ${context.page} page.`,
       ],
       additional_evidence_required: [
-        "Human review or another evidence source is required.",
+        "Ask about findings requiring attention, FileVault, changes, resolved drift, collected resources not evaluated, framework cross-references, provenance, evidence links, Intune review, or EvidenceOps limitations.",
+        "Human review or another classified evidence source is required for other conclusions.",
       ],
       suggested_human_review_questions: [
-        "What evidence source should answer this question?",
+        "Which reviewed evidence source should answer this question?",
       ],
     };
   }
@@ -528,15 +1044,97 @@ function fixtureDirectAnswer(context: AssistantContext): string {
     const count = Array.isArray(context.facts.changed_requirements)
       ? context.facts.changed_requirements.length
       : 0;
-    return `${count} mapped requirements changed since the previous sanitized evidence package.`;
+    const began = stringArray(context.facts.new_drift).length;
+    const resolved = stringArray(context.facts.resolved_drift).length;
+    return `${count} evaluated requirement(s) changed since the previous sanitized package: ${began} began drifting and ${resolved} resolved. Open Changes for the fingerprint-verified snapshot comparison.`;
+  }
+  if (context.intent === "resolved" && isRecord(context.facts)) {
+    const resolved = Array.isArray(context.facts.resolved_findings)
+      ? context.facts.resolved_findings
+      : [];
+    if (resolved.length === 0) {
+      return "No resolved finding is recorded in the current sanitized comparison. A later collection, not a browser refresh or Git revert, is required to prove a setting changed.";
+    }
+    return `${resolved.length} finding(s) resolved since the previous sanitized collection. ${summarizeFindingFacts(resolved)}`;
   }
   if (context.intent === "collection_gaps" && Array.isArray(context.facts)) {
-    return `${context.facts.length} collection gap is recorded and requires additional evidence.`;
+    return `${context.facts.length} collection gap(s) are recorded. Each remains additional evidence required; EvidenceOps does not convert an unavailable endpoint into a missing tenant setting.`;
+  }
+  if (context.intent === "unevaluated" && isRecord(context.facts)) {
+    const groups = Array.isArray(context.facts.groups)
+      ? context.facts.groups
+      : [];
+    const labels = groups
+      .filter(isJsonRecord)
+      .slice(0, 4)
+      .map(
+        (group) => `${displayFact(group.reason)} (${displayFact(group.count)})`,
+      )
+      .join("; ");
+    return `${displayFact(context.facts.total)} collected resource(s) are not currently evaluated. ${labels || "The package does not classify their evaluation reason."} These objects do not enter the alignment denominator.`;
+  }
+  if (context.intent === "framework_meaning") {
+    return "Framework cross-references are distinct identifiers linked to evaluated technical settings. They are navigation aids for human review and do not determine a framework verdict or completed assessment.";
+  }
+  if (context.intent === "provenance" && isRecord(context.facts)) {
+    return `This package is labeled ${displayFact(context.facts.data_mode)}. It was collected at ${displayFact(context.facts.collected_at_utc)} through ${displayFact(context.facts.provider)} and published as ${displayFact(context.facts.snapshot_id)} against ${displayFact(context.facts.baseline_name)}.`;
+  }
+  if (context.intent === "limitations") {
+    return "EvidenceOps is limited to collected configuration evidence and deterministic drift. It does not provide organizational or assessor verdicts, accept risk, approve exceptions, or confirm a human change without a later collection. Human review is required.";
+  }
+  if (context.intent === "evidence" && isRecord(context.facts)) {
+    if (typeof context.facts.evidence_missing === "string") {
+      return `${context.facts.evidence_missing} Open a finding or setting detail and choose Ask Evidence Copilot.`;
+    }
+    return `The selected evidence chain is: ${summarizeFindingFacts([context.facts])} Open the linked finding or requirement for identifiers and fingerprints.`;
   }
   if (Array.isArray(context.facts)) {
-    return `${context.facts.length} deterministic finding(s) match the selected evidence question.`;
+    if (context.facts.length === 0) {
+      return "No deterministic finding matches this bounded question in the current sanitized package. Review the Settings view for aligned, unsupported, or unevaluated requirements.";
+    }
+    return `${context.facts.length} deterministic finding(s) match. ${summarizeFindingFacts(context.facts)}`;
   }
   return INSUFFICIENT;
+}
+
+function summarizeFindingFacts(facts: JsonValue[]): string {
+  return facts
+    .filter(isJsonRecord)
+    .slice(0, 3)
+    .map((finding) => {
+      const title =
+        typeof finding.title === "string"
+          ? finding.title
+          : typeof finding.rule_id === "string"
+            ? finding.rule_id
+            : "Selected evidence";
+      const state =
+        typeof finding.drift_type === "string"
+          ? finding.drift_type
+          : typeof finding.outcome === "string"
+            ? finding.outcome
+            : "state unavailable";
+      const observed = displayFact(finding.observed_value);
+      const target = displayFact(finding.expected_value);
+      const assignment =
+        typeof finding.assignment_summary === "string"
+          ? finding.assignment_summary
+          : "assignment evidence unavailable";
+      return `${title}: ${state}; observed ${observed}, target ${target}; assignment ${assignment}.`;
+    })
+    .join(" ");
+}
+
+function isJsonRecord(value: JsonValue): value is { [key: string]: JsonValue } {
+  return isRecord(value);
+}
+
+function displayFact(value: unknown): string {
+  if (value === undefined || value === null) return "not available";
+  if (typeof value === "string" || typeof value === "number")
+    return String(value);
+  if (typeof value === "boolean") return value ? "enabled" : "disabled";
+  return canonicalJson(value as JsonValue);
 }
 
 async function openAIOutput(
@@ -652,6 +1250,7 @@ function openAIRequest(
     input: JSON.stringify({
       question,
       intent: context.intent,
+      page: context.page,
       evidence_timestamp: context.evidence_timestamp,
       baseline_version: context.baseline_version,
       facts: context.facts,

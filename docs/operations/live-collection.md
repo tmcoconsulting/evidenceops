@@ -87,26 +87,51 @@ python scripts/check_public_artifacts.py build/live-public
 
 The publisher reconstructs an allowlisted public package, validates its canonical fingerprint,
 and performs the credential/content scan. Unknown fields fail closed. A human must inspect any live
-sanitized package before it can replace the public synthetic artifact.
+sanitized package before it can replace the current public package.
 
 The protected workflow has an explicit `prepare_publication` input, disabled by default. When a
 reviewer selects it, the workflow may retain exactly one already validated and scanned
 `mission-control.json` as a one-day GitHub Actions artifact. It never uploads the private package,
 Graph response, access token, pseudonym key, or containing directory. A separate reviewed
-deployment accepts the exact successful audit run ID, downloads that named public artifact,
-revalidates the schema, fingerprint, nested field allowlists, credential/content policy, and full
-static site, then deploys only when the protected deployment gate is enabled. Collection and
-deployment remain two separate human actions.
+deployment requires both the exact successful audit run ID and the expected Mission snapshot ID.
+It verifies that the run was a completed successful `workflow_dispatch` of the trusted-main Intune
+audit, downloads that named public artifact, and revalidates the schema, fingerprint, nested field
+allowlists, credential/content policy, data mode, snapshot ID, and full static site. Production has
+no synthetic rebuild or fallback path. Collection and deployment remain two separate human
+actions.
+
+For a bounded before/after comparison, set `prior_sanitized_audit_run_id` to a successful prior
+publication-enabled audit. Before requesting an Entra token, the workflow verifies that run's
+trusted-main provenance, downloads only its named sanitized public artifact, rejects extra files,
+revalidates its fingerprint and `LIVE SANITIZED TENANT DATA` mode, and supplies it to
+`publish-mission --previous-public`. The current package can then record changed, new, and resolved
+findings without retaining either raw collection. Leaving the input empty produces a current-only
+snapshot; it never substitutes synthetic history.
+
+After a reviewed change in Intune, an operator can explicitly select the prior public run when
+dispatching the next protected audit:
+
+```bash
+gh workflow run intune-audit.yml --ref main \
+  -f prepare_publication=true \
+  -f prior_sanitized_audit_run_id='<successful-prior-publication-run-id>'
+```
+
+This browser/CLI action starts a new GET-only collection; it does not modify Intune. The prior run
+must still have its one-day public artifact available. An expired, missing, synthetic, malformed,
+or non-main artifact stops the comparison before Entra authentication.
 
 ## GitHub OIDC workflow
 
 `.github/workflows/intune-audit.yml` is manual, main-only, and targets the protected `production`
 environment. It checks out trusted `main`, requests only `contents: read` and `id-token: write`,
-uses the exact environment-scoped Entra federation, runs contract tests with repository-wide
+plus `actions: read` solely when retrieving an explicitly selected prior public artifact. It uses
+the exact environment-scoped Entra federation, runs contract tests with repository-wide
 coverage addopts explicitly disabled for that smoke step, collects privately, publishes and scans
 the derived package, writes only aggregate counts to the job summary, and deletes private and
-working evidence at job end. Its optional one-day handoff contains only the scanned public Mission
-file. Pull requests and arbitrary branches cannot obtain the production identity.
+working current/prior evidence at job end. Its optional one-day handoff contains only the newly
+scanned public Mission file. Pull requests and arbitrary branches cannot obtain the production
+identity.
 
 ## Validation status
 

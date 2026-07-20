@@ -1,13 +1,14 @@
 # Threat Model
 
 This Phase 1 model covers the public repository, unprivileged CI, local static build, live read-only
-adapter, private evidence writer, sanitizer, OpenAI boundary, deterministic verifier, and
-synthetic demo, and the deployed Cloudflare Worker/static-assets runtime. The public custom domain,
-encrypted OpenAI secret binding, fixture API behavior, TLS, headers, and rate limits are in scope.
+adapter, private evidence writer, sanitizer, OpenAI boundary, deterministic verifier, synthetic
+demo, and deployed Cloudflare Worker/static-assets runtime. The public custom domain,
+encrypted OpenAI secret binding, explicit local/preview fixture behavior, production OpenAI mode,
+TLS, headers, and rate limits are in scope.
 The environment-bound Entra trust and expanded four-permission application consent are configured
 and independently re-read. A protected-main GET-only audit, separately reviewed live sanitized
 publication, and one bounded verified model response are now inside the validated state; narrative
-mode remains fixture-based by default.
+mode is fixed-model OpenAI; local and preview remain fixture-based.
 
 ## Assets
 

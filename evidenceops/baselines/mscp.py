@@ -1,4 +1,4 @@
-"""Pinned TMCO Build Week demo baseline derived from mSCP metadata.
+"""Pinned TMCO Consulting Build Week demo baseline derived from mSCP metadata.
 
 Only rule identifiers, titles, expected mobileconfig values, and deterministic
 cross-reference identifiers needed by the demo are reproduced. Apple vendor
@@ -234,7 +234,7 @@ DEMO_RULE_MAPPINGS: Final[dict[str, dict[str, JsonValue]]] = {
 APPROVAL_RECORD: Final[dict[str, JsonValue]] = {
     "schema_version": BASELINE_SCHEMA_VERSION,
     "organization": "TMCO Consulting",
-    "baseline_name": "TMCO macOS CIS Level 1 Build Week Demo Baseline",
+    "baseline_name": "TMCO Consulting macOS CIS Level 1 Demo Baseline",
     "platform": "macOS",
     "benchmark": "CIS Apple macOS 26 Tahoe Benchmark Level 1",
     "benchmark_version": "macOS 26.0 / pinned mSCP profile",
@@ -244,7 +244,7 @@ APPROVAL_RECORD: Final[dict[str, JsonValue]] = {
     "source_artifact_sha256": SOURCE_ARTIFACT_SHA256,
     "extracted_baseline_sha256": EXTRACTED_INVENTORY_SHA256,
     "approval_status": "internally approved demo baseline",
-    "approver": "TMCO Build Week Demo Authority",
+    "approver": "TMCO Consulting, LLC — Build Week Demo Authority",
     "approval_date": "2026-07-19",
     "approval_rationale": (
         "Provide reproducible technical drift detection for the EvidenceOps Build Week demo."

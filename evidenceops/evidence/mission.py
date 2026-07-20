@@ -4,22 +4,39 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
 import math
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from enum import StrEnum
+from pathlib import Path
 from typing import Final, cast
 
-from evidenceops.baselines import APPROVAL_RECORD, BASELINE_RULES, DEMO_RULE_MAPPINGS
+from evidenceops.baselines import (
+    APPROVAL_RECORD,
+    BASELINE_RULES,
+    DEMO_RULE_MAPPINGS,
+    INTUNE_PROVIDER_MAPPINGS,
+    PROVIDER_MAPPING_REGISTRY_VERSION,
+    AssignmentRequirement,
+    MappingReviewStatus,
+    ProviderRuleMapping,
+    UnsupportedProviderValueError,
+    matching_alias,
+    normalize_provider_definition_id,
+    normalize_provider_value,
+    reviewed_provider_definition_ids,
+)
 from evidenceops.domain import JsonValue, canonical_json, fingerprint
 from evidenceops.providers.apple import AppleIntuneCollection, summarize_devices
 from evidenceops.sanitization import assert_public_safe
 
-MISSION_SCHEMA_VERSION: Final = "2.0.0"
-MISSION_ALGORITHM_VERSION: Final = "evidenceops-mission-drift-v2.0.0"
+MISSION_SCHEMA_VERSION: Final = "2.1.0"
+MISSION_ALGORITHM_VERSION: Final = "evidenceops-mission-drift-v2.1.0"
 PUBLICATION_POLICY_VERSION: Final = "evidenceops-mission-public-v1.0.0"
 FRESHNESS_SECONDS: Final = 86_400
+MAX_PUBLIC_MISSION_BYTES: Final = 2_000_000
 
 
 class DriftOutcome(StrEnum):
@@ -33,6 +50,8 @@ class DriftOutcome(StrEnum):
     DEVICE_STATE_DRIFT = "Device-state drift"
     COLLECTION_GAP = "Collection gap"
     UNSUPPORTED = "Unsupported by provider"
+    PROVIDER_MAPPING_NOT_REVIEWED = "Provider mapping not reviewed"
+    UNSUPPORTED_VALUE_SHAPE = "Unsupported value shape"
     NOT_APPLICABLE = "Not applicable"
     HUMAN_REVIEW = "Human review required"
 
@@ -91,13 +110,21 @@ def build_public_mission_snapshot(
     """
     if len(pseudonym_key) < 32:
         raise ValueError("pseudonym_key must contain at least 32 bytes")
-    requirements, findings, used_evidence_ids = _evaluate_requirements(collection)
+    previous_document = _validated_previous_snapshot(
+        previous,
+        current_synthetic=synthetic,
+        current_collection_timestamp=collection.collected_at_utc,
+    )
+    requirements, findings, used_evidence_ids = _evaluate_requirements(collection, pseudonym_key)
     resources = _public_resources(collection.records, pseudonym_key, synthetic=synthetic)
     unmapped = [
         resource
         for resource in resources
         if cast(str, resource["source_evidence_id"]) not in used_evidence_ids
         and resource["resource_family"] not in {"managed_devices", "managed_devices_assignments"}
+        and not cast(str, resource["resource_family"]).endswith(
+            ("_assignments", "_scheduled_actions")
+        )
     ]
     gaps = [_public_gap(gap) for gap in collection.collection_gaps]
     device_summary = summarize_devices(collection.records)
@@ -139,7 +166,12 @@ def build_public_mission_snapshot(
         "resources": cast(JsonValue, resources),
         "unmapped_objects": cast(JsonValue, unmapped),
         "collection_gaps": cast(JsonValue, gaps),
-        "changes": _changes(previous, requirements, metrics),
+        "changes": _changes(
+            previous_document,
+            requirements,
+            metrics,
+            current_collection_timestamp=collection.collected_at_utc,
+        ),
         "framework_coverage": _framework_coverage(requirements),
         "privacy": {
             "publication_policy_version": PUBLICATION_POLICY_VERSION,
@@ -219,8 +251,25 @@ def validate_public_mission_snapshot(value: object) -> dict[str, JsonValue]:
     return document
 
 
+def load_public_mission_snapshot(path: Path, *, require_live: bool = False) -> dict[str, JsonValue]:
+    """Load one bounded public snapshot without accepting links or private envelopes."""
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("previous public Mission snapshot must be one regular file")
+    if path.stat().st_size > MAX_PUBLIC_MISSION_BYTES:
+        raise ValueError("previous public Mission snapshot exceeds the package limit")
+    try:
+        loaded = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError("previous public Mission snapshot could not be read") from exc
+    validated = validate_public_mission_snapshot(loaded)
+    if require_live and validated["data_mode"] != "LIVE SANITIZED TENANT DATA":
+        raise ValueError("previous public Mission snapshot must contain live sanitized data")
+    return validated
+
+
 def _evaluate_requirements(
     collection: AppleIntuneCollection,
+    pseudonym_key: bytes,
 ) -> tuple[list[dict[str, JsonValue]], list[dict[str, JsonValue]], set[str]]:
     requirements: list[dict[str, JsonValue]] = []
     findings: list[dict[str, JsonValue]] = []
@@ -235,30 +284,53 @@ def _evaluate_requirements(
         for record in collection.records
         if cast(str, record["resource_family"]).endswith("_assignments")
     ]
+    parents_by_evidence_id = {
+        cast(str, record["evidence_id"]): record
+        for record in collection.records
+        if not cast(str, record["resource_family"]).endswith(
+            ("_assignments", "_settings", "_scheduled_actions")
+        )
+    }
     for ordinal, (section, rule_id) in enumerate(
         ((section, rule_id) for section, rules in BASELINE_RULES for rule_id in rules),
         start=1,
     ):
-        mapping = DEMO_RULE_MAPPINGS.get(rule_id)
-        if mapping is None:
+        desired_mapping = DEMO_RULE_MAPPINGS.get(rule_id)
+        provider_mapping = INTUNE_PROVIDER_MAPPINGS.get(rule_id)
+        if (
+            desired_mapping is None
+            or provider_mapping is None
+            or provider_mapping.review_status is not MappingReviewStatus.REVIEWED
+        ):
             requirement = _requirement(
                 ordinal=ordinal,
                 section=section,
                 rule_id=rule_id,
                 title=rule_id.replace("_", " ").title(),
-                expected="provider mapping not implemented",
-                outcome=DriftOutcome.UNSUPPORTED,
+                expected=(
+                    desired_mapping["expected_value"]
+                    if desired_mapping is not None
+                    else "not evaluated"
+                ),
+                outcome=DriftOutcome.PROVIDER_MAPPING_NOT_REVIEWED,
                 severity="informational",
                 mappings={},
                 evidence_ids=[],
                 assignment_summary="not evaluated",
                 observed="not evaluated",
+                setting_key=(
+                    cast(str, desired_mapping["setting_key"])
+                    if desired_mapping is not None
+                    else "not mapped"
+                ),
+                provider_definition_ids=[],
+                matched_provider_definition_ids=[],
+                parent_resource_refs=[],
+                mapping_review_status=MappingReviewStatus.NOT_REVIEWED.value,
             )
             requirements.append(requirement)
             continue
-        candidates = _matching_settings(setting_records, mapping)
-        evidence_ids = [cast(str, item["evidence_id"]) for item in candidates]
-        used.update(evidence_ids)
+        candidates = _matching_settings(setting_records, provider_mapping)
         parent_ids = {
             cast(str, cast(dict[str, JsonValue], item["properties"])["parent_evidence_id"])
             for item in candidates
@@ -269,23 +341,56 @@ def _evaluate_requirements(
             if cast(dict[str, JsonValue], item["properties"]).get("parent_evidence_id")
             in parent_ids
         ]
-        used.update(cast(str, item["evidence_id"]) for item in related_assignments)
-        outcome, observed = _deterministic_outcome(mapping, candidates, related_assignments)
+        evidence_ids = [
+            cast(str, item["evidence_id"]) for item in [*candidates, *related_assignments]
+        ]
+        used.update(evidence_ids)
+        used.update(parent_ids)
+        outcome: DriftOutcome
+        observed: JsonValue
+        if not candidates and not _settings_catalog_is_complete(collection):
+            outcome, observed = DriftOutcome.COLLECTION_GAP, "collection incomplete"
+        else:
+            outcome, observed = _deterministic_outcome(
+                desired_mapping,
+                candidates,
+                related_assignments,
+                provider_mapping=provider_mapping,
+            )
         assignment_summary = (
             f"{len(related_assignments)} normalized assignment(s)"
             if related_assignments
             else "no normalized assignment observed"
         )
+        parent_refs = sorted(
+            _pseudonym(
+                "resource",
+                cast(str, parents_by_evidence_id[parent_id]["source_object_id"]),
+                pseudonym_key,
+            )
+            for parent_id in parent_ids
+            if parent_id in parents_by_evidence_id
+        )
+        matched_definition_ids = sorted(
+            {
+                cast(
+                    str,
+                    cast(dict[str, JsonValue], item["properties"])["setting_definition_id"],
+                )
+                for item in candidates
+            },
+            key=str.casefold,
+        )
         requirement = _requirement(
             ordinal=ordinal,
             section=section,
             rule_id=rule_id,
-            title=cast(str, mapping["title"]),
-            expected=mapping["expected_value"],
+            title=cast(str, desired_mapping["title"]),
+            expected=desired_mapping["expected_value"],
             outcome=outcome,
-            severity=cast(str, mapping["severity"]),
+            severity=cast(str, desired_mapping["severity"]),
             mappings={
-                key: mapping[key]
+                key: desired_mapping[key]
                 for key in (
                     "cis_benchmark",
                     "nist_800_53r5",
@@ -297,25 +402,26 @@ def _evaluate_requirements(
             evidence_ids=evidence_ids,
             assignment_summary=assignment_summary,
             observed=observed,
+            setting_key=provider_mapping.setting_key,
+            provider_definition_ids=[alias.definition_id for alias in provider_mapping.aliases],
+            matched_provider_definition_ids=matched_definition_ids,
+            parent_resource_refs=parent_refs,
+            mapping_review_status=provider_mapping.review_status.value,
         )
         requirements.append(requirement)
         if outcome is not DriftOutcome.ALIGNED:
-            findings.append(_finding(requirement, mapping, collection.collected_at_utc))
+            findings.append(_finding(requirement, collection.collected_at_utc))
     return requirements, findings, used
 
 
 def _matching_settings(
-    records: Sequence[dict[str, JsonValue]], mapping: Mapping[str, JsonValue]
+    records: Sequence[dict[str, JsonValue]], mapping: ProviderRuleMapping
 ) -> list[dict[str, JsonValue]]:
-    needles = {
-        cast(str, mapping["setting_key"]).lower(),
-        cast(str, mapping["payload_key"]).lower(),
-    }
     matches: list[dict[str, JsonValue]] = []
     for record in records:
         properties = cast(dict[str, JsonValue], record["properties"])
-        definition = cast(str, properties["setting_definition_id"]).lower()
-        if any(needle in definition for needle in needles):
+        definition = cast(str, properties["setting_definition_id"])
+        if matching_alias(mapping, definition) is not None:
             matches.append(record)
     return sorted(matches, key=lambda item: cast(str, item["evidence_id"]))
 
@@ -324,12 +430,26 @@ def _deterministic_outcome(
     mapping: Mapping[str, JsonValue],
     settings: Sequence[dict[str, JsonValue]],
     assignments: Sequence[dict[str, JsonValue]],
+    *,
+    provider_mapping: ProviderRuleMapping | None = None,
 ) -> tuple[DriftOutcome, JsonValue]:
     if not settings:
         return DriftOutcome.MISSING, "not observed"
-    values = [
-        cast(dict[str, JsonValue], item["properties"])["normalized_value"] for item in settings
-    ]
+    values: list[JsonValue] = []
+    for item in settings:
+        properties = cast(dict[str, JsonValue], item["properties"])
+        if properties.get("normalization_state", "normalized") != "normalized":
+            return DriftOutcome.UNSUPPORTED_VALUE_SHAPE, "unsupported value shape"
+        value = properties["normalized_value"]
+        if provider_mapping is not None:
+            alias = matching_alias(provider_mapping, cast(str, properties["setting_definition_id"]))
+            if alias is None:  # pragma: no cover - exact matcher selected these records
+                raise AssertionError("provider setting lost its exact mapping")
+            try:
+                value = normalize_provider_value(alias, value)
+            except UnsupportedProviderValueError:
+                return DriftOutcome.UNSUPPORTED_VALUE_SHAPE, "unsupported value shape"
+        values.append(value)
     canonical_values = {canonical_json(value) for value in values}
     if len(canonical_values) > 1:
         return DriftOutcome.CONFLICTING, cast(JsonValue, sorted(canonical_values))
@@ -342,7 +462,10 @@ def _deterministic_outcome(
             return DriftOutcome.VALUE_DRIFT, observed
     elif observed != expected:
         return DriftOutcome.VALUE_DRIFT, observed
-    if not assignments:
+    if (
+        provider_mapping is None
+        or provider_mapping.assignment_requirement is AssignmentRequirement.AT_LEAST_ONE
+    ) and not assignments:
         return DriftOutcome.ASSIGNMENT_DRIFT, observed
     return DriftOutcome.ALIGNED, observed
 
@@ -360,6 +483,11 @@ def _requirement(
     evidence_ids: Sequence[str],
     assignment_summary: str,
     observed: JsonValue,
+    setting_key: str,
+    provider_definition_ids: Sequence[str],
+    matched_provider_definition_ids: Sequence[str],
+    parent_resource_refs: Sequence[str],
+    mapping_review_status: str,
 ) -> dict[str, JsonValue]:
     unsigned: dict[str, JsonValue] = {
         "ordinal": ordinal,
@@ -373,6 +501,12 @@ def _requirement(
         "severity": severity,
         "evaluation_included": outcome.value in EVALUATED_OUTCOMES,
         "assignment_summary": assignment_summary,
+        "setting_key": setting_key,
+        "provider_definition_ids": list(provider_definition_ids),
+        "matched_provider_definition_ids": list(matched_provider_definition_ids),
+        "parent_resource_refs": list(parent_resource_refs),
+        "provider_mapping_registry_version": PROVIDER_MAPPING_REGISTRY_VERSION,
+        "mapping_review_status": mapping_review_status,
         "mappings": dict(mappings),
         "source_evidence_ids": list(evidence_ids),
         "additional_evidence_required": outcome is not DriftOutcome.ALIGNED,
@@ -387,7 +521,6 @@ def _requirement(
 
 def _finding(
     requirement: Mapping[str, JsonValue],
-    mapping: Mapping[str, JsonValue],
     observed_at: str,
 ) -> dict[str, JsonValue]:
     outcome = cast(str, requirement["outcome"])
@@ -406,6 +539,9 @@ def _finding(
         ),
         DriftOutcome.COLLECTION_GAP.value: (
             "Restore read-only evidence collection or provide alternate evidence."
+        ),
+        DriftOutcome.UNSUPPORTED_VALUE_SHAPE.value: (
+            "Review the provider value shape before adding a deterministic transform."
         ),
         DriftOutcome.HUMAN_REVIEW.value: (
             "Have a qualified reviewer evaluate the ambiguous evidence."
@@ -435,16 +571,60 @@ def _finding(
             "Technical evidence does not establish organizational compliance.",
             "No Intune write or automatic remediation operation exists.",
         ],
-        "setting_key": mapping["setting_key"],
+        "setting_key": requirement["setting_key"],
+        "provider_definition_ids": requirement["provider_definition_ids"],
+        "matched_provider_definition_ids": requirement["matched_provider_definition_ids"],
+        "parent_resource_refs": requirement["parent_resource_refs"],
+        "provider_mapping_registry_version": requirement["provider_mapping_registry_version"],
+        "mapping_review_status": requirement["mapping_review_status"],
     }
     digest = fingerprint(unsigned)
     return {**unsigned, "finding_id": f"finding-{digest[7:31]}", "fingerprint": digest}
+
+
+def _settings_catalog_is_complete(collection: AppleIntuneCollection) -> bool:
+    """Return true only when absence can be distinguished from a collection gap."""
+    root_statuses = [
+        item for item in collection.endpoint_statuses if item.get("key") == "settings-catalog"
+    ]
+    if len(root_statuses) != 1 or root_statuses[0].get("status") != "collected":
+        return False
+    relevant_gaps = [
+        gap
+        for gap in collection.collection_gaps
+        if gap.get("source_endpoint_key") in {"settings-catalog", "settings_catalog:settings"}
+    ]
+    if relevant_gaps:
+        return False
+    parent_count = sum(
+        record["resource_family"] == "settings_catalog" for record in collection.records
+    )
+    relationship_statuses = [
+        item
+        for item in collection.endpoint_statuses
+        if item.get("key") == "settings_catalog:settings"
+    ]
+    if parent_count == 0:
+        return True
+    return len(relationship_statuses) == parent_count and all(
+        item.get("status") == "collected" for item in relationship_statuses
+    )
 
 
 def _public_resources(
     records: Sequence[dict[str, JsonValue]], pseudonym_key: bytes, *, synthetic: bool
 ) -> list[dict[str, JsonValue]]:
     result: list[dict[str, JsonValue]] = []
+    parent_resource_refs = {
+        cast(str, record["evidence_id"]): _pseudonym(
+            "resource", cast(str, record["source_object_id"]), pseudonym_key
+        )
+        for record in records
+        if not cast(str, record["resource_family"]).endswith(
+            ("_assignments", "_settings", "_scheduled_actions")
+        )
+    }
+    reviewed_ids = reviewed_provider_definition_ids()
     for record in records:
         if record["resource_family"] == "managed_devices":
             continue
@@ -468,6 +648,24 @@ def _public_resources(
             and cast(dict[str, JsonValue], candidate["properties"]).get("parent_evidence_id")
             == record["evidence_id"]
         )
+        parent_evidence_id = properties.get("parent_evidence_id")
+        parent_resource_ref = (
+            parent_resource_refs.get(parent_evidence_id)
+            if isinstance(parent_evidence_id, str)
+            else None
+        )
+        provider_definition_id: str | None = None
+        definition = properties.get("setting_definition_id")
+        if isinstance(definition, str):
+            try:
+                known_definition = normalize_provider_definition_id(definition) in reviewed_ids
+            except ValueError:
+                known_definition = False
+            if known_definition:
+                provider_definition_id = definition
+        evaluation_reason, action_expected = _resource_evaluation_classification(
+            record, provider_definition_id=provider_definition_id
+        )
         result.append(
             {
                 "resource_ref": resource_ref,
@@ -480,11 +678,51 @@ def _public_resources(
                 "state": safe_state,
                 "source_api_version": record["source_api_version"],
                 "fingerprint": record["content_fingerprint"],
+                "parent_resource_ref": parent_resource_ref,
+                "provider_definition_id": provider_definition_id,
+                "evaluation_reason": evaluation_reason,
+                "action_expected": action_expected,
             }
         )
     return sorted(
         result,
         key=lambda item: (cast(str, item["resource_family"]), cast(str, item["resource_ref"])),
+    )
+
+
+def _resource_evaluation_classification(
+    record: Mapping[str, JsonValue], *, provider_definition_id: str | None
+) -> tuple[str, str]:
+    family = cast(str, record["resource_family"])
+    properties = cast(dict[str, JsonValue], record["properties"])
+    platforms = properties.get("platforms", [])
+    if family == "settings_catalog_settings":
+        if properties.get("normalization_state") == "unsupported_value_shape":
+            return (
+                "unsupported value shape",
+                "Review provider shape before adding deterministic evaluation.",
+            )
+        if provider_definition_id is None:
+            return (
+                "provider setting not recognized",
+                "Review and approve an exact provider mapping before evaluation.",
+            )
+        return "collected setting not currently evaluated", "No configuration action inferred."
+    if isinstance(platforms, list) and "macOS" not in platforms:
+        return "platform baseline not loaded", "No action for the current macOS baseline."
+    if family.endswith(("_assignments", "_scheduled_actions")):
+        return (
+            "supporting tenant service or inventory only",
+            "Review only with its parent resource.",
+        )
+    if family in {"configuration_profiles", "settings_catalog", "compliance_policies"}:
+        return (
+            "provider mapping not reviewed",
+            "Review exact provider settings before deterministic evaluation.",
+        )
+    return (
+        "supporting tenant service or inventory only",
+        "No posture action is inferred from inventory alone.",
     )
 
 
@@ -544,6 +782,8 @@ def _changes(
     previous: Mapping[str, JsonValue] | None,
     requirements: Sequence[dict[str, JsonValue]],
     metrics: Mapping[str, JsonValue],
+    *,
+    current_collection_timestamp: str,
 ) -> dict[str, JsonValue]:
     current = {cast(str, item["rule_id"]): cast(str, item["outcome"]) for item in requirements}
     if previous is None:
@@ -553,11 +793,15 @@ def _changes(
             "new_drift": [],
             "resolved_drift": [],
             "changed_requirements": [],
+            "unchanged_requirements": [],
+            "previous_collection_timestamp_utc": None,
+            "current_collection_timestamp_utc": current_collection_timestamp,
             "history_state": "no previous collection",
         }
     previous_requirements = cast(list[dict[str, JsonValue]], previous.get("requirements", []))
     old = {cast(str, item["rule_id"]): cast(str, item["outcome"]) for item in previous_requirements}
     changed = sorted(rule for rule, outcome in current.items() if old.get(rule) != outcome)
+    unchanged = sorted(rule for rule, outcome in current.items() if old.get(rule) == outcome)
     new_drift = sorted(
         rule
         for rule in changed
@@ -582,8 +826,49 @@ def _changes(
         "new_drift": cast(JsonValue, new_drift),
         "resolved_drift": cast(JsonValue, resolved),
         "changed_requirements": cast(JsonValue, changed),
+        "unchanged_requirements": cast(JsonValue, unchanged),
+        "previous_collection_timestamp_utc": cast(dict[str, JsonValue], previous["collection"])[
+            "collected_at_utc"
+        ],
+        "current_collection_timestamp_utc": current_collection_timestamp,
         "history_state": "compared",
     }
+
+
+def _validated_previous_snapshot(
+    previous: Mapping[str, JsonValue] | None,
+    *,
+    current_synthetic: bool,
+    current_collection_timestamp: str,
+) -> dict[str, JsonValue] | None:
+    if previous is None:
+        return None
+    validated = validate_public_mission_snapshot(previous)
+    expected_mode = "SYNTHETIC DEMO DATA" if current_synthetic else "LIVE SANITIZED TENANT DATA"
+    if validated["data_mode"] != expected_mode:
+        raise ValueError("previous Mission snapshot data mode does not match the current package")
+    previous_collection = cast(dict[str, JsonValue], validated["collection"])
+    previous_timestamp = cast(str, previous_collection["collected_at_utc"])
+    if _parse_utc(previous_timestamp) >= _parse_utc(current_collection_timestamp):
+        raise ValueError("previous Mission snapshot must predate the current collection")
+    previous_baseline = cast(dict[str, JsonValue], validated["baseline"])
+    if (
+        previous_baseline["source_revision"] != APPROVAL_RECORD["mscp_source_revision"]
+        or previous_baseline["extracted_baseline_sha256"]
+        != APPROVAL_RECORD["extracted_baseline_sha256"]
+    ):
+        raise ValueError("previous Mission snapshot uses a different approved baseline")
+    return validated
+
+
+def _parse_utc(value: str) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError("Mission collection timestamp is invalid") from exc
+    if parsed.tzinfo is None:
+        raise ValueError("Mission collection timestamp must include a UTC offset")
+    return parsed.astimezone(UTC)
 
 
 def _framework_coverage(requirements: Sequence[dict[str, JsonValue]]) -> dict[str, JsonValue]:
@@ -747,6 +1032,9 @@ def _validate_nested_public_objects(document: Mapping[str, JsonValue]) -> None:
             "new_drift",
             "resolved_drift",
             "changed_requirements",
+            "unchanged_requirements",
+            "previous_collection_timestamp_utc",
+            "current_collection_timestamp_utc",
             "history_state",
         },
     )
@@ -810,6 +1098,82 @@ def _validate_nested_public_objects(document: Mapping[str, JsonValue]) -> None:
             for item in values
         ):
             raise ValueError(f"mission field {list_field} contains an invalid mapping")
+    _validate_mission_semantics(document)
+
+
+def _validate_mission_semantics(document: Mapping[str, JsonValue]) -> None:
+    requirements = cast(list[dict[str, JsonValue]], document["requirements"])
+    rule_ids = [cast(str, item["rule_id"]) for item in requirements]
+    if len(rule_ids) != len(set(rule_ids)) or len(rule_ids) != 98:
+        raise ValueError("mission requirements must contain 98 unique baseline rules")
+    allowed_outcomes = {item.value for item in DriftOutcome}
+    for item in requirements:
+        if item["outcome"] not in allowed_outcomes:
+            raise ValueError("mission requirement has an unsupported outcome")
+        if item["mapping_review_status"] not in {
+            MappingReviewStatus.REVIEWED.value,
+            MappingReviewStatus.NOT_REVIEWED.value,
+        }:
+            raise ValueError("mission requirement has an invalid mapping review status")
+        for field in (
+            "provider_definition_ids",
+            "matched_provider_definition_ids",
+            "parent_resource_refs",
+            "source_evidence_ids",
+        ):
+            value = item[field]
+            if not isinstance(value, list) or not all(isinstance(entry, str) for entry in value):
+                raise ValueError(f"mission requirement field {field} must be a string array")
+        configured = {
+            normalize_provider_definition_id(value)
+            for value in cast(list[str], item["provider_definition_ids"])
+        }
+        matched = {
+            normalize_provider_definition_id(value)
+            for value in cast(list[str], item["matched_provider_definition_ids"])
+        }
+        if not matched.issubset(configured):
+            raise ValueError("mission requirement matched an unreviewed provider definition")
+    resources = cast(list[dict[str, JsonValue]], document["resources"])
+    resource_refs = {cast(str, item["resource_ref"]) for item in resources}
+    for item in resources:
+        parent = item["parent_resource_ref"]
+        if parent is not None and (not isinstance(parent, str) or parent not in resource_refs):
+            raise ValueError("mission resource has an invalid public parent link")
+        provider_id = item["provider_definition_id"]
+        if provider_id is not None and (
+            not isinstance(provider_id, str)
+            or normalize_provider_definition_id(provider_id)
+            not in reviewed_provider_definition_ids()
+        ):
+            raise ValueError("mission resource exposed an unreviewed provider definition")
+    changes = cast(dict[str, JsonValue], document["changes"])
+    for field in (
+        "new_drift",
+        "resolved_drift",
+        "changed_requirements",
+        "unchanged_requirements",
+    ):
+        value = changes[field]
+        if not isinstance(value, list) or not all(isinstance(entry, str) for entry in value):
+            raise ValueError(f"mission changes field {field} must be a string array")
+        if not set(cast(list[str], value)).issubset(rule_ids):
+            raise ValueError(f"mission changes field {field} references an unknown rule")
+    changed = set(cast(list[str], changes["changed_requirements"]))
+    unchanged = set(cast(list[str], changes["unchanged_requirements"]))
+    if changes["history_state"] == "compared":
+        if changed.intersection(unchanged) or changed.union(unchanged) != set(rule_ids):
+            raise ValueError("mission change sets do not exactly cover baseline requirements")
+        if changes["previous_snapshot_id"] is None:
+            raise ValueError("compared Mission snapshot lacks a previous snapshot ID")
+    elif changes["history_state"] == "no previous collection":
+        if changed or unchanged or changes["previous_snapshot_id"] is not None:
+            raise ValueError("Mission snapshot without history contains comparison claims")
+    else:
+        raise ValueError("mission changes history state is invalid")
+    collection = cast(dict[str, JsonValue], document["collection"])
+    if changes["current_collection_timestamp_utc"] != collection["collected_at_utc"]:
+        raise ValueError("mission comparison current timestamp is inconsistent")
 
 
 def _exact_object(
@@ -835,6 +1199,12 @@ def _requirement_fields() -> frozenset[str]:
             "severity",
             "evaluation_included",
             "assignment_summary",
+            "setting_key",
+            "provider_definition_ids",
+            "matched_provider_definition_ids",
+            "parent_resource_refs",
+            "provider_mapping_registry_version",
+            "mapping_review_status",
             "mappings",
             "source_evidence_ids",
             "additional_evidence_required",
@@ -865,6 +1235,11 @@ def _finding_fields() -> frozenset[str]:
             "remediation_guidance",
             "limitations",
             "setting_key",
+            "provider_definition_ids",
+            "matched_provider_definition_ids",
+            "parent_resource_refs",
+            "provider_mapping_registry_version",
+            "mapping_review_status",
             "finding_id",
             "fingerprint",
         }
@@ -884,6 +1259,10 @@ def _resource_fields() -> frozenset[str]:
             "state",
             "source_api_version",
             "fingerprint",
+            "parent_resource_ref",
+            "provider_definition_id",
+            "evaluation_reason",
+            "action_expected",
         }
     )
 
