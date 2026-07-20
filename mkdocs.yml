@@ -66,6 +66,7 @@ nav:
           - Phase 1 Validation: build-week/phase-1-validation.md
           - Worker Validation: build-week/cloudflare-worker-validation.md
           - Build Week Slice Validation: build-week/build-week-slice-validation.md
+          - Final Live MVP Validation: build-week/final-live-mvp-validation.md
           - Final Implementation Report: build-week/final-implementation-report.md
           - Demo Package: build-week/demo-package.md
           - Final Video Runbook: build-week/video-runbook.md
