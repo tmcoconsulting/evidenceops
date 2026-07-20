@@ -114,6 +114,162 @@
   display: block;
 }
 
+.matrix-comparison {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid rgb(40 201 181 / 28%);
+  border-radius: 0.75rem;
+  background:
+    radial-gradient(circle at 90% 0%, rgb(35 88 215 / 15%), transparent 32%),
+    var(--md-code-bg-color);
+}
+
+.matrix-comparison-heading {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  justify-content: space-between;
+}
+
+.matrix-comparison-heading h2 {
+  margin: 0.1rem 0 0;
+}
+
+.matrix-comparison-heading label {
+  display: grid;
+  gap: 0.28rem;
+  min-width: min(100%, 17rem);
+  font-size: 0.65rem;
+  font-weight: 750;
+}
+
+.matrix-comparison-heading select {
+  width: 100%;
+  min-height: 2.35rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.4rem;
+  color: var(--md-default-fg-color);
+  background: var(--md-default-bg-color);
+  font: inherit;
+}
+
+.matrix-comparison-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.8rem;
+}
+
+.matrix-comparison-card {
+  min-width: 0;
+  padding: 0.7rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.45rem;
+  background: rgb(4 15 30 / 24%);
+}
+
+.matrix-comparison-card strong,
+.matrix-comparison-card span {
+  display: block;
+}
+
+.matrix-comparison-card strong {
+  color: var(--md-accent-fg-color);
+  font-size: 1.05rem;
+}
+
+.matrix-comparison-card span {
+  margin-top: 0.18rem;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.6rem;
+  line-height: 1.35;
+}
+
+.matrix-comparison-gaps {
+  margin-top: 0.8rem;
+}
+
+.matrix-comparison-caption,
+.matrix-comparison-more,
+.matrix-comparison-complete,
+.matrix-comparison-boundary {
+  color: var(--md-default-fg-color--light);
+  font-size: 0.64rem;
+}
+
+.matrix-comparison-caption {
+  margin: 0 0 0.35rem;
+  font-weight: 700;
+}
+
+.matrix-comparison-source {
+  margin: 0.55rem 0 0;
+  color: var(--md-default-fg-color--light);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.58rem;
+  overflow-wrap: anywhere;
+}
+
+.matrix-overlap-meter {
+  height: 0.42rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(128 150 178 / 24%);
+}
+
+.matrix-overlap-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2358d7, #28c9b5);
+}
+
+.matrix-comparison-gap-heading {
+  display: block;
+  margin-top: 0.75rem;
+  font-size: 0.68rem;
+}
+
+.matrix-comparison-gap-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+}
+
+.matrix-comparison-gap-list > span {
+  display: grid;
+  min-width: 0;
+  padding: 0.42rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.35rem;
+  background: var(--md-default-bg-color);
+}
+
+.matrix-comparison-gap-list strong {
+  overflow: hidden;
+  font-size: 0.59rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.matrix-comparison-gap-list code {
+  margin-top: 0.18rem;
+  overflow: hidden;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.5rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.matrix-comparison-boundary {
+  margin: 0.75rem 0 0;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+}
+
 .matrix-summary-card strong {
   font-size: 1.3rem;
   line-height: 1.2;
@@ -341,6 +497,22 @@
   font-size: 0.58rem;
 }
 
+.matrix-framework-chips .matrix-membership-tmco {
+  border-color: rgb(40 201 181 / 44%);
+  color: #6be7d2;
+}
+
+.matrix-framework-chips .matrix-membership-shared {
+  border-color: rgb(35 88 215 / 48%);
+  color: #83a7ff;
+}
+
+.matrix-framework-chips .matrix-membership-reference,
+.matrix-framework-chips .matrix-membership-tmco-only {
+  border-color: rgb(215 153 35 / 48%);
+  color: #e8bc63;
+}
+
 .matrix-framework-chips .matrix-muted {
   border: 0;
   color: var(--md-default-fg-color--light);
@@ -414,8 +586,13 @@
 
 @media (max-width: 76rem) {
   .matrix-summary,
-  .matrix-plan {
+  .matrix-plan,
+  .matrix-comparison-summary {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .matrix-comparison-gap-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .matrix-controls {
@@ -429,9 +606,18 @@
     align-items: start;
   }
 
+  .matrix-comparison-heading {
+    display: grid;
+  }
+
   .matrix-summary,
   .matrix-plan,
+  .matrix-comparison-summary,
   .matrix-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .matrix-comparison-gap-list {
     grid-template-columns: 1fr;
   }
 

@@ -16,7 +16,7 @@ same-origin API behavior, rate limits, readiness validation, or the assistant ro
 
 ## 2. Public Cloudflare application
 
-The production application runs at `evidenceops.tmcoconsulting.com` and consists of:
+The production application runs at `provifact.tmcoconsulting.com` and consists of:
 
 1. the scanned MkDocs `site/` directory served through Workers Static Assets;
 2. a small TypeScript Worker that runs first only for `/api/*`;

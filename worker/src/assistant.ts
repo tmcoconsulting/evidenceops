@@ -20,9 +20,11 @@ const MAX_QUESTION_LENGTH = 240;
 const MAX_FINDINGS = 32;
 const MAX_REQUIREMENTS = 128;
 const MAX_OUTPUT_TOKENS = 700;
-const VERIFIER_VERSION = "evidenceops-assistant-verifier-v1.0.0";
+const VERIFIER_VERSION = "provifact-assistant-verifier-v1.1.0";
 const INSUFFICIENT =
   "Provifact does not have sufficient collected evidence to answer this question.";
+const HUMAN_REVIEW_NOTICE =
+  "AI-generated analysis is explanatory only; human review is required.";
 const VERDICT =
   /\b(?:compliant|certified|certification|control\s+(?:is\s+)?satisfied|assessment\s+(?:is\s+)?complete|risk\s+accepted|meets?\s+(?:the\s+)?(?:standard|framework|compliance))\b/i;
 const REFERENCE = /\b(?:finding|req|gap|mission)-[0-9a-f]{24}\b/g;
@@ -128,14 +130,17 @@ interface AssistantClaim {
   claim_value: JsonValue;
 }
 
-interface AssistantOutput {
+interface AssistantGeneratedOutput {
   direct_answer: string;
-  claims: AssistantClaim[];
-  evidence_references: string[];
   evidence_sufficiency: "insufficient" | "partial" | "verified";
   limitations: string[];
   additional_evidence_required: string[];
   suggested_human_review_questions: string[];
+}
+
+interface AssistantOutput extends AssistantGeneratedOutput {
+  claims: AssistantClaim[];
+  evidence_references: string[];
 }
 
 interface AssistantContext {
@@ -206,6 +211,13 @@ export async function createAssistantAnswer(
       : await openAIOutput(env, input.question, context, dependencies);
   assertMissionEgressSafe(output);
   const verification = verifyOutput(output, context);
+  if (verification.status === "rejected") {
+    throw new HttpError(
+      502,
+      "assistant_output_rejected",
+      "assistant output failed deterministic verification",
+    );
+  }
   return {
     mode,
     ai_model_call_performed: mode === "openai",
@@ -985,6 +997,14 @@ function claim(
   return { claim_code: code, subject_id: subject, claim_value: value };
 }
 
+function canonicalClaim(value: AssistantClaim): string {
+  return canonicalJson({
+    claim_code: value.claim_code,
+    claim_value: value.claim_value,
+    subject_id: value.subject_id,
+  });
+}
+
 function fixtureOutput(
   question: string,
   context: AssistantContext,
@@ -1181,7 +1201,15 @@ async function openAIOutput(
     const classified = assistantUpstreamFailure(failure);
     throw new HttpError(classified.status, classified.code, classified.message);
   }
-  return parseOutput(extractOutput(await readBoundedResponse(response)));
+  const generated = parseOutput(
+    extractOutput(await readBoundedResponse(response)),
+  );
+  return {
+    ...generated,
+    claims: context.expected_claims,
+    evidence_references: context.allowed_references,
+    limitations: [...new Set([...generated.limitations, HUMAN_REVIEW_NOTICE])],
+  };
 }
 
 function assistantUpstreamFailure(failure: UpstreamFailure): {
@@ -1243,8 +1271,8 @@ function openAIRequest(
     max_output_tokens: MAX_OUTPUT_TOKENS,
     reasoning: { effort: "low" },
     instructions:
-      "Answer only from the supplied sanitized Provifact facts. Copy every expected typed claim exactly. " +
-      "Cite only allowed references. Do not infer identities, request identifiers, claim compliance, " +
+      "Answer only from the supplied sanitized Provifact facts. Deterministic typed claims and evidence " +
+      "references are attached by the server; do not restate evidence IDs. Do not infer identities, request identifiers, claim compliance, " +
       "certification, control satisfaction, assessment completion, exception, remediation, or risk acceptance. " +
       "If evidence is insufficient, use the exact supplied insufficient-evidence sentence. State limitations " +
       "and human-review questions. Free prose is AI-generated analysis subject to human review.",
@@ -1255,8 +1283,6 @@ function openAIRequest(
       evidence_timestamp: context.evidence_timestamp,
       baseline_version: context.baseline_version,
       facts: context.facts,
-      expected_claims: context.expected_claims,
-      allowed_references: context.allowed_references,
       insufficient_evidence_sentence: INSUFFICIENT,
     }),
     text: {
@@ -1277,8 +1303,6 @@ function assistantSchema(): object {
     additionalProperties: false,
     required: [
       "direct_answer",
-      "claims",
-      "evidence_references",
       "evidence_sufficiency",
       "limitations",
       "additional_evidence_required",
@@ -1286,25 +1310,6 @@ function assistantSchema(): object {
     ],
     properties: {
       direct_answer: { type: "string", minLength: 1, maxLength: 1200 },
-      claims: {
-        type: "array",
-        maxItems: 32,
-        items: {
-          type: "object",
-          additionalProperties: false,
-          required: ["claim_code", "subject_id", "claim_value"],
-          properties: {
-            claim_code: { type: "string" },
-            subject_id: { type: "string" },
-            claim_value: { type: ["string", "number", "boolean", "null"] },
-          },
-        },
-      },
-      evidence_references: {
-        type: "array",
-        maxItems: 40,
-        items: { type: "string" },
-      },
       evidence_sufficiency: {
         type: "string",
         enum: ["verified", "partial", "insufficient"],
@@ -1361,13 +1366,11 @@ function extractOutput(value: unknown): unknown {
   modelRejected();
 }
 
-function parseOutput(value: unknown): AssistantOutput {
+function parseOutput(value: unknown): AssistantGeneratedOutput {
   if (!isRecord(value)) modelRejected();
   const fields = [
     "additional_evidence_required",
-    "claims",
     "direct_answer",
-    "evidence_references",
     "evidence_sufficiency",
     "limitations",
     "suggested_human_review_questions",
@@ -1375,25 +1378,11 @@ function parseOutput(value: unknown): AssistantOutput {
   if (Object.keys(value).sort().join(",") !== fields.join(",")) modelRejected();
   if (
     typeof value.direct_answer !== "string" ||
-    !Array.isArray(value.claims) ||
-    !Array.isArray(value.evidence_references) ||
     !["verified", "partial", "insufficient"].includes(
       String(value.evidence_sufficiency),
     )
   )
     modelRejected();
-  const claims = value.claims.map((item) => {
-    if (
-      !isRecord(item) ||
-      Object.keys(item).sort().join(",") !==
-        "claim_code,claim_value,subject_id" ||
-      typeof item.claim_code !== "string" ||
-      typeof item.subject_id !== "string" ||
-      (typeof item.claim_value === "object" && item.claim_value !== null)
-    )
-      modelRejected();
-    return item as unknown as AssistantClaim;
-  });
   const strings = (item: unknown): string[] => {
     if (
       !Array.isArray(item) ||
@@ -1406,8 +1395,6 @@ function parseOutput(value: unknown): AssistantOutput {
   };
   return {
     direct_answer: value.direct_answer,
-    claims,
-    evidence_references: value.evidence_references as string[],
     evidence_sufficiency:
       value.evidence_sufficiency as AssistantOutput["evidence_sufficiency"],
     limitations: strings(value.limitations),
@@ -1432,14 +1419,9 @@ function verifyOutput(
 ): AssistantResult["verification"] {
   const reasons: string[] = [];
   const expected = new Map(
-    context.expected_claims.map((item) => [
-      canonicalJson(item as unknown as JsonValue),
-      item,
-    ]),
+    context.expected_claims.map((item) => [canonicalClaim(item), item]),
   );
-  const observed = output.claims.map((item) =>
-    canonicalJson(item as unknown as JsonValue),
-  );
+  const observed = output.claims.map(canonicalClaim);
   const duplicates = observed.filter(
     (item, index) => observed.indexOf(item) !== index,
   );

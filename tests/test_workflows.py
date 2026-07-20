@@ -104,7 +104,7 @@ def test_privileged_workflows_are_main_only_and_environment_protected() -> None:
     assert "npx wrangler versions list --env production --json" in deploy
     assert "npx wrangler deployments list --env production --json" in deploy
     assert "python scripts/verify_cloudflare_deployment.py" in deploy
-    assert "evidenceops.tmcoconsulting.com/api/status" not in deploy
+    assert "provifact.tmcoconsulting.com/api/status" not in deploy
     assert "curl " not in deploy
     assert "python scripts/check_public_artifacts.py build/publication-handoff" in deploy
 
@@ -159,7 +159,8 @@ def test_live_publication_handoff_cannot_retain_or_publish_private_evidence() ->
     assert "compression-level: 0" in audit
     assert "overwrite: false" in audit
     assert "sanitized_audit_run_id:" in deploy
-    assert "repository: tmcoconsulting/evidenceops" in deploy
+    assert "repository: ${{ github.repository }}" in deploy
+    assert 'gh api "/repos/$GITHUB_REPOSITORY/actions/runs/' in deploy
     assert "evidenceops-sanitized-mission-${{ inputs.sanitized_audit_run_id }}" in deploy
     assert "find artifacts/private -type f -delete" in audit
     assert "find build/live-public -type f -delete" in audit
@@ -291,12 +292,12 @@ def test_mission_control_bounds_grid_content_on_narrow_viewports() -> None:
     assert "min-width: 0;" in stylesheet
     assert ".mission-table-wrap {\n  overflow-x: auto;" in stylesheet
     mkdocs = (REPOSITORY_ROOT / "mkdocs.yml").read_text(encoding="utf-8")
-    assert "assets/stylesheets/extra.css?v=20260720-judge2" in mkdocs
-    assert "assets/javascripts/mission-control.js?v=20260720-judge2" in mkdocs
-    assert "assets/javascripts/assistant-evidence-context.js?v=20260720-judge2" in mkdocs
+    assert "assets/stylesheets/extra.css?v=20260720-provifact2" in mkdocs
+    assert "assets/javascripts/mission-control.js?v=20260720-provifact2" in mkdocs
+    assert "assets/javascripts/assistant-evidence-context.js?v=20260720-provifact2" in mkdocs
 
 
-def test_mission_control_is_an_operational_dashboard_with_honest_stig_lens() -> None:
+def test_mission_control_links_to_loaded_reference_profile_comparisons() -> None:
     dashboard = (REPOSITORY_ROOT / "docs" / "evidence-dashboard.md").read_text(encoding="utf-8")
     script = (REPOSITORY_ROOT / "docs" / "assets" / "javascripts" / "mission-control.js").read_text(
         encoding="utf-8"
@@ -306,18 +307,20 @@ def test_mission_control_is_an_operational_dashboard_with_honest_stig_lens() -> 
     )
     for required in (
         "data-baseline-view",
-        "STIG · technical cross-reference only",
+        "Compare with DISA STIG →",
+        "Compare with CIS Level 2 →",
         "data-collection-pipeline",
         "data-posture-rows",
         "data-planning-groups",
-        "CIS Level 1 · full implementation plan",
-        "CIS Level 1 · evaluated rules only",
+        "TMCO Consulting Approved · full implementation plan",
+        "TMCO Consulting Approved · evaluated rules only",
         "No Intune writes",
     ):
         assert required in dashboard
-    assert '"NOT LOADED"' in script
+    assert '"disa_stig"' in script
+    assert '"cis_lvl2"' in script
     assert '"APPROVED"' in script
-    assert "No STIG assessment or score is produced" in script
+    assert "/settings-matrix/?profile=" in script
     assert "exact provider mappings" in script
     assert 'if (lens === "active") return true' in script
     assert 'return "Implementation planning required"' in script
@@ -358,6 +361,14 @@ def test_operational_frontend_is_compact_and_keyboard_accessible() -> None:
     assert "if (!dialog.open) dialog.showModal()" in assistant
     assert "input.focus()" in assistant
     assert "launcher.focus()" in assistant
+    assert "validateAssistantPayload" in assistant
+    assert "canonicalJson" in assistant
+    assert "typed_claims_rejected.length !== 0" in assistant
+    assert "Ask the evidence, not the tenant" in assistant
+    assert "grid-template-areas:" in assistant_css
+    assert '"suggestions"' in assistant_css
+    assert "grid-template-columns: repeat(3, minmax(0, 1fr))" in assistant_css
+    assert "scroll-snap-type: x proximity" in assistant_css
     assert "@media (max-width: 52rem)" in assistant_css
     assert "@media (max-width: 35rem)" in assistant_css
 
@@ -388,7 +399,7 @@ def test_baseline_plan_shows_all_rules_by_default_without_false_findings() -> No
     assert "data-matrix-mapped-only>" in page
     assert "data-matrix-mapped-only checked" not in page
     assert "Limit to deterministically evaluated rules" in page
-    assert "Approved Level 1 rules" in matrix
+    assert "TMCO Consulting-approved rules" in matrix
     assert "Implementation backlog" in matrix
     assert "Provider mapping review required" in matrix
     assert "Implementation planning required" in matrix

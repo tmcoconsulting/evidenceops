@@ -35,19 +35,21 @@ Public CI never performs live collection.
 - [x] Add a setting-level matrix for observed value, approved target, deterministic state, reviewed
       framework identifiers, evidence references, and required technical change
 - [x] Pair the FileVault assistant task with deterministic package context without expanding model egress
-- [x] Mark CIS Level 2 as not loaded rather than inferring it from Level 1 or another crosswalk
+- [x] Load a fingerprinted comparison catalog for 16 public mSCP technical profiles while keeping
+      company approval and deterministic evidence scope separate
 - [ ] Preserve a reviewed parent-policy reference in the private normalized model so an authenticated
       deployment can show the actual Intune policy that supplied each setting
 - [ ] Define the data-classification, authorization, and retention rules for friendly tenant policy names
-- [ ] Load and independently review a CIS Level 2 baseline before displaying Level 2 technical alignment
+- [ ] Approve any additional profile as company desired state only through a separate human-reviewed
+      baseline change; comparison membership alone never enters the deterministic denominator
 - [ ] Work through the visible 94-rule backlog and expand exact reviewed provider mappings only when
       provider identifiers, typed targets, collection completeness, and ownership are verified
-- [x] Add matrix/evidence tests for aligned, value-drift, assignment, conflict, missing, collection-gap,
-      unsupported, and baseline-not-loaded states
+- [x] Add matrix/evidence tests for aligned, value-drift, assignment, conflict, missing,
+      collection-gap, unsupported, and reference-only planning states
 - [x] Flatten documented nested Settings Catalog groups so FileVault child settings join by exact
       provider ID without treating non-Apple policies as Apple collection gaps
-- [x] Present desired, observed, missing/evidence-gap, and technical STIG cross-reference views in a
-      full-width NOC-style Mission Control while keeping STIG explicitly not loaded
+- [x] Present desired, observed, missing/evidence-gap, and profile-membership comparison views in a
+      full-width NOC-style Mission Control
 - [x] Show all 98 approved Level 1 rules by default with authoritative pinned-source titles and
       separate the 94-rule implementation backlog from the deterministic four-rule denominator
 - [x] Group implementation work by baseline section and distinguish exact provider-mapping review
@@ -65,7 +67,7 @@ Public CI never performs live collection.
 - [x] Independently review the Worker runtime and production configuration
 - [x] Configure a project-scoped Provifact runtime key as a Worker secret (never a repository/CI secret)
 - [ ] Verify Cloudflare/OpenAI abuse monitoring, log retention, alert ownership, and rollback rehearsal
-- [x] Create the Worker/custom domain at `evidenceops.tmcoconsulting.com` and verify DNS/TLS
+- [ ] Attach and verify the renamed production custom domain at `provifact.tmcoconsulting.com`
 - [x] Add disabled-by-default least-privilege GitHub deployment orchestration after manual validation
 - [x] Store `CLOUDFLARE_API_TOKEN` by name in the protected production environment
 - [x] Verify the account deployment token has only `Workers Scripts Write` and prove its GitHub
@@ -118,6 +120,7 @@ Those data-model contracts come first.
 - Directory-wide permissions or any read permission not tied to a documented collector family
 - Model tools, autonomous publication, exceptions, or compliance verdicts
 - Browser-persisted API keys or public-CI OpenAI credentials
-- Claims of complete CIS/STIG/NIST/CMMC coverage
-- Inferred CIS Level 2 results without a loaded, reviewed Level 2 baseline
+- Claims that profile membership, technical mappings, or a selected reference profile prove
+  CIS/STIG/NIST/CMMC compliance
+- Inferred implementation or compliance results from CIS Level 2 or any other comparison profile
 - Code/history imports from unrelated endpoint-management repositories

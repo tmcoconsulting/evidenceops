@@ -6,6 +6,20 @@
   const HISTORY_KEY = "provifact-assistant-history-v1";
   const MAX_HISTORY = 12;
   const EVIDENCE_ID = /^(?:finding|req|gap|mission)-[0-9a-f]{24}$/;
+  const CLAIM_CODES = new Set([
+    "alignment_percent",
+    "change_count",
+    "collection_gap_count",
+    "collection_gap_present",
+    "data_mode",
+    "device_aggregate",
+    "finding_outcome",
+    "framework_reference_set_count",
+    "intune_write_capability",
+    "requirement_outcome",
+    "resolved_drift_count",
+    "unevaluated_resource_count",
+  ]);
   const operationalPaths = new Set([
     "/",
     "/evidence-dashboard/",
@@ -13,14 +27,24 @@
     "/live-demo/",
   ]);
   const suggestions = [
-    "What requires my attention?",
-    "Why is FileVault aligned or drifting?",
-    "What changed since the previous collection?",
-    "Which finding was resolved?",
-    "What is not currently evaluated?",
-    "What do the framework cross-references mean?",
-    "Is this live tenant data?",
-    "What can Provifact not conclude?",
+    { label: "Priority queue", question: "What requires my attention?" },
+    {
+      label: "FileVault evidence",
+      question: "Why is FileVault aligned or drifting?",
+    },
+    {
+      label: "Change watch",
+      question: "What changed since the previous collection?",
+    },
+    {
+      label: "Coverage gaps",
+      question: "What is not currently evaluated?",
+    },
+    {
+      label: "Evidence boundary",
+      question: "What can Provifact not conclude?",
+    },
+    { label: "Data provenance", question: "Is this live tenant data?" },
   ];
 
   const create = (tagName, className = "", text = "") => {
@@ -74,6 +98,103 @@
     ) {
       throw new Error("Worker status failed its browser contract");
     }
+    return value;
+  };
+
+  const stringArray = (value, maximum = 40) =>
+    Array.isArray(value) &&
+    value.length <= maximum &&
+    value.every((item) => typeof item === "string");
+
+  const jsonValue = (value, depth = 0) => {
+    if (depth > 8) return false;
+    if (
+      value === null ||
+      typeof value === "string" ||
+      typeof value === "boolean"
+    )
+      return true;
+    if (typeof value === "number") return Number.isFinite(value);
+    if (Array.isArray(value))
+      return (
+        value.length <= 128 && value.every((item) => jsonValue(item, depth + 1))
+      );
+    if (!isRecord(value) || Object.keys(value).length > 64) return false;
+    return Object.entries(value).every(
+      ([key, item]) => key.length <= 96 && jsonValue(item, depth + 1),
+    );
+  };
+
+  const canonicalJson = (value) => {
+    if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+    if (isRecord(value))
+      return `{${Object.keys(value)
+        .sort()
+        .map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`)
+        .join(",")}}`;
+    return JSON.stringify(value);
+  };
+
+  const claimArray = (value) =>
+    Array.isArray(value) &&
+    value.length <= 32 &&
+    value.every(
+      (item) =>
+        isRecord(item) &&
+        Object.keys(item).sort().join(",") ===
+          "claim_code,claim_value,subject_id" &&
+        typeof item.claim_code === "string" &&
+        CLAIM_CODES.has(item.claim_code) &&
+        typeof item.subject_id === "string" &&
+        item.subject_id.length <= 96 &&
+        jsonValue(item.claim_value),
+    );
+
+  const validateAssistantPayload = (value, status) => {
+    if (
+      !isRecord(value) ||
+      !["fixture", "openai"].includes(value.mode) ||
+      value.human_review_required !== true ||
+      value.source_snapshot_id !== status.source_snapshot_id ||
+      !isRecord(value.answer) ||
+      !isRecord(value.verification) ||
+      !["typed_claims_verified", "insufficient_evidence"].includes(
+        value.verification.status,
+      ) ||
+      value.verification.generated_prose_quarantined !== true ||
+      value.verification.human_review_required !== true ||
+      typeof value.verification.verifier_version !== "string" ||
+      !stringArray(value.verification.typed_claims_accepted, 32) ||
+      !stringArray(value.verification.typed_claims_rejected, 32) ||
+      !stringArray(value.verification.reasons, 16) ||
+      typeof value.answer.direct_answer !== "string" ||
+      value.answer.direct_answer.length < 1 ||
+      value.answer.direct_answer.length > 1200 ||
+      value.answer.human_review_required !== true ||
+      typeof value.answer.ai_generated_analysis !== "boolean" ||
+      !["verified", "partial", "insufficient"].includes(
+        value.answer.evidence_sufficiency,
+      ) ||
+      !claimArray(value.answer.claims) ||
+      !stringArray(value.answer.evidence_references) ||
+      !value.answer.evidence_references.every((reference) =>
+        EVIDENCE_ID.test(reference),
+      ) ||
+      !stringArray(value.answer.limitations, 8) ||
+      !stringArray(value.answer.additional_evidence_required, 8) ||
+      !stringArray(value.answer.suggested_human_review_questions, 8)
+    ) {
+      throw new Error("The answer failed deterministic browser verification.");
+    }
+    const accepted = value.verification.typed_claims_accepted;
+    const claims = value.answer.claims.map(canonicalJson).sort();
+    if (
+      value.verification.typed_claims_rejected.length !== 0 ||
+      value.verification.reasons.length !== 0 ||
+      accepted.length !== claims.length ||
+      accepted.some((item, index) => item !== claims[index])
+    )
+      throw new Error("The answer failed deterministic browser verification.");
     return value;
   };
 
@@ -314,8 +435,34 @@
     const transcript = create("div", "provifact-assistant-transcript");
     transcript.setAttribute("aria-live", "polite");
     transcript.setAttribute("aria-label", "Provifact Assistant conversation");
+    const emptyState = create("section", "provifact-assistant-welcome");
+    emptyState.append(
+      create("span", "provifact-assistant-welcome-mark", "P"),
+      create("strong", "", "Ask the evidence, not the tenant"),
+      create(
+        "p",
+        "",
+        "Provifact sends a bounded sanitized evidence subset to the fixed model, then verifies deterministic claims and evidence references before showing the answer.",
+      ),
+    );
+    transcript.append(emptyState);
+    const suggestionSection = create(
+      "section",
+      "provifact-assistant-suggestion-section",
+    );
+    const suggestionHeading = create(
+      "strong",
+      "provifact-assistant-suggestion-heading",
+      "Start with a focused evidence question",
+    );
+    suggestionHeading.id = "provifact-assistant-suggestion-heading";
     const suggestionGroup = create("div", "provifact-assistant-suggestions");
     suggestionGroup.setAttribute("aria-label", "Suggested evidence questions");
+    suggestionGroup.setAttribute(
+      "aria-labelledby",
+      "provifact-assistant-suggestion-heading",
+    );
+    suggestionSection.append(suggestionHeading, suggestionGroup);
 
     const form = create("form", "provifact-assistant-form");
     const label = create("label", "", "Ask about the published evidence");
@@ -342,7 +489,7 @@
       header,
       selected,
       transcript,
-      suggestionGroup,
+      suggestionSection,
       form,
       boundary,
     );
@@ -351,15 +498,28 @@
     let selectedEvidenceId = null;
     let history = readHistory();
 
-    const appendMessage = (role, text, references = []) => {
+    const appendMessage = (role, text, references = [], analysis = null) => {
+      emptyState.hidden = true;
       const article = create(
         "article",
         `provifact-assistant-message provifact-assistant-${role}`,
       );
-      article.append(
+      const messageHeader = create("div", "provifact-assistant-message-header");
+      messageHeader.append(
         create("strong", "", role === "user" ? "You" : "Provifact Assistant"),
-        create("p", "", text),
       );
+      if (role === "assistant" && isRecord(analysis)) {
+        messageHeader.append(
+          create(
+            "span",
+            "provifact-assistant-generated-label",
+            analysis.aiGenerated
+              ? "AI-GENERATED · REVIEW REQUIRED"
+              : "DETERMINISTIC FIXTURE",
+          ),
+        );
+      }
+      article.append(messageHeader, create("p", "", text));
       const links = references
         .filter(
           (reference) =>
@@ -377,6 +537,32 @@
         }
         article.append(nav);
       }
+      if (role === "assistant" && isRecord(analysis)) {
+        const details = create(
+          "details",
+          "provifact-assistant-analysis-details",
+        );
+        const detailSummary = create(
+          "summary",
+          "",
+          "Evidence boundary and next review",
+        );
+        details.append(detailSummary);
+        for (const [label, values] of [
+          ["Limitations", analysis.limitations],
+          ["Additional evidence", analysis.additionalEvidence],
+          ["Human review questions", analysis.reviewQuestions],
+        ]) {
+          if (!Array.isArray(values) || !values.length) continue;
+          const section = create("section");
+          section.append(create("strong", "", label));
+          const list = create("ul");
+          for (const value of values) list.append(create("li", "", value));
+          section.append(list);
+          details.append(section);
+        }
+        article.append(details);
+      }
       transcript.append(article);
       transcript.scrollTop = transcript.scrollHeight;
     };
@@ -386,11 +572,16 @@
       appendMessage("assistant", item.answer, item.references);
     }
 
-    for (const question of suggestions) {
-      const button = create("button", "", question);
+    for (const suggestion of suggestions) {
+      const button = create("button");
       button.type = "button";
+      button.append(
+        create("strong", "", suggestion.label),
+        create("span", "", suggestion.question),
+      );
       button.addEventListener("click", () => {
-        input.value = question;
+        input.value = suggestion.question;
+        input.dispatchEvent(new Event("input"));
         input.focus();
       });
       suggestionGroup.append(button);
@@ -441,11 +632,22 @@
     window.ProvifactAssistant = { open: openAssistant };
 
     let status;
+    let requestPending = false;
+    const updateSubmit = () => {
+      const questionLength = input.value.trim().length;
+      submit.disabled =
+        requestPending ||
+        !status ||
+        status.narrative_available !== true ||
+        questionLength < 4 ||
+        questionLength > 240;
+    };
+    input.addEventListener("input", updateSubmit);
     try {
       status = await statusPromise;
       currentStatus = status;
       runtime.textContent = `${status.data_mode} · ${new Date(status.evidence_timestamp).toLocaleString()} · ${status.source_snapshot_id} · ${status.model_call_available ? `${status.model} available` : status.narrative_mode === "fixture" ? "deterministic fixture" : "model unavailable"}`;
-      submit.disabled = status.narrative_available !== true;
+      updateSubmit();
       formStatus.textContent =
         status.narrative_mode === "openai" && status.model_call_available
           ? "A fixed GPT-5.6 model may receive a bounded sanitized evidence subset."
@@ -463,7 +665,9 @@
       event.preventDefault();
       const question = input.value.trim();
       if (!status || question.length < 4 || question.length > 240) return;
-      submit.disabled = true;
+      requestPending = true;
+      form.dataset.busy = "true";
+      updateSubmit();
       formStatus.textContent = "Selecting and verifying bounded evidence…";
       appendMessage("user", question);
       const controller = new AbortController();
@@ -504,24 +708,17 @@
               : "The request stopped at an evidence or verification boundary.",
           );
         }
-        if (
-          !isRecord(payload) ||
-          !isRecord(payload.answer) ||
-          !isRecord(payload.verification) ||
-          !["typed_claims_verified", "insufficient_evidence"].includes(
-            payload.verification.status,
-          ) ||
-          typeof payload.answer.direct_answer !== "string" ||
-          !Array.isArray(payload.answer.evidence_references)
-        ) {
-          throw new Error(
-            "The answer failed deterministic browser verification.",
-          );
-        }
+        validateAssistantPayload(payload, status);
         appendMessage(
           "assistant",
           payload.answer.direct_answer,
           payload.answer.evidence_references,
+          {
+            aiGenerated: payload.answer.ai_generated_analysis,
+            limitations: payload.answer.limitations,
+            additionalEvidence: payload.answer.additional_evidence_required,
+            reviewQuestions: payload.answer.suggested_human_review_questions,
+          },
         );
         history.push({
           question,
@@ -530,7 +727,7 @@
         });
         history = history.slice(-MAX_HISTORY);
         writeHistory(history);
-        formStatus.textContent = `${payload.mode === "openai" ? "GPT-5.6 answer" : "Deterministic fixture answer"} · typed claims verified · prose subject to human review`;
+        formStatus.textContent = `${payload.mode === "openai" ? "GPT-5.6 explanation" : "Deterministic fixture answer"} · deterministic claims and references verified · generated prose quarantined · human review required`;
         input.value = "";
       } catch (error) {
         const message =
@@ -543,7 +740,9 @@
         formStatus.textContent = message;
       } finally {
         window.clearTimeout(timeout);
-        submit.disabled = status.narrative_available !== true;
+        requestPending = false;
+        delete form.dataset.busy;
+        updateSubmit();
       }
     });
   };

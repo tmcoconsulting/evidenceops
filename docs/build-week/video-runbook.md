@@ -12,7 +12,7 @@ The verified production package at the end of finalization is
 because no manual Intune change occurred. Recheck these values immediately before recording and use
 whatever newer reviewed production snapshot is actually reported.
 
-1. Open `https://evidenceops.tmcoconsulting.com/api/status` in a clean browser profile. Confirm
+1. Open `https://provifact.tmcoconsulting.com/api/status` in a clean browser profile. Confirm
    `data_mode` is `LIVE SANITIZED TENANT DATA`, `narrative_mode` is `openai`, `model` is
    `gpt-5.6-terra`, and `model_call_available` is `true`.
 2. Open `/assets/data/mission-control.json` and compare its `snapshot_id` with `/api/status` and the

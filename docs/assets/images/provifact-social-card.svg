@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Provifact by TMCO Consulting</title>
+  <desc id="desc">From approved change to audit-ready proof.</desc>
+  <defs>
+    <linearGradient id="background" x1="60" y1="20" x2="1140" y2="610" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#07111f"/>
+      <stop offset="0.55" stop-color="#0c1e33"/>
+      <stop offset="1" stop-color="#071827"/>
+    </linearGradient>
+    <linearGradient id="proof" x1="104" y1="118" x2="382" y2="418" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2dd4bf"/>
+      <stop offset="1" stop-color="#55a7ff"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="translate(920 100) rotate(118) scale(500 620)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1679ba" stop-opacity=".34"/>
+      <stop offset="1" stop-color="#07111f" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#background)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <g opacity=".2" stroke="#55a7ff">
+    <path d="M0 510h1200M0 450h1200M0 390h1200M0 330h1200M0 270h1200"/>
+    <path d="M750 0v630M850 0v630M950 0v630M1050 0v630M1150 0v630"/>
+  </g>
+  <g transform="translate(80 98)">
+    <rect width="330" height="330" rx="72" fill="#07111f"/>
+    <path d="M165 28 288 98v140l-123 74-123-74V98L165 28Z" fill="#0c1e33" stroke="url(#proof)" stroke-width="11"/>
+    <path d="M95 111h83c42 0 69 23 69 58s-27 58-69 58h-30v48H95V111Zm53 41v34h27c12 0 19-6 19-17s-7-17-19-17h-27Z" fill="#eaf4ff"/>
+    <circle cx="84" cy="98" r="12" fill="#2dd4bf"/>
+    <circle cx="84" cy="169" r="12" fill="#55a7ff"/>
+    <path d="m188 266 25 25 50-57" fill="none" stroke="#2dd4bf" stroke-linecap="round" stroke-linejoin="round" stroke-width="18"/>
+  </g>
+  <g font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    <text x="470" y="178" fill="#7ee9d9" font-size="25" font-weight="700" letter-spacing="4">TMCO Consulting</text>
+    <text x="470" y="286" fill="#f4f9ff" font-size="92" font-weight="780" letter-spacing="-4">Provifact™</text>
+    <text x="470" y="354" fill="#a9bed4" font-size="34" font-weight="520">From approved change to</text>
+    <text x="470" y="405" fill="#eaf4ff" font-size="42" font-weight="720">audit-ready proof.</text>
+    <text x="80" y="548" fill="#8ea7bf" font-size="23" font-weight="540">READ-ONLY COLLECTION</text>
+    <circle cx="345" cy="540" r="5" fill="#2dd4bf"/>
+    <text x="370" y="548" fill="#8ea7bf" font-size="23" font-weight="540">DETERMINISTIC DRIFT</text>
+    <circle cx="650" cy="540" r="5" fill="#55a7ff"/>
+    <text x="675" y="548" fill="#8ea7bf" font-size="23" font-weight="540">BOUNDED AI EXPLANATION</text>
+  </g>
+  <rect x="2" y="2" width="1196" height="626" rx="3" fill="none" stroke="#1e5e82" stroke-width="4"/>
+</svg>

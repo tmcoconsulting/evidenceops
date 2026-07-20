@@ -70,7 +70,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api "/repos/tmcoconsulting/evidenceops/actions/runs/$PRIOR_SANITIZED_AUDIT_RUN_ID" \
+          gh api "/repos/$GITHUB_REPOSITORY/actions/runs/$PRIOR_SANITIZED_AUDIT_RUN_ID" \
             > "$RUNNER_TEMP/evidenceops-prior-audit-run.json"
           jq -e '
             .name == "Read-only Intune audit" and
@@ -91,7 +91,7 @@ jobs:
           name: evidenceops-sanitized-mission-${{ inputs.prior_sanitized_audit_run_id }}
           path: build/previous-public
           github-token: ${{ github.token }}
-          repository: tmcoconsulting/evidenceops
+          repository: ${{ github.repository }}
           run-id: ${{ inputs.prior_sanitized_audit_run_id }}
 
       - name: Revalidate prior live Mission package

@@ -508,3 +508,47 @@ specific: it explains sanitized deterministic evidence and is not a general-purp
 productivity copilot.
 
 **Source:** [Microsoft Trademark and Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks).
+
+## 2026-07-20 — Keep deterministic Assistant metadata server-owned
+
+**Decision:** Send only bounded sanitized facts and the operator question to the fixed OpenAI
+model. Ask the model for strict explanatory fields, then attach typed deterministic claims and
+evidence references from the Worker-selected context. Add the mandatory human-review boundary in
+trusted code, verify the complete response server-side, and repeat strict shape and canonical claim
+checks in the browser.
+
+**Why:** Requiring a generative model to reproduce authoritative claim objects and evidence IDs made
+otherwise safe prose fail verification and gave the model unnecessary influence over deterministic
+metadata. The model now cannot add, omit, or alter the authoritative claims or references.
+
+**Source:** OpenAI's official Structured Outputs documentation for strict Responses API
+`text.format` schemas. Application-side evidence and policy verification remains mandatory.
+
+## 2026-07-20 — Compare pinned public profiles by exact membership
+
+**Decision:** Build a public comparison catalog from one local archive of the already-pinned NIST
+mSCP revision. Copy only profile membership, rule IDs, titles, sections, attribution, and source
+fingerprints. Load 16 public technical profiles and compare them to TMCO Consulting Approved by
+exact rule-ID set overlap. Reject an archive whose root does not match the pinned revision.
+
+**Why:** Operators need to see where their approved baseline overlaps or differs from reference
+profiles without converting a crosswalk into a compliance score. Keeping profile membership,
+company approval, deterministic observation, and assessor judgment as separate states makes the
+adoption backlog visible and reviewable.
+
+**Source:** [NIST macOS Security Compliance Project](https://github.com/usnistgov/macos_security),
+pinned to revision `11b5896e4f12f43410686024f543792742562c91` and attributed under CC BY 4.0.
+
+## 2026-07-20 — Coordinate the Provifact repository and hostname cutover
+
+**Decision:** Rename the GitHub repository to `tmcoconsulting/provifact` and make
+`provifact.tmcoconsulting.com` the public hostname. Preserve the internal Cloudflare Worker,
+OpenAI project/key labels, Python namespace, environment prefix, artifact prefix, and schema IDs
+where changing them would add migration risk without user value. Use repository-relative workflow
+provenance. Create and verify a post-rename immutable GitHub OIDC subject in Entra before retiring
+the prior subject.
+
+**Why:** Public naming should be coherent, but encrypted secrets, version history, artifact
+provenance, and federation trust must not be broken or silently broadened during a cosmetic rename.
+The prior hostname remains a rollback surface until the new custom domain, TLS, protected audit, and
+deployment are independently verified.

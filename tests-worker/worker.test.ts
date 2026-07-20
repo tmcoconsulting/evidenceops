@@ -526,25 +526,14 @@ describe("Worker routes", () => {
     expect(outboundFetch).not.toHaveBeenCalled();
   });
 
-  it("sends only a bounded selected context to GPT-5.6 and verifies typed claims", async () => {
+  it("keeps typed claims and references server-owned around GPT-5.6 prose", async () => {
     const high = missionFixture.findings.filter(
       (finding) => finding.severity === "high",
     );
     const modelAnswer = {
-      direct_answer: `${high.length} high-severity technical findings require human review.`,
-      claims: high.map((finding) => ({
-        claim_code: "finding_outcome",
-        subject_id: finding.finding_id,
-        claim_value: finding.drift_type,
-      })),
-      evidence_references: [
-        missionFixture.snapshot_id,
-        ...high.map((finding) => finding.finding_id),
-      ],
+      direct_answer: `${high.length} high-severity technical findings require attention.`,
       evidence_sufficiency: "verified",
-      limitations: [
-        "Technical evidence is not an assessor conclusion; human review is required.",
-      ],
+      limitations: ["Technical evidence is not an assessor conclusion."],
       additional_evidence_required: [
         "Review scope and operating effectiveness.",
       ],
@@ -564,6 +553,10 @@ describe("Worker routes", () => {
         reasoning: { effort: "low" },
       });
       expect(body).not.toHaveProperty("tools");
+      expect(init.body).not.toContain('"expected_claims"');
+      expect(init.body).not.toContain('"allowed_references"');
+      expect(init.body).not.toContain('"claims"');
+      expect(init.body).not.toContain('"evidence_references"');
       expect(init.body).not.toContain("synthetic-device-mac");
       return Response.json({
         output: [
@@ -585,7 +578,61 @@ describe("Worker routes", () => {
     await expect(response.json()).resolves.toMatchObject({
       mode: "openai",
       ai_model_call_performed: true,
+      answer: {
+        claims: high.map((finding) => ({
+          claim_code: "finding_outcome",
+          subject_id: finding.finding_id,
+          claim_value: finding.drift_type,
+        })),
+        evidence_references: [
+          missionFixture.snapshot_id,
+          ...high.flatMap((finding) => [
+            finding.finding_id,
+            missionFixture.requirements.find(
+              (requirement) => requirement.rule_id === finding.rule_id,
+            )?.requirement_id,
+          ]),
+        ],
+        limitations: expect.arrayContaining([
+          "AI-generated analysis is explanatory only; human review is required.",
+        ]),
+      },
       verification: { status: "typed_claims_verified" },
+    });
+  });
+
+  it("rejects prohibited model prose before returning an assistant answer", async () => {
+    const modelAnswer = {
+      direct_answer: "The organization meets the compliance standard.",
+      evidence_sufficiency: "verified",
+      limitations: ["This is an automated summary."],
+      additional_evidence_required: ["Review operating effectiveness."],
+      suggested_human_review_questions: ["What should be reviewed next?"],
+    };
+    await expect(
+      handleRequest(
+        assistantRequest(),
+        environment("openai", { apiKey: TEST_API_KEY }),
+        {
+          outboundFetch: async () =>
+            Response.json({
+              output: [
+                {
+                  type: "message",
+                  content: [
+                    {
+                      type: "output_text",
+                      text: JSON.stringify(modelAnswer),
+                    },
+                  ],
+                },
+              ],
+            }),
+        },
+      ),
+    ).rejects.toMatchObject({
+      code: "assistant_output_rejected",
+      status: 502,
     });
   });
 

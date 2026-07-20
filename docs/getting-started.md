@@ -111,5 +111,5 @@ The test command enforces 90% branch-aware coverage. All public artifacts must p
 `mkdocs build --strict` produces `site/` with relative navigation and self-contained public assets.
 The exact-pinned Wrangler configuration serves `site/` through Workers Static Assets and routes
 only `/api/*` through Worker code first. Production is available at
-`https://evidenceops.tmcoconsulting.com/`; it serves a separately reviewed live sanitized Mission
+`https://provifact.tmcoconsulting.com/`; it serves a separately reviewed live sanitized Mission
 package and reports the actual fixed-model availability through `/api/status`.
