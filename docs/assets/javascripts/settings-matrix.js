@@ -4,6 +4,7 @@
   const root = document.querySelector("[data-settings-matrix]");
   if (!(root instanceof HTMLElement)) return;
 
+  const CATALOG_URL = "/assets/data/baseline-catalog.json";
   const banner = root.querySelector("[data-matrix-banner]");
   const summary = root.querySelector("[data-matrix-summary]");
   const table = root.querySelector("[data-matrix-table]");
@@ -18,6 +19,11 @@
   const dialog = root.querySelector("[data-matrix-dialog]");
   const detail = root.querySelector("[data-matrix-detail]");
   const plan = root.querySelector("[data-matrix-plan]");
+  const profile = root.querySelector("[data-matrix-profile]");
+  const comparisonSummary = root.querySelector(
+    "[data-matrix-comparison-summary]",
+  );
+  const comparisonGaps = root.querySelector("[data-matrix-comparison-gaps]");
 
   if (
     !(banner instanceof HTMLElement) ||
@@ -33,7 +39,10 @@
     !(empty instanceof HTMLElement) ||
     !(dialog instanceof HTMLDialogElement) ||
     !(detail instanceof HTMLElement) ||
-    !(plan instanceof HTMLElement)
+    !(plan instanceof HTMLElement) ||
+    !(profile instanceof HTMLSelectElement) ||
+    !(comparisonSummary instanceof HTMLElement) ||
+    !(comparisonGaps instanceof HTMLElement)
   )
     return;
 
@@ -52,6 +61,24 @@
   };
   const isRecord = (value) =>
     value !== null && typeof value === "object" && !Array.isArray(value);
+  const canonicalJson = (value) => {
+    if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+    if (isRecord(value))
+      return `{${Object.keys(value)
+        .sort()
+        .map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`)
+        .join(",")}}`;
+    return JSON.stringify(value);
+  };
+  const sha256 = async (value) => {
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(value),
+    );
+    return [...new Uint8Array(digest)]
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
+  };
   const formatValue = (value) => {
     if (typeof value === "boolean") return value ? "Enabled" : "Disabled";
     if (typeof value === "string" || typeof value === "number")
@@ -74,6 +101,8 @@
     Array.isArray(requirement.provider_definition_ids) &&
     requirement.provider_definition_ids.length > 0;
   const implementationState = (requirement) => {
+    if (requirement.reference_only === true)
+      return "Not in TMCO Consulting approved baseline";
     if (requirement.evaluation_included === true) return requirement.outcome;
     if (
       requirement.mapping_review_status === "not reviewed" &&
@@ -84,13 +113,17 @@
     return "Implementation planning required";
   };
   const implementationTarget = (requirement) =>
-    requirement.setting_key && requirement.setting_key !== "not mapped"
-      ? formatValue(requirement.expected_value)
-      : "Target pending approved mapping";
+    requirement.reference_only === true
+      ? "Reference profile membership; target not approved"
+      : requirement.setting_key && requirement.setting_key !== "not mapped"
+        ? formatValue(requirement.expected_value)
+        : "Target pending approved mapping";
   const implementationObserved = (requirement) =>
-    requirement.evaluation_included === true
-      ? formatValue(requirement.observed_value)
-      : "Not deterministically collected";
+    requirement.reference_only === true
+      ? "Not evaluated"
+      : requirement.evaluation_included === true
+        ? formatValue(requirement.observed_value)
+        : "Not deterministically collected";
   const stateClass = (value) => {
     if (value === "Aligned") return "matrix-state-aligned";
     if (value === "Conflicting policy") return "matrix-state-conflict";
@@ -101,6 +134,7 @@
       value === "Collection gap" ||
       value === "Provider mapping not reviewed" ||
       value === "Provider mapping review required" ||
+      value === "Not in TMCO Consulting approved baseline" ||
       value === "Implementation planning required" ||
       value === "Unsupported value shape"
     )
@@ -114,6 +148,8 @@
   };
 
   const buildAction = (requirement) => {
+    if (requirement.reference_only === true)
+      return "Baseline owner review: decide whether this reference-profile rule belongs in the TMCO Consulting-approved baseline. If adopted, approve its target, management path, and evidence source before evaluation.";
     const key = requirement.setting_key || requirement.rule_id;
     const target = formatValue(requirement.expected_value);
     const observed = formatValue(requirement.observed_value);
@@ -156,7 +192,7 @@
   };
 
   const openDetail = (row) => {
-    const { requirement, finding, resources } = row;
+    const { requirement, finding, resources, referenceProfile } = row;
     detail.replaceChildren();
     const heading = create("h2", "", requirement.title);
     heading.id = "matrix-dialog-title";
@@ -168,6 +204,12 @@
     const list = create("dl", "matrix-detail-list");
     addDetail(list, "Planning state", implementationState(requirement));
     addDetail(list, "Raw deterministic state", requirement.outcome);
+    if (requirement.reference_only === true)
+      addDetail(
+        list,
+        "Reference membership",
+        `${referenceProfile?.label || "Selected profile"}; not currently in the TMCO Consulting-approved baseline`,
+      );
     addDetail(
       list,
       "Requirement",
@@ -245,25 +287,31 @@
         "This setting-level evidence does not establish organizational compliance or control satisfaction. Provifact cannot write, assign, or remediate Intune. Human review is required.",
       ),
     );
-    const ask = create(
-      "button",
-      "md-button md-button--primary",
-      "Ask Provifact Assistant about this setting",
-    );
-    ask.type = "button";
-    ask.addEventListener("click", () => {
-      dialog.close();
-      window.dispatchEvent(
-        new CustomEvent("provifact:select-evidence", {
-          detail: {
-            evidenceId: requirement.requirement_id,
-            question:
-              "Explain this setting evidence and the read-only Intune review step.",
-          },
-        }),
+    detail.append(heading, label, list, action);
+    if (
+      requirement.reference_only !== true &&
+      typeof requirement.requirement_id === "string"
+    ) {
+      const ask = create(
+        "button",
+        "md-button md-button--primary",
+        "Ask Provifact Assistant about this setting",
       );
-    });
-    detail.append(heading, label, list, action, ask);
+      ask.type = "button";
+      ask.addEventListener("click", () => {
+        dialog.close();
+        window.dispatchEvent(
+          new CustomEvent("provifact:select-evidence", {
+            detail: {
+              evidenceId: requirement.requirement_id,
+              question:
+                "Explain this setting evidence and the read-only Intune review step.",
+            },
+          }),
+        );
+      });
+      detail.append(ask);
+    }
     dialog.showModal();
   };
 
@@ -283,6 +331,72 @@
     return value;
   };
 
+  const validateCatalog = async (value, mission) => {
+    if (
+      !isRecord(value) ||
+      Object.keys(value).sort().join(",") !==
+        "catalog_fingerprint,comparison_boundary,metadata_fallback_rule_ids,profiles,rules,schema_version,source" ||
+      value.schema_version !== "1.0.0" ||
+      !/^sha256:[0-9a-f]{64}$/.test(value.catalog_fingerprint) ||
+      !isRecord(value.source) ||
+      Object.keys(value.source).sort().join(",") !==
+        "attribution,license,platform,repository,revision" ||
+      typeof value.source.repository !== "string" ||
+      typeof value.source.attribution !== "string" ||
+      value.source.revision !== mission.baseline.source_revision ||
+      !Array.isArray(value.profiles) ||
+      !Array.isArray(value.rules) ||
+      !Array.isArray(value.metadata_fallback_rule_ids) ||
+      value.metadata_fallback_rule_ids.length !== 0 ||
+      typeof value.comparison_boundary !== "string"
+    )
+      throw new Error("Baseline catalog failed its source and schema contract");
+    const unsigned = { ...value };
+    delete unsigned.catalog_fingerprint;
+    if (
+      value.catalog_fingerprint !==
+      `sha256:${await sha256(canonicalJson(unsigned))}`
+    )
+      throw new Error("Baseline catalog fingerprint did not verify");
+    const ruleIds = new Set(
+      value.rules
+        .filter(
+          (item) =>
+            isRecord(item) &&
+            typeof item.rule_id === "string" &&
+            typeof item.title === "string" &&
+            typeof item.section === "string" &&
+            Array.isArray(item.profile_ids) &&
+            item.profile_ids.every(
+              (profileId) => typeof profileId === "string",
+            ),
+        )
+        .map((item) => item.rule_id),
+    );
+    const profiles = value.profiles.filter(
+      (item) =>
+        isRecord(item) &&
+        typeof item.profile_id === "string" &&
+        typeof item.label === "string" &&
+        typeof item.family === "string" &&
+        Array.isArray(item.rule_ids) &&
+        item.rule_ids.every((ruleId) => typeof ruleId === "string") &&
+        item.rule_ids.length === item.rule_count &&
+        new Set(item.rule_ids).size === item.rule_ids.length &&
+        item.rule_ids.every((ruleId) => ruleIds.has(ruleId)),
+    );
+    if (profiles.length !== value.profiles.length)
+      throw new Error("Baseline catalog contains an invalid profile");
+    const tmco = profiles.find((item) => item.profile_id === "tmco_approved");
+    if (
+      !tmco ||
+      tmco.rule_count !== mission.baseline.rule_count ||
+      tmco.source_sha256 !== mission.baseline.extracted_baseline_sha256
+    )
+      throw new Error("Baseline catalog does not match the approved baseline");
+    return { ...value, profiles };
+  };
+
   const initialize = async () => {
     try {
       const url = new URL(
@@ -294,17 +408,45 @@
       );
       if (requestedSnapshot && /^mission-[0-9a-f]{24}$/.test(requestedSnapshot))
         url.searchParams.set("snapshot", requestedSnapshot);
-      const response = await fetch(url, {
-        credentials: "same-origin",
-        cache: "no-store",
-        headers: { Accept: "application/json" },
-      });
+      const [response, catalogResponse] = await Promise.all([
+        fetch(url, {
+          credentials: "same-origin",
+          cache: "no-store",
+          headers: { Accept: "application/json" },
+        }),
+        fetch(CATALOG_URL, {
+          credentials: "same-origin",
+          cache: "force-cache",
+          headers: { Accept: "application/json" },
+        }),
+      ]);
       if (
         !response.ok ||
-        !response.headers.get("Content-Type")?.includes("application/json")
+        !response.headers.get("Content-Type")?.includes("application/json") ||
+        !catalogResponse.ok ||
+        !catalogResponse.headers
+          .get("Content-Type")
+          ?.includes("application/json")
       )
-        throw new Error("Mission package could not be loaded");
+        throw new Error(
+          "Mission package or baseline catalog could not be loaded",
+        );
       const mission = validateMission(await response.json());
+      const catalog = await validateCatalog(
+        await catalogResponse.json(),
+        mission,
+      );
+      const catalogRules = new Map(
+        catalog.rules.map((item) => [item.rule_id, item]),
+      );
+      const catalogProfiles = new Map(
+        catalog.profiles.map((item) => [item.profile_id, item]),
+      );
+      const tmcoProfile = catalogProfiles.get("tmco_approved");
+      if (!tmcoProfile)
+        throw new Error(
+          "TMCO Consulting approved profile is missing from the catalog",
+        );
       const findings = new Map(
         mission.findings
           .filter(
@@ -335,19 +477,56 @@
           resources: (requirement.source_evidence_ids || [])
             .map((id) => resources.get(id))
             .filter(Boolean),
+          referenceProfile: null,
         }));
 
+      const profileGroups = new Map();
+      for (const catalogProfile of catalog.profiles) {
+        if (catalogProfile.profile_id === "tmco_approved") continue;
+        const group = profileGroups.get(catalogProfile.family) || [];
+        group.push(catalogProfile);
+        profileGroups.set(catalogProfile.family, group);
+      }
+      for (const [family, catalogProfilesInFamily] of profileGroups) {
+        const optionGroup = create("optgroup");
+        optionGroup.label = family;
+        for (const catalogProfile of catalogProfilesInFamily) {
+          const option = create(
+            "option",
+            "",
+            `${catalogProfile.label} · ${catalogProfile.rule_count} rules`,
+          );
+          option.value = catalogProfile.profile_id;
+          optionGroup.append(option);
+        }
+        profile.append(optionGroup);
+      }
+      profile.value = "cis_lvl1";
+      const requestedProfile = new URL(window.location.href).searchParams.get(
+        "profile",
+      );
+      if (
+        requestedProfile &&
+        requestedProfile !== "tmco_approved" &&
+        catalogProfiles.has(requestedProfile)
+      )
+        profile.value = requestedProfile;
+
       for (const value of [
-        ...new Set(
-          rows.map(({ requirement }) => implementationState(requirement)),
-        ),
+        ...new Set([
+          ...rows.map(({ requirement }) => implementationState(requirement)),
+          "Not in TMCO Consulting approved baseline",
+        ]),
       ].sort()) {
         const option = create("option", "", value);
         option.value = value;
         outcome.append(option);
       }
       for (const value of [
-        ...new Set(rows.map(({ requirement }) => requirement.section)),
+        ...new Set([
+          ...rows.map(({ requirement }) => requirement.section),
+          ...catalog.rules.map((rule) => rule.section),
+        ]),
       ].sort()) {
         const option = create("option", "", value);
         option.value = value;
@@ -370,7 +549,7 @@
           requirement.setting_key && requirement.setting_key !== "not mapped",
       ).length;
       const summaryValues = [
-        [rows.length, "Approved Level 1 rules"],
+        [rows.length, "TMCO Consulting-approved rules"],
         [mapped.length, "Exact Intune joins"],
         [planning.length, "Implementation backlog"],
         [evaluated.length - aligned, "Deterministic drift"],
@@ -412,50 +591,202 @@
         ? "live"
         : "fixture";
 
+      const tmcoRuleIds = new Set(tmcoProfile.rule_ids);
+      const missionRowsByRule = new Map(
+        rows.map((row) => [row.requirement.rule_id, row]),
+      );
+
+      const selectedProfile = () => {
+        const value = catalogProfiles.get(profile.value);
+        if (!value || value.profile_id === "tmco_approved")
+          throw new Error("Selected comparison profile is unavailable");
+        return value;
+      };
+
+      const rowsForProfile = (referenceProfile) => {
+        const referenceIds = new Set(referenceProfile.rule_ids);
+        const combined = rows.map((row) => ({
+          ...row,
+          referenceProfile,
+          inReferenceProfile: referenceIds.has(row.requirement.rule_id),
+        }));
+        for (const ruleId of referenceProfile.rule_ids) {
+          if (missionRowsByRule.has(ruleId)) continue;
+          const rule = catalogRules.get(ruleId);
+          if (!rule) continue;
+          combined.push({
+            requirement: {
+              reference_only: true,
+              rule_id: rule.rule_id,
+              title: rule.title,
+              section: rule.section,
+              outcome: "Not evaluated",
+              severity: "not evaluated",
+              setting_key: "not mapped",
+              mapping_review_status: "not reviewed",
+              provider_definition_ids: [],
+              matched_provider_definition_ids: [],
+              source_evidence_ids: [],
+              evaluation_included: false,
+              assignment_summary: "No company evidence scope approved",
+            },
+            finding: null,
+            resources: [],
+            referenceProfile,
+            inReferenceProfile: true,
+          });
+        }
+        return combined;
+      };
+
+      const renderComparison = (referenceProfile, combinedRows) => {
+        const referenceIds = new Set(referenceProfile.rule_ids);
+        const overlap = [...tmcoRuleIds].filter((ruleId) =>
+          referenceIds.has(ruleId),
+        );
+        const referenceGaps = referenceProfile.rule_ids.filter(
+          (ruleId) => !tmcoRuleIds.has(ruleId),
+        );
+        const tmcoOnly = [...tmcoRuleIds].filter(
+          (ruleId) => !referenceIds.has(ruleId),
+        );
+        const overlapEvaluated = combinedRows.filter(
+          ({ requirement, inReferenceProfile }) =>
+            inReferenceProfile && requirement.evaluation_included === true,
+        ).length;
+        const percent = referenceProfile.rule_count
+          ? Math.round((overlap.length / referenceProfile.rule_count) * 100)
+          : 0;
+        comparisonSummary.replaceChildren();
+        for (const [value, label] of [
+          [
+            `${overlap.length}/${referenceProfile.rule_count}`,
+            "Reference rules included",
+          ],
+          [`${percent}%`, "Technical membership overlap"],
+          [referenceGaps.length, "Reference rules to consider"],
+          [tmcoOnly.length, "TMCO Consulting-only rules"],
+          [overlapEvaluated, "Overlap rules with deterministic evidence"],
+        ]) {
+          const card = create("article", "matrix-comparison-card");
+          card.append(create("strong", "", value), create("span", "", label));
+          comparisonSummary.append(card);
+        }
+        comparisonGaps.replaceChildren();
+        const progress = create("div", "matrix-overlap-meter");
+        const fill = create("span");
+        fill.style.width = `${percent}%`;
+        progress.append(fill);
+        comparisonGaps.append(
+          create(
+            "p",
+            "matrix-comparison-caption",
+            `${referenceProfile.label}: ${overlap.length} of ${referenceProfile.rule_count} rule IDs are present in the TMCO Consulting-approved baseline.`,
+          ),
+          progress,
+        );
+        const provenance = create("p", "matrix-comparison-source");
+        provenance.append(
+          "Pinned source: ",
+          (() => {
+            const link = create("a", "", catalog.source.attribution);
+            link.href = catalog.source.repository;
+            link.rel = "noopener noreferrer";
+            return link;
+          })(),
+          ` · revision ${catalog.source.revision.slice(0, 12)} · catalog ${catalog.catalog_fingerprint.slice(0, 19)}…`,
+        );
+        comparisonGaps.append(provenance);
+        if (referenceGaps.length) {
+          const heading = create(
+            "strong",
+            "matrix-comparison-gap-heading",
+            `${referenceGaps.length} reference-profile rule${referenceGaps.length === 1 ? "" : "s"} not in the company baseline`,
+          );
+          const list = create("div", "matrix-comparison-gap-list");
+          for (const ruleId of referenceGaps.slice(0, 8)) {
+            const rule = catalogRules.get(ruleId);
+            if (!rule) continue;
+            const item = create("span");
+            item.append(
+              create("strong", "", rule.title),
+              create("code", "", rule.rule_id),
+            );
+            list.append(item);
+          }
+          comparisonGaps.append(heading, list);
+          if (referenceGaps.length > 8)
+            comparisonGaps.append(
+              create(
+                "p",
+                "matrix-comparison-more",
+                `${referenceGaps.length - 8} more reference-only rules are included in the searchable table below.`,
+              ),
+            );
+        } else {
+          comparisonGaps.append(
+            create(
+              "p",
+              "matrix-comparison-complete",
+              "Every rule ID in this reference profile is present in the TMCO Consulting-approved baseline. Implementation and observed evidence remain separate questions.",
+            ),
+          );
+        }
+      };
+
       const render = () => {
+        const referenceProfile = selectedProfile();
+        const comparisonRows = rowsForProfile(referenceProfile);
+        renderComparison(referenceProfile, comparisonRows);
         const query = search.value.trim().toLowerCase();
         const selectedOutcome = outcome.value;
         const selectedSection = section.value;
         const selectedFramework = framework.value;
-        const filtered = rows.filter(({ requirement, resources: evidence }) => {
-          if (mappedOnly.checked && !hasReviewedProviderMapping(requirement))
-            return false;
-          if (
-            selectedOutcome &&
-            implementationState(requirement) !== selectedOutcome
-          )
-            return false;
-          if (selectedSection && requirement.section !== selectedSection)
-            return false;
-          if (selectedFramework === "cis_lvl2") return false;
-          if (
-            selectedFramework &&
-            selectedFramework !== "cis_benchmark" &&
-            !frameworkIds(requirement, selectedFramework).length
-          )
-            return false;
-          if (!query) return true;
-          return [
-            requirement.title,
-            requirement.rule_id,
-            requirement.setting_key,
-            requirement.outcome,
-            implementationState(requirement),
-            formatValue(requirement.observed_value),
-            formatValue(requirement.expected_value),
-            buildAction(requirement),
-            ...(requirement.provider_definition_ids || []),
-            ...(requirement.source_evidence_ids || []),
-            ...frameworkColumns.flatMap(({ key }) =>
-              frameworkIds(requirement, key),
-            ),
-            ...evidence.flatMap((item) => [item.title, item.resource_family]),
-          ]
-            .filter((value) => typeof value === "string")
-            .join(" ")
-            .toLowerCase()
-            .includes(query);
-        });
+        const filtered = comparisonRows.filter(
+          ({ requirement, resources: evidence }) => {
+            if (mappedOnly.checked && !hasReviewedProviderMapping(requirement))
+              return false;
+            if (
+              selectedOutcome &&
+              implementationState(requirement) !== selectedOutcome
+            )
+              return false;
+            if (selectedSection && requirement.section !== selectedSection)
+              return false;
+            if (
+              selectedFramework === "cis_benchmark" &&
+              requirement.reference_only === true
+            )
+              return false;
+            if (
+              selectedFramework &&
+              selectedFramework !== "cis_benchmark" &&
+              !frameworkIds(requirement, selectedFramework).length
+            )
+              return false;
+            if (!query) return true;
+            return [
+              requirement.title,
+              requirement.rule_id,
+              requirement.setting_key,
+              requirement.outcome,
+              implementationState(requirement),
+              formatValue(requirement.observed_value),
+              formatValue(requirement.expected_value),
+              buildAction(requirement),
+              ...(requirement.provider_definition_ids || []),
+              ...(requirement.source_evidence_ids || []),
+              ...frameworkColumns.flatMap(({ key }) =>
+                frameworkIds(requirement, key),
+              ),
+              ...evidence.flatMap((item) => [item.title, item.resource_family]),
+            ]
+              .filter((value) => typeof value === "string")
+              .join(" ")
+              .toLowerCase()
+              .includes(query);
+          },
+        );
 
         const head = table.tHead || table.createTHead();
         head.replaceChildren();
@@ -474,7 +805,8 @@
         for (const row of filtered) {
           const requirement = row.requirement;
           const tr = body.insertRow();
-          tr.id = requirement.requirement_id;
+          if (typeof requirement.requirement_id === "string")
+            tr.id = requirement.requirement_id;
           const setting = create("td");
           const open = create(
             "button",
@@ -505,17 +837,39 @@
           const stateCell = create("td");
           stateCell.append(state(implementationState(requirement)));
           const frameworks = create("td", "matrix-framework-chips");
+          if (requirement.reference_only === true) {
+            frameworks.append(
+              create(
+                "span",
+                "matrix-membership-reference",
+                `${row.referenceProfile.label} only`,
+              ),
+            );
+          } else {
+            frameworks.append(
+              create(
+                "span",
+                "matrix-membership-tmco",
+                "TMCO Consulting Approved",
+              ),
+            );
+            frameworks.append(
+              create(
+                "span",
+                row.inReferenceProfile
+                  ? "matrix-membership-shared"
+                  : "matrix-membership-tmco-only",
+                row.inReferenceProfile
+                  ? `Also in ${row.referenceProfile.label}`
+                  : `Not in ${row.referenceProfile.label}`,
+              ),
+            );
+          }
           for (const { key, label } of frameworkColumns) {
             const ids = frameworkIds(requirement, key);
             if (ids.length)
               frameworks.append(create("span", "", `${label} ${ids.length}`));
           }
-          if (!frameworkIds(requirement, "cis_benchmark").length)
-            frameworks.prepend(create("span", "", "CIS L1 inventory"));
-          if (!frameworks.childElementCount)
-            frameworks.append(
-              create("span", "matrix-muted", "No reviewed cross-reference"),
-            );
           const actionCell = create("td");
           const action = create(
             "button",
@@ -534,24 +888,34 @@
             actionCell,
           );
         }
-        count.textContent = `${filtered.length} of ${rows.length} baseline requirements shown`;
+        count.textContent = `${filtered.length} of ${comparisonRows.length} visible rules shown · ${rows.length} TMCO Consulting Approved + ${comparisonRows.length - rows.length} ${referenceProfile.label}-only`;
         empty.hidden = filtered.length !== 0;
         if (!filtered.length)
-          empty.textContent =
-            selectedFramework === "cis_lvl2"
-              ? "CIS Level 2 is not loaded. Provifact does not infer it from Level 1 or a framework cross-reference."
-              : "No settings match the selected filters.";
+          empty.textContent = "No settings match the selected filters.";
       };
 
-      for (const control of [search, outcome, section, framework, mappedOnly]) {
+      for (const control of [
+        search,
+        outcome,
+        section,
+        framework,
+        mappedOnly,
+        profile,
+      ]) {
         control.addEventListener("input", render);
         control.addEventListener("change", render);
       }
+      profile.addEventListener("change", () => {
+        const next = new URL(window.location.href);
+        next.searchParams.set("profile", profile.value);
+        window.history.replaceState(null, "", next);
+      });
       reset.addEventListener("click", () => {
         search.value = "";
         outcome.value = "";
         section.value = "";
         framework.value = "";
+        profile.value = "cis_lvl1";
         mappedOnly.checked = false;
         render();
       });

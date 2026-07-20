@@ -1,13 +1,14 @@
-# CIS Level 1 Implementation Plan
+# Baseline Comparison & Implementation Plan
 
 <div class="matrix-intro">
   <div>
     <p class="matrix-kicker">Setting-level technical evidence</p>
-    <h2>Start with all 98 approved rules, then separate proven drift from work still to plan.</h2>
+    <h2>Compare the approved company baseline to public technical profiles—without inventing a compliance score.</h2>
     <p>
-      This view begins with the complete pinned CIS Level 1 inventory. Exact reviewed Intune joins
-      produce deterministic technical states; every other rule remains visible as implementation or
-      provider-mapping work. It does not issue a certification or organizational-compliance verdict.
+      Begin with all 98 TMCO Consulting-approved rules, then switch among the pinned CIS, DISA STIG, NIST,
+      CMMC, CNSSI, HICP, and NLLMAP technical profiles. Exact rule-ID overlap shows what the company
+      baseline includes and what it would need to consider; only reviewed Intune joins produce
+      deterministic posture. A profile comparison is not a certification or organizational verdict.
     </p>
   </div>
   <div class="matrix-intro-actions">
@@ -17,9 +18,9 @@
 </div>
 
 <div class="matrix-scope-note">
-  <strong>Current approved baseline:</strong> the pinned macOS 26 CIS Level 1 demo profile.
-  CIS Level 2 is shown explicitly as <em>not loaded</em>; Provifact does not infer Level 2 coverage
-  from Level 1 or from another framework's cross-reference.
+  <strong>Current approved baseline:</strong> the pinned TMCO Consulting macOS 26 technical baseline.
+  Reference profiles come from the same pinned public NIST mSCP revision. The comparison is exact
+  profile membership—not a CIS, NIST, DoD, CMMC, HHS, or assessor score.
 </div>
 
 <div id="settings-matrix" data-settings-matrix aria-busy="true">
@@ -28,6 +29,24 @@
   </div>
 
   <div class="matrix-summary" data-matrix-summary aria-live="polite"></div>
+  <section class="matrix-comparison" aria-labelledby="matrix-comparison-title">
+    <div class="matrix-comparison-heading">
+      <div>
+        <p class="matrix-kicker">Approved baseline versus reference profile</p>
+        <h2 id="matrix-comparison-title">Technical profile overlap</h2>
+      </div>
+      <label>
+        <span>Compare TMCO Consulting Approved to</span>
+        <select data-matrix-profile aria-describedby="matrix-comparison-boundary"></select>
+      </label>
+    </div>
+    <div class="matrix-comparison-summary" data-matrix-comparison-summary aria-live="polite"></div>
+    <div class="matrix-comparison-gaps" data-matrix-comparison-gaps></div>
+    <p id="matrix-comparison-boundary" class="matrix-comparison-boundary">
+      Exact rule-ID membership only. “Included” does not mean implemented, observed, satisfied,
+      compliant, or assessed. Deterministic Intune evidence remains a separate state.
+    </p>
+  </section>
   <div class="matrix-plan" data-matrix-plan aria-label="Implementation backlog by baseline section"></div>
 
   <form class="matrix-controls" data-matrix-controls>
@@ -48,11 +67,10 @@
       </select>
     </label>
     <label>
-      <span>Framework mapping</span>
+      <span>Evidence cross-reference</span>
       <select data-matrix-framework>
-        <option value="">All frameworks</option>
+        <option value="">All cross-references</option>
         <option value="cis_benchmark">CIS Level 1</option>
-        <option value="cis_lvl2">CIS Level 2</option>
         <option value="stig">STIG</option>
         <option value="nist_800_171r3">NIST SP 800-171</option>
         <option value="nist_800_53r5">NIST SP 800-53</option>
@@ -90,7 +108,8 @@
 
 ## How to read the matrix
 
-The default table shows every approved Level 1 rule. Select **Review details** for the exact
+The default table shows every TMCO Consulting-approved rule. Changing the comparison profile also adds its
+reference-only rules so the adoption gap is visible rather than hidden. Select **Review details** for the exact
 provider definition ID when one is approved, public-safe policy references, evidence IDs,
 fingerprints, deterministic guidance, and limitations. Use **Limit to deterministically evaluated
 rules** to reduce the view to the four exact Intune joins.
@@ -113,15 +132,18 @@ next data-model priority; the public matrix never guesses it from a display name
 
 ## Coverage limits
 
-- The complete 98-rule CIS Level 1 inventory is visible by default. Only explicitly reviewed exact
+- The complete 98-rule TMCO Consulting-approved inventory is visible by default. Only explicitly reviewed exact
   provider mappings enter the technical-alignment denominator.
+- Sixteen pinned public mSCP reference profiles are loaded for exact rule-membership comparison,
+  including CIS Levels 1 and 2, DISA STIG, NIST SP 800-171 and SP 800-53 impact levels, CMMC Levels
+  1 and 2, CNSSI impact levels, HICP, NLLMAP, and CIS Controls v8.
 - **Implementation planning required** means the rule belongs to the approved inventory but its
   Intune Settings Catalog, custom-profile, script/agent, or alternate-evidence path has not been
   approved. It is a backlog state—not a failed control.
 - **Provider mapping review required** means desired metadata exists but an exact Intune definition
   ID has not yet passed review.
-- CIS Level 2 is not loaded in the current repository and is never inferred.
-- STIG, NIST, and CMMC cells are cross-reference identifiers associated with the setting. They are
-  supporting technical evidence, not independent baseline scores.
+- STIG, NIST, CMMC, and other profile membership is loaded from the pinned mSCP source. Separate
+  cross-reference cells are identifiers associated with an evaluated setting. Both are supporting
+  technical evidence, not independent baseline scores.
 - Unsupported rules say so directly. AI does not create missing mappings or fill evidence gaps.
 - Provifact remains GET-only and cannot change, assign, or remediate an Intune policy.

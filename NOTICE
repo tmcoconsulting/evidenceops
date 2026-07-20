@@ -19,7 +19,8 @@ Commons Attribution 4.0 International (CC BY 4.0):
 
   https://github.com/usnistgov/macos_security
   Revision: 11b5896e4f12f43410686024f543792742562c91
-  Source profile: src/mscp/data/baselines/macos/cis_lvl1_macos_26.0.yaml
+  Approved source profile: src/mscp/data/baselines/macos/cis_lvl1_macos_26.0.yaml
+  Comparison source: 16 profile files enumerated in docs/assets/data/baseline-catalog.json
 
 Apple-authored vendor descriptions are not copied into this repository. CIS, NIST, DoD, CMMC, and
 Apple trademarks and referenced standards remain the property of their respective owners. The

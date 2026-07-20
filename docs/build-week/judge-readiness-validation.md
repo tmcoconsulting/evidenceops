@@ -144,7 +144,7 @@ then reset and independently verified as `CLOUDFLARE_DEPLOY_ENABLED=false`.
 
 Independent production verification confirmed:
 
-- `https://evidenceops.tmcoconsulting.com/`, Mission Control, the baseline plan, judge guide,
+- `https://provifact.tmcoconsulting.com/`, Mission Control, the baseline plan, judge guide,
   logo, `/api/status`, and `/api/ready` return HTTP 200 with successful TLS verification;
 - every one of the 32 URLs in the production sitemap returns HTTP 200;
 - HSTS, CSP, frame denial, no-sniff, referrer, permissions, cross-origin opener, and cross-origin

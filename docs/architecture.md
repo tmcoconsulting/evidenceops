@@ -49,6 +49,12 @@ mapping remains explicitly unreviewed. Only reviewed mappings can drive determin
 other 94 rules stay visible as implementation-planning work and do not enter the alignment
 denominator. iOS and iPadOS posture is visible but is not scored against the macOS baseline.
 
+A separate fingerprinted public catalog contains only rule IDs, titles, sections, and exact profile
+membership for 16 public technical profiles at that same revision. It supports company-versus-CIS,
+DISA STIG, NIST, CMMC, CNSSI, HICP, NLLMAP, and CIS Controls comparisons. It excludes vendor
+descriptions and remediation prose. A reference-only rule is planning input—not an approved target,
+observation, failed control, assessment result, or compliance conclusion.
+
 The engine compares only explicitly mapped normalized values and assignment evidence. Every
 finding links the baseline requirement, source evidence IDs, Git SHA, algorithm version, and
 fingerprints. Outcomes include aligned, missing, value drift, assignment drift, conflict,
@@ -58,18 +64,18 @@ relationships—not framework or organizational compliance. A model never select
 ## Brand and compatibility boundary
 
 **Provifact™ by TMCO Consulting** is the public product name. The tagline is **From approved change
-to audit-ready proof.** Phase 1 intentionally retains legacy technical identifiers—including the
-`evidenceops` Python package, `EVIDENCEOPS_*` environment variables, versioned schema identifiers,
-GitHub repository slug, Cloudflare Worker name, and current transition hostname—until a coordinated
-migration can update Entra's repository-bound OIDC subject, Cloudflare secrets/custom domains, and
-GitHub workflow provenance together. The `provifact` CLI is the preferred public command; the old
+to audit-ready proof.** Phase 1 retains legacy technical identifiers—including the `evidenceops`
+Python package, `EVIDENCEOPS_*` environment variables, versioned schema identifiers, Cloudflare
+Worker name, and OpenAI project/key labels—for compatibility and rollback. The GitHub repository
+and public hostname migrate together to `tmcoconsulting/provifact` and
+`provifact.tmcoconsulting.com`; the environment-scoped Entra trust is reverified against GitHub's
+post-rename immutable subject before any protected audit. The `provifact` CLI is preferred; the old
 command remains a compatibility alias.
 
-Mission Control presents the approved CIS Level 1 desired state beside the normalized observed
-state in a dense operational view. Its STIG selector is a comparison lens over already reviewed
-technical cross-references, not a loaded STIG baseline, assessment, or score. A real baseline switch
-requires a pinned authoritative release, human approval, reviewed requirement mappings, and exact
-provider mappings before any STIG rule enters deterministic evaluation.
+Mission Control presents the approved desired state beside normalized observed state in a dense
+operational view. Its selector opens the full profile-membership catalog. A real baseline switch
+still requires human approval, reviewed targets, requirement mappings, and exact provider mappings
+before any new rule enters deterministic evaluation.
 
 ## Private-to-public boundary
 
@@ -106,10 +112,12 @@ headers in `docs/_headers`; JSON API responses set the corresponding restrictive
 ## AI and verifier boundary
 
 The OpenAI Responses API request uses `store: false`, no tools, low reasoning effort, strict JSON
-schema output, and a bounded context containing only sanitized facts and allowed references. The
-verifier treats model output as untrusted. Typed claims must exactly equal deterministic expected
-claims, evidence references must remain in-package, unsupported verdict language is rejected, and
-all explanatory prose remains generated and quarantined for human review.
+schema output, and a bounded context containing only sanitized facts. The model supplies explanatory
+prose only. The Worker attaches deterministic typed claims and evidence references from the selected
+verified package after the model response, then checks exact claim equality, reference scope,
+unsupported verdict language, and mandatory limitations. The browser repeats strict shape and
+canonical typed-claim checks. All explanatory prose remains generated and quarantined for human
+review.
 
 ## GitHub and Entra trust boundary
 

@@ -511,26 +511,19 @@
       !(next instanceof HTMLElement)
     )
       return;
+    const comparisonProfiles = new Set([
+      "cis_lvl1",
+      "cis_lvl2",
+      "disa_stig",
+      "nist_800_53_moderate",
+      "cmmc_level_2",
+    ]);
     const render = () => {
-      const stig = selector.value === "stig";
       const evaluatedOnly = selector.value === "evaluated";
-      const framework = mission.framework_coverage.STIG || {
-        identifiers: [],
-        technical_evidence_identifier_count: 0,
-      };
       const evaluated = mission.requirements.filter(
         (requirement) => requirement.evaluation_included === true,
       );
-      const stigEvaluated = evaluated.filter(
-        (requirement) =>
-          Array.isArray(requirement.mappings?.stig) &&
-          requirement.mappings.stig.length,
-      );
-      const scoped = stig
-        ? stigEvaluated
-        : evaluatedOnly
-          ? evaluated
-          : mission.requirements;
+      const scoped = evaluatedOnly ? evaluated : mission.requirements;
       const evaluatedScoped = scoped.filter(
         (requirement) => requirement.evaluation_included === true,
       );
@@ -540,90 +533,64 @@
       const planning = scoped.length - evaluatedScoped.length;
       readout.replaceChildren(
         metricCard(
-          stig
-            ? "STIG-linked evaluated settings"
-            : evaluatedOnly
-              ? "Exact reviewed joins"
-              : "Pinned baseline inventory",
+          evaluatedOnly ? "Exact reviewed joins" : "Pinned baseline inventory",
           scoped.length,
-          stig
-            ? `${framework.technical_evidence_identifier_count} technical identifier(s)`
-            : evaluatedOnly
-              ? "Deterministic denominator only"
-              : mission.baseline.benchmark_version,
+          evaluatedOnly
+            ? "Deterministic denominator only"
+            : mission.baseline.benchmark_version,
         ),
         metricCard(
           "Deterministically evaluated",
           evaluatedScoped.length,
-          stig ? "Cross-reference lens only" : "Exact reviewed Intune mappings",
+          "Exact reviewed Intune mappings",
         ),
         metricCard(
-          evaluatedOnly || stig
-            ? "Matches desired state"
-            : "Implementation backlog",
-          evaluatedOnly || stig ? aligned : planning,
-          evaluatedOnly || stig
+          evaluatedOnly ? "Matches desired state" : "Implementation backlog",
+          evaluatedOnly ? aligned : planning,
+          evaluatedOnly
             ? `${evaluatedScoped.length - aligned} deterministic finding(s)`
             : "Requires approved management and evidence paths",
           planning || evaluatedScoped.length - aligned ? "warning" : "good",
         ),
         metricCard(
-          stig
-            ? "STIG baseline status"
-            : evaluatedOnly
-              ? "Deterministic findings"
-              : "Authority",
-          stig
-            ? "NOT LOADED"
-            : evaluatedOnly
-              ? evaluatedScoped.length - aligned
-              : "APPROVED",
-          stig
-            ? "No STIG assessment or score is produced"
-            : evaluatedOnly
-              ? "Technical evidence states only"
-              : mission.baseline.approval_status,
-          stig || (evaluatedOnly && evaluatedScoped.length - aligned)
+          evaluatedOnly ? "Deterministic findings" : "Authority",
+          evaluatedOnly ? evaluatedScoped.length - aligned : "APPROVED",
+          evaluatedOnly
+            ? "Technical evidence states only"
+            : mission.baseline.approval_status,
+          evaluatedOnly && evaluatedScoped.length - aligned
             ? "warning"
             : "good",
         ),
       );
       next.replaceChildren();
-      if (stig) {
-        next.append(
-          create("strong", "", "What switching to STIG would require"),
-          create(
-            "p",
-            "",
-            "Provifact can reuse the same observations, but a real STIG evaluation requires a pinned authoritative STIG release, an approved desired-state profile, reviewed requirement-to-setting mappings, exact Intune definition mappings, and human acceptance of the new scope. The current view is only a technical cross-reference.",
-          ),
-          create(
-            "p",
-            "",
-            `Current evidence references: ${Array.isArray(framework.identifiers) && framework.identifiers.length ? framework.identifiers.join(", ") : "none published"}.`,
-          ),
-        );
-      } else {
-        next.append(
-          create(
-            "strong",
-            "",
-            evaluatedOnly
-              ? "Deterministic evidence scope"
-              : mission.baseline.benchmark,
-          ),
-          create(
-            "p",
-            "",
-            evaluatedOnly
-              ? `${mission.metrics.alignment_denominator} rules currently have reviewed exact provider mappings. Their states come from evidence, not GPT.`
-              : `${mission.baseline.rule_count} rules are inventoried; ${mission.metrics.alignment_denominator} have reviewed exact provider mappings and ${mission.baseline.rule_count - mission.metrics.alignment_denominator} remain visible as implementation planning work.`,
-          ),
-        );
-      }
+      next.append(
+        create(
+          "strong",
+          "",
+          evaluatedOnly
+            ? "Deterministic evidence scope"
+            : mission.baseline.benchmark,
+        ),
+        create(
+          "p",
+          "",
+          evaluatedOnly
+            ? `${mission.metrics.alignment_denominator} rules currently have reviewed exact provider mappings. Their states come from evidence, not GPT.`
+            : `${mission.baseline.rule_count} rules are inventoried; ${mission.metrics.alignment_denominator} have reviewed exact provider mappings and ${mission.baseline.rule_count - mission.metrics.alignment_denominator} remain visible as implementation planning work. Use a reference-profile option above to open the full rule-membership comparison.`,
+        ),
+      );
       renderPostureRows(selector.value);
     };
-    selector.addEventListener("change", render);
+    selector.addEventListener("change", () => {
+      if (comparisonProfiles.has(selector.value)) {
+        window.location.assign(
+          `/settings-matrix/?profile=${encodeURIComponent(selector.value)}`,
+        );
+        return;
+      }
+      render();
+    });
     render();
   };
 

@@ -103,9 +103,13 @@ hide:
           <label class="mission-baseline-selector">
             <span>Comparison lens</span>
             <select data-baseline-view>
-              <option value="active">CIS Level 1 · full implementation plan</option>
-              <option value="evaluated">CIS Level 1 · evaluated rules only</option>
-              <option value="stig">STIG · technical cross-reference only</option>
+              <option value="active">TMCO Consulting Approved · full implementation plan</option>
+              <option value="evaluated">TMCO Consulting Approved · evaluated rules only</option>
+              <option value="cis_lvl1">Compare with CIS Level 1 →</option>
+              <option value="cis_lvl2">Compare with CIS Level 2 →</option>
+              <option value="disa_stig">Compare with DISA STIG →</option>
+              <option value="nist_800_53_moderate">Compare with NIST SP 800-53 Moderate →</option>
+              <option value="cmmc_level_2">Compare with CMMC Level 2 →</option>
             </select>
           </label>
         </div>

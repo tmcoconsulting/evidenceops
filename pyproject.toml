@@ -44,9 +44,9 @@ dev = [
 ]
 
 [project.urls]
-Documentation = "https://github.com/tmcoconsulting/evidenceops/tree/main/docs"
-Issues = "https://github.com/tmcoconsulting/evidenceops/issues"
-Repository = "https://github.com/tmcoconsulting/evidenceops"
+Documentation = "https://github.com/tmcoconsulting/provifact/tree/main/docs"
+Issues = "https://github.com/tmcoconsulting/provifact/issues"
+Repository = "https://github.com/tmcoconsulting/provifact"
 
 [tool.hatch.build.targets.wheel]
 packages = ["evidenceops", "provifact"]

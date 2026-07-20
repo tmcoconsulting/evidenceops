@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import struct
 import tomllib
 from pathlib import Path
 
@@ -24,6 +25,25 @@ def test_provifact_public_brand_and_tagline_are_consistent() -> None:
     assert "<strong>Provifact™</strong><small>by TMCO Consulting</small>" in dashboard
     assert "site_name: Provifact™ by TMCO Consulting" in mkdocs
     assert "site_description: From approved change to audit-ready proof." in mkdocs
+    assert "site_url: https://provifact.tmcoconsulting.com/" in mkdocs
+    assert "repo_url: https://github.com/tmcoconsulting/provifact" in mkdocs
+
+
+def test_social_card_and_share_contract_are_public_and_accessible() -> None:
+    override = (REPOSITORY_ROOT / "docs/overrides/main.html").read_text(encoding="utf-8")
+    script = (REPOSITORY_ROOT / "docs/assets/javascripts/share.js").read_text(encoding="utf-8")
+    image_path = REPOSITORY_ROOT / "docs/assets/images/provifact-social-card.png"
+    payload = image_path.read_bytes()
+    assert payload.startswith(b"\x89PNG\r\n\x1a\n")
+    assert struct.unpack(">II", payload[16:24]) == (1200, 630)
+    assert "og:image" in override
+    assert "twitter:card" in override
+    assert (
+        "https://provifact.tmcoconsulting.com/assets/images/provifact-social-card.png" in override
+    )
+    assert 'navigator.share === "function"' in script
+    assert "navigator.clipboard.writeText" in script
+    assert 'aria-label", "Share this Provifact view"' in script
 
 
 def test_prior_product_name_is_absent_from_current_public_copy() -> None:

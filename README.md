@@ -2,7 +2,7 @@
 
 **From approved change to audit-ready proof.**
 
-[![CI](https://github.com/tmcoconsulting/evidenceops/actions/workflows/ci.yml/badge.svg)](https://github.com/tmcoconsulting/evidenceops/actions/workflows/ci.yml)
+[![CI](https://github.com/tmcoconsulting/provifact/actions/workflows/ci.yml/badge.svg)](https://github.com/tmcoconsulting/provifact/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 Provifact™ is a continuous audit-evidence and configuration-lifecycle platform from TMCO Consulting
@@ -14,7 +14,7 @@ The Build Week Phase 1 vertical slice connects a Git-approved macOS baseline to 
 through Microsoft Graph GET requests, normalizes only the evidence needed for deterministic drift,
 publishes a fail-closed sanitized package, and serves an operational dashboard with a constrained
 GPT-5.6 Provifact Assistant. The current live application remains at the legacy transition hostname
-[evidenceops.tmcoconsulting.com](https://evidenceops.tmcoconsulting.com/).
+[provifact.tmcoconsulting.com](https://provifact.tmcoconsulting.com/).
 
 The verified production record is in
 [Final Live MVP Validation](docs/build-week/final-live-mvp-validation.md). Production currently
@@ -129,11 +129,11 @@ See [Getting Started](docs/getting-started.md), [Architecture](docs/architecture
 
 The public product is **Provifact™ by TMCO Consulting**. Phase 1 retains the existing
 `evidenceops` Python import, `evidenceops` console command, schema/algorithm identifiers,
-`EVIDENCEOPS_*` environment variables, GitHub repository slug, Worker resource name, and current
-hostname as compatibility identifiers. New operator documentation uses the `provifact` command.
-These identifiers will move only through a reviewed, rollback-safe migration because the GitHub
-repository name is part of the Entra OIDC trust and the Worker name owns encrypted secrets and
-deployment history.
+`EVIDENCEOPS_*` environment variables, Worker resource name, OpenAI project/key labels, and artifact
+prefixes as compatibility identifiers. New operator documentation uses the `provifact` command.
+The public repository and hostname are migrating to `tmcoconsulting/provifact` and
+`provifact.tmcoconsulting.com` through a federation-safe cutover; the Worker name keeps its encrypted
+secrets and deployment history.
 
 Copyright 2026 TMCO Consulting, LLC. Provifact™ is a trademark of TMCO Consulting, LLC. The
 software is licensed under the

@@ -99,7 +99,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api "/repos/tmcoconsulting/evidenceops/actions/runs/$SANITIZED_AUDIT_RUN_ID" \
+          gh api "/repos/$GITHUB_REPOSITORY/actions/runs/$SANITIZED_AUDIT_RUN_ID" \
             > "$RUNNER_TEMP/evidenceops-audit-run.json"
           jq -e '
             .name == "Read-only Intune audit" and
@@ -119,7 +119,7 @@ jobs:
           name: evidenceops-sanitized-mission-${{ inputs.sanitized_audit_run_id }}
           path: build/publication-handoff
           github-token: ${{ github.token }}
-          repository: tmcoconsulting/evidenceops
+          repository: ${{ github.repository }}
           run-id: ${{ inputs.sanitized_audit_run_id }}
 
       - name: Revalidate and stage live sanitized dashboard

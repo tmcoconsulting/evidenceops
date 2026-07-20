@@ -1,13 +1,14 @@
 site_name: Provifact™ by TMCO Consulting
 site_description: From approved change to audit-ready proof.
-site_url: https://evidenceops.tmcoconsulting.com/
-repo_url: https://github.com/tmcoconsulting/evidenceops
+site_url: https://provifact.tmcoconsulting.com/
+repo_url: https://github.com/tmcoconsulting/provifact
 repo_name: Provifact source
 edit_uri: edit/main/docs/
 copyright: Copyright &copy; 2026 TMCO Consulting, LLC · Provifact™
 
 theme:
   name: material
+  custom_dir: docs/overrides
   language: en
   font: false
   logo: assets/images/provifact-mark.svg
@@ -73,15 +74,17 @@ markdown_extensions:
       alternate_style: true
 
 extra_css:
-  - assets/stylesheets/extra.css?v=20260720-judge2
-  - assets/stylesheets/settings-matrix.css?v=20260720-judge2
-  - assets/stylesheets/assistant-evidence-context.css?v=20260720-judge2
+  - assets/stylesheets/extra.css?v=20260720-provifact2
+  - assets/stylesheets/settings-matrix.css?v=20260720-provifact2
+  - assets/stylesheets/assistant-evidence-context.css?v=20260720-provifact2
+  - assets/stylesheets/share.css?v=20260720-provifact1
 
 extra_javascript:
-  - assets/javascripts/mission-control.js?v=20260720-judge2
-  - assets/javascripts/provifact-api.js?v=20260720-judge2
-  - assets/javascripts/settings-matrix.js?v=20260720-judge2
-  - assets/javascripts/assistant-evidence-context.js?v=20260720-judge2
+  - assets/javascripts/mission-control.js?v=20260720-provifact2
+  - assets/javascripts/provifact-api.js?v=20260720-provifact2
+  - assets/javascripts/settings-matrix.js?v=20260720-provifact2
+  - assets/javascripts/assistant-evidence-context.js?v=20260720-provifact2
+  - assets/javascripts/share.js?v=20260720-provifact1
 
 plugins:
   - search

@@ -13,10 +13,11 @@ Intune.** This guide is a product walkthrough, not a statement of any competitio
    assignment evidence, public-safe parent reference, evidence IDs, fingerprints, and human-only
    operator guidance.
 3. Switch **Baseline posture** between the full 98-rule implementation plan and the evaluated-only
-   denominator. The dashboard never hides the 94 rules that still need an approved implementation
-   or mapping path.
-4. Open the [Baseline Plan](settings-matrix.md). Filter by Auditing, Operating System, Password
-   Policy, System Settings, or Supplemental. A planning item is not mislabeled as a failed control.
+   denominator. Then open CIS Level 2, DISA STIG, NIST SP 800-53 Moderate, or CMMC Level 2 in the
+   profile comparison. The dashboard never hides rules that need company approval or evidence.
+4. Open the [Baseline Plan](settings-matrix.md). Switch among all 16 pinned public technical
+   profiles. Exact rule-ID membership shows the adoption gap; it never becomes a compliance score,
+   and a planning item is not mislabeled as a failed control.
 5. Ask Provifact Assistant what requires attention. Typed claims and cited evidence are checked
    deterministically; generated prose remains generated analysis subject to human review.
 6. Finish at **Evidence health and privacy**: Graph is GET-only, raw tenant responses are not public,
@@ -31,7 +32,7 @@ Intune.** This guide is a product walkthrough, not a statement of any competitio
 | Drift status | Deterministic engine | GPT cannot create, alter, resolve, or approve a finding |
 | Provifact Assistant | Bounded sanitized context | Typed claims are verified; prose is quarantined from evidence authority |
 | CIS Level 1 plan | 98 hash-pinned rules from the recorded NIST mSCP revision | Four exact Intune joins are evaluated; 94 rules are visible implementation work |
-| STIG lens | Cross-references on reviewed evidence only | No STIG baseline, score, compliance verdict, or certification is claimed |
+| Public reference profiles | Exact membership from one pinned public mSCP revision | Shows overlap and adoption gaps; never a score, compliance verdict, or certification |
 
 ## The macOS onboarding use case
 
@@ -67,7 +68,8 @@ authoritative upstream project is the
 ## Honest limitations
 
 - Only four exact Intune provider mappings currently enter the technical denominator.
-- CIS Level 2 and a full STIG baseline are not loaded.
+- Sixteen public reference profiles are loaded for exact membership comparison; none becomes the
+  approved company target without separate human approval.
 - iOS and iPadOS appear as sanitized aggregate posture but are not scored against a macOS baseline.
 - No Intune write, remediation, assignment, exception, or rollback capability exists.
 - Technical configuration evidence can support an assessment objective; human assessors retain

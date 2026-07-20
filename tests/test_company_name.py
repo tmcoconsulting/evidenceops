@@ -17,7 +17,7 @@ def test_company_name_scanner_accepts_full_name_and_lowercase_identifiers(
     docs = tmp_path / "docs"
     docs.mkdir()
     (docs / "index.md").write_text(
-        "TMCO Consulting operates tmcoconsulting/evidenceops.",
+        "TMCO Consulting operates tmcoconsulting/provifact.",
         encoding="utf-8",
     )
 
