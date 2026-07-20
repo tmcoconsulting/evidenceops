@@ -445,3 +445,14 @@ STIG `NOT LOADED` and explain the approval and mapping work required for a real 
 decision surface. A visual framework change does not alter the authority boundary: the current CIS
 desired state and deterministic evidence remain authoritative, and cross-references never become a
 STIG score or compliance verdict.
+
+## 2026-07-20 — Separate public Mission and model-response byte ceilings
+
+**Decision:** Keep OpenAI response reads capped at 256 KiB. Read the scanned public Mission through a
+separate 512 KiB ceiling before schema, fingerprint, and egress validation. Reject a public Mission
+above that dedicated cap with a fail-closed readiness error.
+
+**Why:** The first live package after nested FileVault normalization was 268,320 bytes because it
+retains the complete 98-rule review inventory. Reusing the smaller untrusted-model response cap made
+`/api/status` return 502 even though the static package was valid. Increasing the shared limit would
+have unnecessarily weakened the OpenAI boundary; a distinct bounded path keeps both purposes clear.
