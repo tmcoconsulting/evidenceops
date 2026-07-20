@@ -36,34 +36,37 @@ theme:
         name: Switch to light mode
 
 nav:
-  - Overview: index.md
-  - Live Demo: live-demo.md
-  - Architecture: architecture.md
-  - Getting Started: getting-started.md
-  - Standard Operating Procedures:
-      - Demo Mode: operations/demo-mode.md
-      - Live Read-Only Collection: operations/live-collection.md
-      - Deployment Models: operations/deployment-models.md
-      - Cloudflare Worker: operations/cloudflare-worker.md
-      - Incident Response: operations/incident-response.md
-  - Security and Data Handling:
+  - Start Here: index.md
+  - Product:
+      - Mission Control: evidence-dashboard.md
+      - Settings & Baselines: settings-matrix.md
+      - Runtime Demo: live-demo.md
+  - How It Works:
+      - Architecture: architecture.md
+      - Audit Methodology: audit-methodology.md
       - Security Model: security-model.md
       - Data Handling: data-handling.md
       - Threat Model: threat-model.md
-  - Audit Methodology: audit-methodology.md
-  - Evidence Dashboard: evidence-dashboard.md
-  - Videos: videos.md
-  - Build Week:
-      - Codex Collaboration: build-week/codex-collaboration.md
-      - Decision Log: build-week/decision-log.md
-      - Contribution Log: build-week/contribution-log.md
-      - Phase 1 Validation: build-week/phase-1-validation.md
-      - Worker Validation: build-week/cloudflare-worker-validation.md
-      - Build Week Slice Validation: build-week/build-week-slice-validation.md
-      - Final Implementation Report: build-week/final-implementation-report.md
-      - Demo Package: build-week/demo-package.md
-      - Submission Checklist: build-week/submission-checklist.md
-  - Roadmap: roadmap.md
+  - Operate:
+      - Getting Started: getting-started.md
+      - Local Demo: operations/demo-mode.md
+      - Live Read-Only Collection: operations/live-collection.md
+      - Cloudflare Worker: operations/cloudflare-worker.md
+      - Deployment Models: operations/deployment-models.md
+      - Incident Response: operations/incident-response.md
+  - Project:
+      - Roadmap: roadmap.md
+      - Videos: videos.md
+      - Build Week:
+          - Codex Collaboration: build-week/codex-collaboration.md
+          - Decision Log: build-week/decision-log.md
+          - Contribution Log: build-week/contribution-log.md
+          - Phase 1 Validation: build-week/phase-1-validation.md
+          - Worker Validation: build-week/cloudflare-worker-validation.md
+          - Build Week Slice Validation: build-week/build-week-slice-validation.md
+          - Final Implementation Report: build-week/final-implementation-report.md
+          - Demo Package: build-week/demo-package.md
+          - Submission Checklist: build-week/submission-checklist.md
 
 markdown_extensions:
   - admonition
@@ -81,10 +84,14 @@ markdown_extensions:
 
 extra_css:
   - assets/stylesheets/extra.css?v=20260719-responsive
+  - assets/stylesheets/settings-matrix.css?v=20260719-audit
+  - assets/stylesheets/assistant-evidence-context.css?v=20260719-audit
 
 extra_javascript:
   - assets/javascripts/mission-control.js
   - assets/javascripts/evidenceops-api.js
+  - assets/javascripts/settings-matrix.js
+  - assets/javascripts/assistant-evidence-context.js
 
 plugins:
   - search

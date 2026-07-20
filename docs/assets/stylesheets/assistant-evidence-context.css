@@ -1,0 +1,68 @@
+.runtime-evidence-context {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 0.25rem solid var(--md-accent-fg-color);
+  border-radius: 0.55rem;
+  background: var(--md-code-bg-color);
+}
+
+.runtime-evidence-context h4,
+.runtime-evidence-context h5 {
+  margin-top: 0;
+}
+
+.runtime-evidence-context-lead {
+  color: var(--md-default-fg-color--light);
+}
+
+.runtime-evidence-card {
+  margin: 0.8rem 0;
+  padding: 0.8rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.45rem;
+  background: var(--md-default-bg-color);
+}
+
+.runtime-evidence-list {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.65fr) minmax(0, 1.35fr);
+  gap: 0.35rem 0.75rem;
+  margin: 0;
+}
+
+.runtime-evidence-list dt,
+.runtime-evidence-list dd {
+  min-width: 0;
+  margin: 0;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.runtime-evidence-list dt {
+  font-weight: 700;
+}
+
+.runtime-evidence-list dd,
+.runtime-evidence-list code {
+  overflow-wrap: anywhere;
+}
+
+.runtime-evidence-list code {
+  white-space: normal;
+}
+
+@media (max-width: 38rem) {
+  .runtime-evidence-list {
+    grid-template-columns: 1fr;
+  }
+
+  .runtime-evidence-list dt {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  .runtime-evidence-list dd {
+    padding-top: 0;
+  }
+}
