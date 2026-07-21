@@ -27,9 +27,10 @@ maintainer to establish a private channel.
   gates.
 - Production serves a reviewed sanitized Mission package through Cloudflare Workers Static Assets.
   Tenant, device, user, group, assignment, credential, and raw Graph values are not public.
-- `/api/ask` and `/api/narrative` are same-origin, bounded, rate-limited routes. The default public
-  mode is fixture-based and makes no OpenAI model call.
-- When OpenAI mode is explicitly enabled, only sanitized bounded context is sent with `store: false`
+- `/api/ask` and `/api/narrative` are same-origin, bounded, rate-limited routes. Production uses the
+  fixed `gpt-5.6-terra` OpenAI mode and never falls back to a fixture response. Local and preview
+  builds default to credential-free fixture mode and make no model call.
+- In OpenAI mode, only sanitized bounded context is sent with `store: false`
   and no tools. Typed claims and references are verified; generated prose remains subject to human
   review.
 - The public site, technical-alignment result, and generated explanation are not authorization

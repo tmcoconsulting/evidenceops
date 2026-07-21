@@ -6,11 +6,10 @@ only; TJ does not need to appear on camera.
 
 ## Pre-recording gate
 
-The verified production package at the end of finalization is
-`mission-2626272a6ea65343eee5302c`, collected `2026-07-20T16:24:36Z`, with prior live snapshot
-`mission-283e1b9be457b76d104a0e8a`. It contains a real unchanged comparison and no resolved finding
-because no manual Intune change occurred. Recheck these values immediately before recording and use
-whatever newer reviewed production snapshot is actually reported.
+Do not use a snapshot ID, collection timestamp, count, or finding copied from this document. Read
+the current values from the reviewed production package immediately before recording. If evidence
+is stale or the displayed fleet aggregate cannot be explained, follow the protected refresh runbook
+before recording.
 
 1. Open `https://provifact.tmcoconsulting.com/api/status` in a clean browser profile. Confirm
    `data_mode` is `LIVE SANITIZED TENANT DATA`, `narrative_mode` is `openai`, `model` is
@@ -23,7 +22,7 @@ whatever newer reviewed production snapshot is actually reported.
 5. Ask one short Assistant question before recording to confirm the bounded live path. Avoid repeated
    chargeable calls.
 
-## Narrated script — target 2:45
+## Narrated script — target 2:50
 
 **0:00–0:20 — problem and provenance.** Open Mission Control at the top. “Regulated endpoint teams
 should not reconstruct months of configuration history before every audit. Provifact joins
@@ -68,7 +67,7 @@ intent, observed state, drift, limitations, and evidence references reviewable b
 2. Select the first item under **What requires attention now**.
 3. In the dialog, point to observed → target, assignment, provider ID, evidence, fingerprint, and
    guidance; choose **Close**.
-4. Select **Settings** in product navigation.
+4. Select **Baseline matrix** in product navigation.
 5. Choose **Review details** on a reviewed provider mapping; close the dialog.
 6. Return to Mission Control and select **Changes**.
 7. Choose **Check for newer published snapshot** and state that it does not collect from Intune.

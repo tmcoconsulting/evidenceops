@@ -34,6 +34,10 @@ previous-versus-current changes, framework cross-references, and the site-wide P
 Every value comes from the tracked synthetic package; fixture assistant answers make no model
 request.
 
+To change the organization target or adopt another reference profile, follow the
+[approved-baseline runbook](operations/approved-baseline.md). Loading a comparison profile never
+approves it automatically.
+
 To validate the same static artifact behind the local Cloudflare Worker boundary, install Node.js
 22 or later and run:
 

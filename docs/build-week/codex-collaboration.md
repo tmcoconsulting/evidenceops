@@ -7,7 +7,9 @@
 - **Project start:** 2026-07-18
 - **Phase:** Phase 1 — narrow read-only Intune-to-verified-narrative proof
 - **Primary implementation thread:** This OpenAI Build Week Codex task
-- **Supporting implementation threads:** None during Phase 0 or this Phase 1 implementation
+- **Supporting implementation threads:** None for product implementation; three read-only agents
+  independently audited repository/release security, production site/UX, and submission sources
+  during final readiness
 
 ## Human decisions
 
@@ -27,7 +29,8 @@ Cloudflare-next deployment decision. After TJ reviewed and committed that checkp
 the separately reviewable Worker/static-assets runtime, same-origin API contracts, workerd tests,
 CI validation, protected workflow support, Cloudflare preview/production deployments, custom
 domain, secure OpenAI-to-Worker key transfer, and external validation. No supporting agent or
-unrelated repository supplied project code.
+unrelated repository supplied project code. Final-readiness supporting agents changed no file or
+external state; the primary task evaluated and implemented all changes.
 
 The local Codex CLI reported version `0.145.0-alpha.18`. A current official Codex manual fetched
 during Phase 0 documented the GPT-5.6 Sol family and Extra High/Max reasoning controls. The manual
@@ -43,9 +46,10 @@ status claims; it quarantines all unrestricted prose before human review. Public
 static demo use an offline fixture and require no API key. The Worker OpenAI transport is mocked in
 tests. An initial bounded production attempt returned capacity unavailable; a later single bounded
 request succeeded against fixed `gpt-5.6-terra`, passed exact typed-claim verification, quarantined
-all generated prose, and required human review. Production was then returned to fixture narrative
-mode. The deployed evidence package is now a separately reviewed, fail-closed sanitized live
-projection; deterministic evidence remains authoritative.
+all generated prose, and required human review. Production now uses fixed-model OpenAI mode without
+a synthetic fallback. The deployed evidence package is a separately reviewed, fail-closed sanitized
+live projection; deterministic evidence remains authoritative. Local and preview runtimes remain
+credential-free fixture mode.
 
 ## Authorship and ownership
 

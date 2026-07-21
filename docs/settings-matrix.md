@@ -14,6 +14,7 @@
   <div class="matrix-intro-actions">
     <a class="md-button md-button--primary" href="../evidence-dashboard/">Open Mission Control</a>
     <a class="md-button" href="../audit-methodology/">Read the methodology</a>
+    <a class="md-button" href="../operations/approved-baseline/">Change the approved target safely</a>
   </div>
 </div>
 

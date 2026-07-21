@@ -9,7 +9,7 @@
 [![CI](https://github.com/tmcoconsulting/provifact/actions/workflows/ci.yml/badge.svg)](https://github.com/tmcoconsulting/provifact/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-**Provifact turns approved endpoint changes into traceable audit evidence—continuously,
+**Provifact turns approved endpoint changes into traceable audit evidence—repeatably,
 read-only, and without letting AI become the authority.**
 
 Regulated teams can manage thousands of endpoint settings and still spend weeks before an audit
@@ -71,6 +71,15 @@ configuration state?**
   provider slice; the evidence, publication, and verification contracts are designed for additional
   endpoint platforms.
 
+The current implementation is portable at its core but not turnkey across providers. Domain,
+evidence, publication, and verification contracts are provider-neutral; Microsoft Intune is the
+only live provider. Adding Jamf, Omnissa Workspace ONE, or another MDM requires a new GET-only
+adapter, pinned reference data, exact reviewed field mappings and value transforms,
+least-privilege authentication, fixtures, contract tests, and deployment configuration. That same
+pattern can extend to Windows, Linux, or other mobile platforms, but effort depends on the target
+API and schema; it is not guaranteed to be configuration-only. The deterministic engine and public
+schema do not need to be rewritten when those contracts are met.
+
 ## Current Build Week proof
 
 The Phase 1 vertical slice connects the **TMCO Consulting macOS CIS Level 1 Demo Baseline** in Git to
@@ -81,6 +90,9 @@ Provifact Assistant.
 The approved baseline is pinned to a reviewed NIST macOS Security Compliance Project revision and
 hashes. That approval supports technical drift detection; it is **not** CIS certification, a CMMC
 assessment result, a C3PAO conclusion, or an organizational compliance verdict.
+The [approved-baseline runbook](docs/operations/approved-baseline.md) shows how reference selection,
+organization targets, reviewed provider mappings, observations, technical results, and human
+judgment remain separate.
 
 The verified production record is in
 [Judge-Readiness Validation](docs/build-week/judge-readiness-validation.md). Production serves a

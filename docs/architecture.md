@@ -38,6 +38,13 @@ The Apple collector limits concurrency to four operations and converts an unavai
 unsupported shape into an explicit collection-gap record. It does not dump raw responses. A later
 Jamf or Workspace ONE adapter can produce the same evidence model.
 
+Portability is contract-level, not zero-configuration. A new provider must implement GET-only
+collection, pinned reference data, least-privilege authentication, normalization, exact field
+mapping and value-transform review, fixtures, provider-contract tests, and deployment
+configuration. That pattern can extend to Windows, Linux, other mobile platforms, or another MDM,
+but effort depends on the target API and schema. When it emits the existing versioned observation
+contract, the drift, publication, fingerprint, dashboard, and verifier layers remain unchanged.
+
 ## Baseline and deterministic evidence engine
 
 The pinned baseline inventory comes from mSCP revision
@@ -108,6 +115,11 @@ Production pins `gpt-5.6-terra`; the project service-account key exists only as 
 secret `OPENAI_API_KEY`. Fixture mode performs no model request and never silently substitutes for
 a failed live request. Static assets carry repository-controlled CSP, HSTS, and browser security
 headers in `docs/_headers`; JSON API responses set the corresponding restrictive controls in code.
+
+The Mission package's `ai.mode` records how any package-bundled offline narrative was produced; the
+Worker's `/api/status.narrative_mode` reports the active `/api/ask` runtime. A live production
+package may therefore retain `ai.mode: fixture` while the separately gated same-origin Assistant
+runtime reports `openai`. The model does not generate or alter the Mission package.
 
 ## AI and verifier boundary
 

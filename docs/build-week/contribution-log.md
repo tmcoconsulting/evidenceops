@@ -3,7 +3,9 @@
 ## Work location
 
 The Phase 0 implementation occurred in the primary Codex thread. No supporting Codex thread or
-subagent produced repository content during this phase.
+subagent produced repository content during this phase. Final readiness used three read-only
+supporting agents for independent repository, production-site, and submission/source audits; they
+changed no repository file or external state.
 
 ## Milestones
 

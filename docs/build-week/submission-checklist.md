@@ -1,7 +1,8 @@
 # Submission Checklist
 
-This checklist is evidence support, not a statement of Build Week rules. Verify current competition
-requirements from their authoritative source before submission.
+This checklist is evidence support, not a substitute for the
+[official rules](https://openai.devpost.com/rules). The verified submission deadline is July 21,
+2026, 5:00 PM PDT.
 
 ## Public repository
 
@@ -31,7 +32,10 @@ requirements from their authoritative source before submission.
 - [ ] Run `/feedback` in the primary Codex thread
 - [ ] Preserve the returned Session ID privately
 - [ ] Do not commit the Session ID unless rules explicitly require public disclosure
-- [ ] Verify any Devpost or competition fields against authoritative current instructions
+- [ ] Verify category is Developer Tools and repository/test instructions are saved
+- [ ] Add the public YouTube URL and test it signed out
+- [ ] Save required submitter type and country fields accurately
+- [ ] Submit and confirm My Projects shows green **Submitted**, not draft
 
 ## Media review
 
@@ -39,5 +43,5 @@ requirements from their authoritative source before submission.
 - [ ] Review every frame for notifications, identities, secrets, and tenant/device data
 - [ ] Distinguish implemented behavior from roadmap behavior
 - [ ] Confirm asset and music usage rights
-- [ ] Follow the [final video runbook](video-runbook.md) and keep the public recording under three
-      minutes
+- [ ] Follow the [final recording checklist](final-recording-checklist.md), publish with the
+      [YouTube runbook](youtube-publishing-runbook.md), and keep the recording under three minutes

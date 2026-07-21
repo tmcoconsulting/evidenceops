@@ -1,16 +1,28 @@
 # Changelog
 
+## 2026-07-21 — Build Week submission readiness
+
+- Added final source, baseline-approval, protected-refresh, recording, YouTube, Devpost, site-audit,
+  and readiness records without committing private submission metadata.
+- Preserved the Assistant's generated-analysis label, limitations, and human-review questions when
+  restoring session-only history.
+- Improved Mission Control table accessibility, narrow-screen command actions and Assistant
+  suggestions, per-page social metadata, and judge-facing terminology.
+- Added authorized TMCO Consulting YouTube channel assets derived from the repository-native brand
+  system.
+- Reconciled the original external evaluation against the shipped Build Week slice and kept
+  enterprise deferrals explicit.
+
 ## 2026-07-20 — Provifact public identity
 
 - Adopted **Provifact™ by TMCO Consulting** as the public product name and **From approved change to
   audit-ready proof.** as the product tagline.
-- Rebranded the static site, Mission Control, Copilot, Worker responses, package metadata, synthetic
+- Rebranded the static site, Mission Control, Assistant, Worker responses, package metadata, synthetic
   artifacts, documentation, and tests without changing deterministic evidence semantics.
 - Added the preferred `provifact` Python module and console command while preserving the legacy
   `evidenceops` engine namespace and command as compatibility interfaces.
-- Retained the existing repository slug, Entra-bound workflow provenance, Cloudflare Worker,
-  OpenAI-project identifier, schema/algorithm identifiers, environment variables, and transition
-  hostname pending a coordinated, rollback-safe external cutover.
+- Retained legacy runtime compatibility identifiers while completing the rollback-safe repository,
+  OIDC-subject, and public-hostname cutover.
 
 ## 2026-07-20 — Live audit cockpit
 
@@ -21,7 +33,7 @@
   and its exact reviewed snapshot ID; removed every synthetic production fallback.
 - Redesigned Mission Control around current attention, changes, findings, collection health, and
   expandable evidence; reduced Settings to a readable six-column view with accessible detail.
-- Added site-wide Provifact Copilot with session-only history, current-page/snapshot context, selected
+- Added site-wide Provifact Assistant with session-only history, current-page/snapshot context, selected
   evidence, fixed `gpt-5.6-terra` production mode, and useful deterministic local fallback.
 - Added global live/synthetic/stale provenance, no-store snapshot refresh, official TMCO Consulting
   assets, and a company-name content gate.
@@ -37,8 +49,8 @@
 - Added a searchable Intune setting and baseline matrix with observed values, approved targets,
   deterministic states, CIS/STIG/NIST/CMMC identifiers, public-safe evidence references, and exact
   non-mutating change guidance.
-- Marked CIS Level 2 explicitly as not loaded instead of inferring coverage from Level 1 or another
-  framework cross-reference.
+- Added exact pinned CIS Level 2 membership as a reference-only comparison without inferring company
+  approval, technical implementation, assessment coverage, or a framework verdict.
 - Paired the FileVault assistant task with deterministic setting context from the verified Mission
   package without expanding model egress.
 - Corrected current-facing security, local-demo, deployment, video, homepage, and dashboard

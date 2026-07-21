@@ -1,8 +1,11 @@
 # Videos and Demonstration Media
 
-No public Provifact video is linked from this repository yet. The live application and the
-[final video runbook](build-week/video-runbook.md) are ready; media production remains an operator
-submission task rather than a product capability.
+No public Provifact video is linked from this repository yet. The live application and final
+[shot guide](build-week/final-recording-shot-guide.md),
+[voiceover](build-week/final-voiceover-script.md),
+[recording checklist](build-week/final-recording-checklist.md), and
+[YouTube runbook](build-week/youtube-publishing-runbook.md) are ready; media production remains an
+operator submission task rather than a product capability.
 
 ## Recommended recording sequence
 
