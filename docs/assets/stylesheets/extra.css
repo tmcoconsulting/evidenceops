@@ -103,9 +103,11 @@ body:not(:has(.mission-shell)) .md-footer {
     linear-gradient(135deg, #f8fbff 0%, var(--provifact-mist) 100%);
 }
 
-.evidence-hero h1 {
+.evidence-hero .hero-title {
   margin: 0 0 0.8rem;
+  color: inherit;
   font-size: clamp(2.5rem, 6vw, 4.7rem);
+  font-weight: 700;
   line-height: 0.96;
   letter-spacing: -0.045em;
 }
@@ -257,7 +259,7 @@ body:not(:has(.mission-shell)) .md-footer {
   background: rgba(27, 45, 72, 0.84);
 }
 
-[data-md-color-scheme="slate"] .evidence-hero h1 {
+[data-md-color-scheme="slate"] .evidence-hero .hero-title {
   color: #f3f8fd;
 }
 
@@ -1042,6 +1044,7 @@ body:has(.mission-shell) .md-content__inner::before {
 
 .mission-command-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.55rem;
   align-items: center;
   justify-content: flex-end;
@@ -1744,6 +1747,12 @@ body:has(.mission-shell) .md-content__inner::before {
 
   .mission-command-actions {
     justify-content: flex-start;
+  }
+
+  .mission-command-actions a,
+  .mission-command-actions button {
+    flex: 1 1 10rem;
+    text-align: center;
   }
 
   .mission-console {

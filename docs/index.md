@@ -1,6 +1,8 @@
+# Provifact™ by TMCO Consulting { #provifact-overview .mission-visually-hidden }
+
 <div class="evidence-hero">
   <div class="hero-kicker"><img src="assets/images/provifact-mark.svg" alt="" width="42" height="42"> Provifact™ by TMCO Consulting</div>
-  <h1>From approved change to audit-ready proof.</h1>
+  <p class="hero-title">From approved change to audit-ready proof.</p>
   <p>
     Provifact collects managed-Apple configuration read-only, evaluates mapped settings
     deterministically, and publishes a sanitized evidence package that reviewers can trace without
@@ -12,7 +14,7 @@
   </div>
 </div>
 
-<p class="provifact-brand-note">Continuous, deterministic endpoint evidence—without granting the product Intune write authority.</p>
+<p class="provifact-brand-note">Versioned, deterministic endpoint evidence—without granting the product Intune write authority.</p>
 
 <div class="synthetic-banner">
 Production serves a reviewed package labeled `LIVE SANITIZED TENANT DATA`. Tenant, device, user,
@@ -64,6 +66,12 @@ fixed `gpt-5.6-terra` with bounded sanitized context; local and preview builds r
 | Assistant | Site-wide bounded `/api/ask`, exact typed-claim verification, prose quarantine | Production is fixed-model OpenAI mode; local/preview are fixture mode; neither can decide compliance |
 | History | Current/prior sanitized snapshot delta | No persistent D1/KV/R2 history store yet |
 
+The Build Week implementation targets managed Apple endpoints in Microsoft Intune. Baseline data,
+collection, reviewed mappings, evidence, sanitization, and presentation are separated so the same
+pattern can extend to Windows, Linux, other mobile platforms, or another MDM. Each integration still
+needs its own read-only adapter, pinned sources, reviewed mappings and transforms, least-privilege
+credentials, fixtures, tests, and deployment configuration; it is not a configuration-only claim.
+
 ## What the framework columns mean
 
 A mapped setting can support technical evidence for several framework identifiers. For example, a
@@ -76,7 +84,7 @@ The [baseline implementation plan](settings-matrix.md) makes four distinctions v
 - **Mapped and aligned:** collected technical evidence matches the approved target.
 - **Mapped and drifting:** a deterministic value, assignment, conflict, or collection condition
   requires review, with an exact non-mutating change instruction.
-- **Not loaded or not mapped:** Provifact says so directly rather than asking AI to fill the gap.
+- **Reference-only or not mapped:** Provifact says so directly rather than asking AI to fill the gap.
 - **Implementation planning required:** the rule is approved inventory, but the team must still
   choose and approve a Settings Catalog, custom-profile, script/agent, or alternate-evidence path.
 

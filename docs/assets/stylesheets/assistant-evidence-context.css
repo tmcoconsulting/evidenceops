@@ -391,12 +391,10 @@
 }
 
 .provifact-assistant-suggestions button span {
-  overflow: hidden;
   color: var(--md-default-fg-color--light);
-  font-size: 0.54rem;
+  font-size: 0.62rem;
   line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .provifact-assistant-form {
@@ -502,16 +500,11 @@
   }
 
   .provifact-assistant-suggestions {
-    display: flex;
-    overflow-x: auto;
-    overscroll-behavior-inline: contain;
-    scroll-snap-type: x proximity;
-    scrollbar-width: thin;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .provifact-assistant-suggestions button {
-    flex: 0 0 min(72vw, 14rem);
-    scroll-snap-align: start;
+    min-height: 3.2rem;
   }
 
   .provifact-assistant-form {
@@ -525,6 +518,12 @@
 
   .provifact-assistant-boundary {
     padding-bottom: max(0.65rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 24rem) {
+  .provifact-assistant-suggestions {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -4,7 +4,7 @@ hide:
   - toc
 ---
 
-<h1 class="mission-visually-hidden">Provifact™ Mission Control</h1>
+# Provifact™ Mission Control { #mission-content .mission-visually-hidden }
 
 <div class="mission-shell" data-mission-control aria-busy="true">
   <header class="mission-commandbar">
@@ -114,7 +114,7 @@ hide:
           </label>
         </div>
         <div class="mission-baseline-readout" data-baseline-readout></div>
-        <div class="mission-table-wrap mission-posture-table-wrap">
+        <div class="mission-table-wrap mission-posture-table-wrap" role="region" aria-label="Baseline posture table" tabindex="0">
           <table class="mission-table mission-posture-table">
             <thead>
               <tr><th>Control objective</th><th>Desired</th><th>Observed</th><th>Deterministic state</th><th>Evidence</th><th>Action</th></tr>
@@ -141,7 +141,7 @@ hide:
           <label>Setting category <select data-filter-category><option value="">All</option></select></label>
           <button type="button" data-clear-filters>Clear filters</button>
         </div>
-        <div class="mission-table-wrap">
+        <div class="mission-table-wrap" role="region" aria-label="Current findings table" tabindex="0">
           <table class="mission-table">
             <thead>
               <tr><th>Setting</th><th>State</th><th>Severity</th><th>Observed → target</th><th>Assignment</th></tr>
@@ -187,7 +187,7 @@ hide:
             <div><span class="mission-eyebrow">Cross-framework view</span><h2>Assessment support</h2></div>
           </div>
           <div class="mission-callout">Technical references are not passed controls, framework scores, certifications, or assessor conclusions.</div>
-          <div class="mission-table-wrap">
+          <div class="mission-table-wrap" role="region" aria-label="Assessment-support cross-references table" tabindex="0">
             <table class="mission-table mission-framework-table">
               <thead><tr><th>Framework</th><th>Evaluated</th><th>References</th><th>Aligned</th><th>Drifting</th><th>Boundary</th></tr></thead>
               <tbody data-framework-summary></tbody>
