@@ -1,5 +1,9 @@
 # Final Live MVP Validation and Production Record
 
+> **Historical pre-Provifact-cutover record.** Repository names, hostnames, Worker labels, run IDs,
+> snapshots, and counts below preserve the state verified on 2026-07-20. Use the current Mission
+> package, `/api/status`, Judge Guide, and final-readiness report for submission decisions.
+
 **Date:** 2026-07-20
 
 **Branch:** `codex/build-week-final-live-mvp`

@@ -32,9 +32,9 @@ shapes still fail closed.
 
 Mission Control is now a full-width operational console showing desired state, observed state,
 deterministic findings, evidence counts, freshness, collection flow, blind spots, and the
-private-to-public boundary. The STIG selector is a technical cross-reference lens only. It visibly
-states that a STIG baseline is not loaded and produces no STIG score, assessment, or compliance
-verdict.
+private-to-public boundary. At this historical checkpoint, the STIG selector had no loaded
+comparison profile. The current catalog loads exact pinned STIG membership for planning, but still
+produces no STIG score, assessment, or compliance verdict.
 
 ## Local validation
 

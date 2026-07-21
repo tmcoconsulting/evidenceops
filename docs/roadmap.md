@@ -81,10 +81,10 @@ Public CI never performs live collection.
       key, namespace, and artifact identifiers for secret continuity and rollback
 - [x] Validate bounded live `gpt-5.6-terra`; keep fixture mode only for local and preview
 
-Phase 1 technical completion is recorded in the
-[final implementation report](build-week/final-implementation-report.md). External submission,
-media review, and the private `/feedback` identifier remain operator tasks rather than product
-capabilities.
+Current delivery truth and external submission gates are recorded in the
+[final readiness report](build-week/final-readiness-report.md). Dated implementation reports remain
+historical evidence. Media review, the private `/feedback` identifier, and actual Devpost submission
+remain operator actions rather than product capabilities.
 
 ## When to change the application stack
 

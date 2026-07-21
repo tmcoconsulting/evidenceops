@@ -249,8 +249,14 @@ def test_browser_boundary_uses_session_only_history_and_does_not_accept_byok() -
         assert prohibited not in browser
     for prohibited in ("localStorage", "innerHTML", "X-OpenAI-Key", "Authorization"):
         assert prohibited not in assistant_browser
-    assert 'const HISTORY_KEY = "provifact-assistant-history-v1"' in assistant_browser
+    assert 'const HISTORY_KEY = "provifact-assistant-history-v2"' in assistant_browser
     assert "sessionStorage.getItem(HISTORY_KEY)" in assistant_browser
+    assert (
+        'appendMessage("assistant", item.answer, item.references, item.analysis)'
+        in assistant_browser
+    )
+    assert "analysis: {" in assistant_browser
+    assert "limitations: payload.answer.limitations" in assistant_browser
     assert "sessionStorage.setItem(" in assistant_browser
     assert 'request.headers.has("X-OpenAI-Key")' in router
     assert 'request.headers.has("Authorization")' in router
@@ -292,9 +298,10 @@ def test_mission_control_bounds_grid_content_on_narrow_viewports() -> None:
     assert "min-width: 0;" in stylesheet
     assert ".mission-table-wrap {\n  overflow-x: auto;" in stylesheet
     mkdocs = (REPOSITORY_ROOT / "mkdocs.yml").read_text(encoding="utf-8")
-    assert "assets/stylesheets/extra.css?v=20260720-provifact2" in mkdocs
+    assert "assets/stylesheets/extra.css?v=20260721-readiness1" in mkdocs
     assert "assets/javascripts/mission-control.js?v=20260720-provifact2" in mkdocs
-    assert "assets/javascripts/assistant-evidence-context.js?v=20260720-provifact2" in mkdocs
+    assert "assets/javascripts/assistant-evidence-context.js?v=20260721-readiness1" in mkdocs
+    assert "assets/stylesheets/assistant-evidence-context.css?v=20260721-readiness1" in mkdocs
 
 
 def test_mission_control_links_to_loaded_reference_profile_comparisons() -> None:
@@ -368,7 +375,9 @@ def test_operational_frontend_is_compact_and_keyboard_accessible() -> None:
     assert "grid-template-areas:" in assistant_css
     assert '"suggestions"' in assistant_css
     assert "grid-template-columns: repeat(3, minmax(0, 1fr))" in assistant_css
-    assert "scroll-snap-type: x proximity" in assistant_css
+    assert "grid-template-columns: repeat(2, minmax(0, 1fr))" in assistant_css
+    assert "scroll-snap-type: x proximity" not in assistant_css
+    assert "white-space: normal" in assistant_css
     assert "@media (max-width: 52rem)" in assistant_css
     assert "@media (max-width: 35rem)" in assistant_css
 

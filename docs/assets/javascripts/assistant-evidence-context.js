@@ -3,7 +3,7 @@
 
   const STATUS_URL = "/api/status";
   const MISSION_URL = "/assets/data/mission-control.json";
-  const HISTORY_KEY = "provifact-assistant-history-v1";
+  const HISTORY_KEY = "provifact-assistant-history-v2";
   const MAX_HISTORY = 12;
   const EVIDENCE_ID = /^(?:finding|req|gap|mission)-[0-9a-f]{24}$/;
   const CLAIM_CODES = new Set([
@@ -359,7 +359,12 @@
             isRecord(item) &&
             typeof item.question === "string" &&
             typeof item.answer === "string" &&
-            Array.isArray(item.references),
+            stringArray(item.references) &&
+            isRecord(item.analysis) &&
+            typeof item.analysis.aiGenerated === "boolean" &&
+            stringArray(item.analysis.limitations, 8) &&
+            stringArray(item.analysis.additionalEvidence, 8) &&
+            stringArray(item.analysis.reviewQuestions, 8),
         )
         .slice(-MAX_HISTORY);
     } catch {
@@ -569,7 +574,7 @@
 
     for (const item of history) {
       appendMessage("user", item.question);
-      appendMessage("assistant", item.answer, item.references);
+      appendMessage("assistant", item.answer, item.references, item.analysis);
     }
 
     for (const suggestion of suggestions) {
@@ -724,6 +729,12 @@
           question,
           answer: payload.answer.direct_answer,
           references: payload.answer.evidence_references,
+          analysis: {
+            aiGenerated: payload.answer.ai_generated_analysis,
+            limitations: payload.answer.limitations,
+            additionalEvidence: payload.answer.additional_evidence_required,
+            reviewQuestions: payload.answer.suggested_human_review_questions,
+          },
         });
         history = history.slice(-MAX_HISTORY);
         writeHistory(history);

@@ -43,6 +43,8 @@ nav:
       - Runtime Status: live-demo.md
       - Local Demo: operations/demo-mode.md
       - Live Read-Only Collection: operations/live-collection.md
+      - Approved Baseline: operations/approved-baseline.md
+      - Protected Demo Refresh: operations/demo-refresh.md
       - Cloudflare Worker: operations/cloudflare-worker.md
       - Deployment Models: operations/deployment-models.md
       - Incident Response: operations/incident-response.md
@@ -51,6 +53,12 @@ nav:
       - Videos: videos.md
       - Build Week:
           - Demo Package: build-week/demo-package.md
+          - Final Readiness Report: build-week/final-readiness-report.md
+          - Final Site Audit: build-week/final-site-audit.md
+          - Devpost Packet: build-week/final-devpost-packet.md
+          - Recording Checklist: build-week/final-recording-checklist.md
+          - YouTube Runbook: build-week/youtube-publishing-runbook.md
+          - Source Ledger: build-week/final-source-ledger.md
           - Current Judge-Readiness Validation: build-week/judge-readiness-validation.md
           - FileVault & NOC Validation: build-week/filevault-noc-validation.md
           - Decision Log: build-week/decision-log.md
@@ -74,16 +82,16 @@ markdown_extensions:
       alternate_style: true
 
 extra_css:
-  - assets/stylesheets/extra.css?v=20260720-provifact2
+  - assets/stylesheets/extra.css?v=20260721-readiness1
   - assets/stylesheets/settings-matrix.css?v=20260720-provifact2
-  - assets/stylesheets/assistant-evidence-context.css?v=20260720-provifact2
+  - assets/stylesheets/assistant-evidence-context.css?v=20260721-readiness1
   - assets/stylesheets/share.css?v=20260720-provifact1
 
 extra_javascript:
   - assets/javascripts/mission-control.js?v=20260720-provifact2
   - assets/javascripts/provifact-api.js?v=20260720-provifact2
   - assets/javascripts/settings-matrix.js?v=20260720-provifact2
-  - assets/javascripts/assistant-evidence-context.js?v=20260720-provifact2
+  - assets/javascripts/assistant-evidence-context.js?v=20260721-readiness1
   - assets/javascripts/share.js?v=20260720-provifact1
 
 plugins:

@@ -121,6 +121,8 @@ An omitted or mismatched value stops before deployment. Enabling the separate
 `CLOUDFLARE_DEPLOY_ENABLED` environment gate remains an operator-controlled reviewed-window action;
 restore it to `false` immediately after the run.
 
+## Operations and rollback
+
 Remaining operations:
 
 1. keep `CLOUDFLARE_DEPLOY_ENABLED=false` outside an explicitly reviewed deployment window;

@@ -64,6 +64,8 @@ The pinned source inventory and attribution are recorded in the
 [architecture](architecture.md), [decision log](build-week/decision-log.md), and `NOTICE`. The
 authoritative upstream project is the
 [NIST macOS Security Compliance Project](https://github.com/usnistgov/macos_security).
+The [approved-baseline runbook](operations/approved-baseline.md) shows the exact human-reviewed
+change boundary.
 
 ## Honest limitations
 

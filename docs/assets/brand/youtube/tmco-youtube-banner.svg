@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2560 1440" role="img" aria-labelledby="title desc">
+  <title id="title">TMCO Consulting YouTube banner</title>
+  <desc id="desc">TMCO Consulting and Provifact branding centered in the YouTube safe region.</desc>
+  <defs>
+    <radialGradient id="glow-a" cx="16%" cy="20%" r="62%">
+      <stop stop-color="#164B75"/>
+      <stop offset="1" stop-color="#07111F"/>
+    </radialGradient>
+    <radialGradient id="glow-b" cx="88%" cy="78%" r="58%">
+      <stop stop-color="#0B6470" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#07111F" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="proof" x1="810" y1="520" x2="1740" y2="940" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2DD4BF"/>
+      <stop offset="1" stop-color="#55A7FF"/>
+    </linearGradient>
+    <pattern id="grid" width="72" height="72" patternUnits="userSpaceOnUse">
+      <path d="M72 0H0V72" fill="none" stroke="#8ABCE8" stroke-opacity="0.06" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="2560" height="1440" fill="#07111F"/>
+  <rect width="2560" height="1440" fill="url(#glow-a)"/>
+  <rect width="2560" height="1440" fill="url(#glow-b)"/>
+  <rect width="2560" height="1440" fill="url(#grid)"/>
+  <path d="M0 1080C500 920 870 1230 1320 1040s760-430 1240-260v660H0z" fill="#0A1B2F" opacity="0.72"/>
+
+  <!-- All essential text is inside the centered 1235 × 338 minimum safe region. -->
+  <g transform="translate(662.5 551)">
+    <g transform="translate(0 38)">
+      <rect width="210" height="210" rx="46" fill="#0B1F37" stroke="url(#proof)" stroke-width="5"/>
+      <path d="M43 53h124v29h-48v79H91V82H43z" fill="#F3F8FD"/>
+      <path d="M145 134h22v27h-22z" fill="#55A7FF"/>
+    </g>
+    <g transform="translate(255 0)" fill="#F3F8FD" font-family="Inter, Arial, sans-serif">
+      <text x="0" y="78" font-size="78" font-weight="750" letter-spacing="-2">TMCO Consulting</text>
+      <text x="2" y="145" fill="#8DB9E8" font-size="30" font-weight="600" letter-spacing="5">MODERN WORKPLACE · SECURITY · AI</text>
+      <path d="M2 183h855" stroke="url(#proof)" stroke-width="4"/>
+      <text x="2" y="246" font-size="42" font-weight="720">Provifact™</text>
+      <text x="230" y="246" fill="#B9CBE0" font-size="34" font-weight="500">From approved change to audit-ready proof.</text>
+    </g>
+  </g>
+</svg>
